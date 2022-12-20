@@ -112,3 +112,7 @@ touch nohup.out                                   # 首次运行需要新建日�
 nohup python3 app.py & tail -f nohup.out          # 后台运行程序并输出日志
 ```
 同样在扫码后程序即可成功运行于服务器后台。
+
+## 联系
+
+程序运行出现问题可先提 [Issues](https://github.com/zhayujie/chatgpt-on-wechat/issues)，若无回应可加微信 zhayujie_com 交流。
