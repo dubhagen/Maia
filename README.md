@@ -148,7 +148,7 @@ nohup python3 app.py & tail -f nohup.out          # 在后台运行程序并通�
 
 ### 3.Docker部署
 
-参考文档 [Docker部署](https://github.com/zhayujie/chatgpt-on-wechat/wiki/Docker%E9%83%A8%E7%BD%B2)   (Contributed by [limccn](https://github.com/limccn))。
+参考文档 [Docker部署](https://github.com/limccn/chatgpt-on-wechat/wiki/Docker%E9%83%A8%E7%BD%B2)   (Contributed by [limccn](https://github.com/limccn))。
 
 
 ## 常见问题
