@@ -4,7 +4,7 @@
 
 > ChatGPT近期以强大的对话和信息整合能力风靡全网，可以写代码、改论文、讲故事，几乎无所不能，这让人不禁有个大胆的想法，能否用他的对话模型把我们的微信打造成一个智能机器人，可以在与好友对话中给出意想不到的回应，而且再也不用担心女朋友影响我们 ~~打游戏~~ 工作了。
 
- 
+
 基于ChatGPT的微信聊天机器人，通过 [ChatGPT](https://github.com/openai/openai-python) 接口生成对话内容，使用 [itchat](https://github.com/littlecodersh/ItChat) 实现微信消息的接收和自动回复。已实现的特性如下：
 
 - [x] **文本对话：** 接收私聊及群组中的微信消息，使用ChatGPT生成回复内容，完成自动回复
@@ -13,7 +13,9 @@
 - [x] **图片生成：** 支持根据描述生成图片，并自动发送至个人聊天或群聊
 - [x] **上下文记忆**：支持多轮对话记忆，且为每个好友维护独立的上下会话
 - [x] **语音识别：** 支持接收和处理语音消息，通过文字或语音回复
+- [x] **插件化：** 支持个性化功能插件，提供角色扮演、文字冒险游戏等预设插件
 
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/qApznZ?referralCode=RC3znh)
 
 # 更新日志
 
@@ -186,14 +188,11 @@ nohup python3 app.py & tail -f nohup.out          # 在后台运行程序并通�
 
 参考文档 [Docker部署](https://github.com/limccn/chatgpt-on-wechat/wiki/Docker%E9%83%A8%E7%BD%B2)   (Contributed by [limccn](https://github.com/limccn))。
 
-### 4. Railway部署
-[Use with Railway](#use-with-railway)(PaaS, Free, Stable, ✅Recommended)
-> Railway offers $5 (500 hours) of runtime per month
-1. Click the [Railway](https://railway.app/) button to go to the Railway homepage
-2. Click the `Start New Project` button.
-3. Click the `Deploy from Github repo` button.
-4. Choose your repo (you can fork this repo firstly)
-5. Set environment variable to override settings in config-template.json, such as: model, open_ai_api_base, open_ai_api_key, use_azure_chatgpt etc.
+### 4. Railway部署(✅推荐)
+> Railway每月提供5刀和最多500小时的免费额度。
+1. 进入 [Railway](https://railway.app/template/qApznZ?referralCode=RC3znh)。
+2. 点击 `Deploy Now` 按钮。
+3. 设置环境变量来重载程序运行的参数，例如`open_ai_api_key`, `character_desc`。
 
 ## 常见问题
 
