@@ -207,7 +207,7 @@ nohup python3 app.py & tail -f nohup.out          # 在后台运行程序并通�
 #### (1) 下载 docker-compose.yml 文件
 
 ```bash
-wget https://github.com/zhayujie/chatgpt-on-wechat/releases/download/1.3.2/docker-compose.yml
+wget https://open-1317903499.cos.ap-guangzhou.myqcloud.com/docker-compose.yml
 ```
 
 下载完成后打开 `docker-compose.yml` 修改所需配置，如 `OPEN_AI_API_KEY` 和 `GROUP_NAME_WHITE_LIST` 等。
