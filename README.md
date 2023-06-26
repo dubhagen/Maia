@@ -198,11 +198,44 @@ nohup python3 app.py & tail -f nohup.out          # 在后台运行程序并通�
 
 ### 3.Docker部署
 
-参考文档 [Docker部署](https://github.com/limccn/chatgpt-on-wechat/wiki/Docker%E9%83%A8%E7%BD%B2)   (Contributed by [limccn](https://github.com/limccn))。
+> 使用docker部署无需下载源码和安装依赖，只需要拉取镜像并根据 docker-compose.yml 配置文件启动容器即可。
 
-### 4. Railway部署 (✅推荐)
+> 前提是需要安装好 `docker` 及 `docker-compose`，安装成功的表现是执行 `docker -v` 和 `docker-compose version` (或 docker compose version) 可以查看到版本号，可前往 [docker官网](https://docs.docker.com/engine/install/) 进行下载。
+
+#### (1) 下载 docker-compose.yml 文件
+
+```bash
+wget https://github.com/zhayujie/chatgpt-on-wechat/releases/download/1.3.2/docker-compose.yml
+```
+
+下载完成后打开 `docker-compose.yml` 修改所需配置，如 `OPEN_AI_API_KEY` 和 `GROUP_NAME_WHITE_LIST` 等。
+
+#### (2) 启动容器
+
+在 `docker-compose.yml` 所在目录下执行以下命令启动容器：
+
+```bash
+sudo docker compose up -d
+```
+
+运行 `sudo docker ps` 能查看到 NAMES 为 chatgpt-on-wechat 的容器即表示运行成功。
+
+注意：
+
+ - 如果 `docker-compose` 是 1.X 版本 则需要执行 `sudo  docker-compose up -d` 来启动容器
+ - 该命令会自动去 [docker hub](https://hub.docker.com/r/zhayujie/chatgpt-on-wechat) 拉取 latest 版本的镜像，latest 镜像会在每次项目 release 新的版本时生成
+
+最后运行以下命令可查看容器运行日志，扫描日志中的二维码即可完成登录：
+
+```bash
+sudo docker logs -f chatgpt-on-wechat
+```
+
+### 4. Railway部署
+
 > Railway每月提供5刀和最多500小时的免费额度。
-1. 进入 [Railway](https://railway.app/template/qApznZ?referralCode=RC3znh)。
+
+1. 进入 [Railway](https://railway.app/template/qApznZ?referralCode=RC3znh)
 2. 点击 `Deploy Now` 按钮。
 3. 设置环境变量来重载程序运行的参数，例如`open_ai_api_key`, `character_desc`。
 
