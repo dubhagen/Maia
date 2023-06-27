@@ -28,7 +28,7 @@ Demo made by [Visionn](https://www.wangpc.cc/)
 
 # 交流群
 
-添加小助手微信进群：
+添加小助手微信进群，请备注 "wechat"：
 
 <img width="240" src="./docs/images/contact.jpg">
 
@@ -65,7 +65,7 @@ Demo made by [Visionn](https://www.wangpc.cc/)
 支持 Linux、MacOS、Windows 系统（可在Linux服务器上长期运行)，同时需安装 `Python`。
 > 建议Python版本在 3.7.1~3.9.X 之间，推荐3.8版本，3.10及以上版本在 MacOS 可用，其他系统上不确定能否正常运行。
 
-> Docker 或 Railway 部署无需安装python环境，可直接快进到下一步。
+> 注意：Docker 或 Railway 部署无需安装python环境和下载源码，可直接快进到下一节。
 
 **(1) 克隆项目代码：**
 
@@ -200,7 +200,7 @@ nohup python3 app.py & tail -f nohup.out          # 在后台运行程序并通�
 
 ### 3.Docker部署
 
-> 使用docker部署无需下载源码和安装依赖，只需要拉取镜像并根据 docker-compose.yml 配置文件启动容器即可。
+> 使用docker部署无需下载源码和安装依赖，只需要获取 docker-compose.yml 配置文件并启动容器即可。
 
 > 前提是需要安装好 `docker` 及 `docker-compose`，安装成功的表现是执行 `docker -v` 和 `docker-compose version` (或 docker compose version) 可以查看到版本号，可前往 [docker官网](https://docs.docker.com/engine/install/) 进行下载。
 
