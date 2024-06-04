@@ -44,7 +44,7 @@
 
 # 🏷 更新日志
 
->**2024.05.14：** [1.6.5版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.6.5)，新增 gpt-4o 模型支持
+>**2024.06.04：** [1.6.6版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.6.6) 和 [1.6.5版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.6.5)，gpt-4o模型、钉钉流式卡片、讯飞语音识别/合成
 
 >**2024.04.26：** [1.6.0版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.6.0)，新增 Kimi 接入、gpt-4-turbo版本升级、文件总结和语音识别问题修复
 
