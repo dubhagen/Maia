@@ -48,6 +48,8 @@ DEMO视频：https://cdn.link-ai.tech/doc/cow_demo.mp4
 
 # 🏷 更新日志
 
+>**2024.08.02：** [1.7.0版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.6.9) 新增 讯飞4.0 模型、知识库引用来源展示、相关插件优化
+
 >**2024.07.19：** [1.6.9版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.6.9) 新增 gpt-4o-mini 模型、阿里语音识别、企微应用渠道路由优化
 
 >**2024.07.05：** [1.6.8版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.6.8) 和 [1.6.7版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.6.7)，Claude3.5, Gemini 1.5 Pro, MiniMax模型、工作流图片输入、模型列表完善
