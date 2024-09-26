@@ -48,7 +48,9 @@ DEMO视频：https://cdn.link-ai.tech/doc/cow_demo.mp4
 
 # 🏷 更新日志
 
->**2024.08.02：** [1.7.0版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.6.9) 新增 讯飞4.0 模型、知识库引用来源展示、相关插件优化
+>**2024.09.26：** [1.7.2版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.7.2)  和 [1.7.1版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.7.1) 文心，讯飞等模型优化、o1 模型、快速安装和管理脚本
+
+>**2024.08.02：** [1.7.0版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.7.0) 新增 讯飞4.0 模型、知识库引用来源展示、相关插件优化
 
 >**2024.07.19：** [1.6.9版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.6.9) 新增 gpt-4o-mini 模型、阿里语音识别、企微应用渠道路由优化
 
@@ -82,8 +84,13 @@ DEMO视频：https://cdn.link-ai.tech/doc/cow_demo.mp4
 
 # 🚀 快速开始
 
-快速开始详细文档：[项目搭建文档](https://docs.link-ai.tech/cow/quick-start)
+- 快速开始详细文档：[项目搭建文档](https://docs.link-ai.tech/cow/quick-start)
 
+- 快速安装脚本，详细使用指导：[一键安装启动脚本](https://github.com/zhayujie/chatgpt-on-wechat/wiki/%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E5%90%AF%E5%8A%A8%E8%84%9A%E6%9C%AC)
+```bash
+bash <(curl -sS https://cdn.link-ai.tech/code/cow/install.sh)
+```
+- 项目管理脚本，详细使用指导：[项目管理脚本](https://github.com/zhayujie/chatgpt-on-wechat/wiki/%E9%A1%B9%E7%9B%AE%E7%AE%A1%E7%90%86%E8%84%9A%E6%9C%AC)
 ## 一、准备
 
 ### 1. 账号注册
