@@ -48,7 +48,7 @@ DEMO视频：https://cdn.link-ai.tech/doc/cow_demo.mp4
 
 # 🏷 更新日志
 
->**2024.08.29：** [1.7.2版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.7.2)  和 [1.7.1版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.7.1) 文心，讯飞等模型优化、o1 模型、快速安装和管理脚本
+>**2024.09.26：** [1.7.2版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.7.2)  和 [1.7.1版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.7.1) 文心，讯飞等模型优化、o1 模型、快速安装和管理脚本
 
 >**2024.08.02：** [1.7.0版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.7.0) 新增 讯飞4.0 模型、知识库引用来源展示、相关插件优化
 
