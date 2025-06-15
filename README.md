@@ -277,13 +277,15 @@ volumes:
 
 ## 模型说明
 
-以下对所有可支持的模型的配置和使用方法进行说明，注意实际填写`config.json`配置时不要携带注释。
+以下对所有可支持的模型的配置和使用方法进行说明，模型接口实现在项目的 `bot/` 目录下。
 
 <details>
 <summary>OpenAI</summary>
 
 1. API Key创建：在 [OpenAI平台](https://platform.openai.com/api-keys) 创建API Key
+
 2. 填写配置
+
 ```json
 {
     "model": "gpt-4.1-mini",
@@ -321,6 +323,8 @@ volumes:
 
 ## 通道说明
 
+以下对可接入通道的配置方式进行说明，应用通道代码在项目的 `channel/` 目录下。
+
 <details>
 <summary>Web</summary>
 
@@ -352,6 +356,8 @@ volumes:
 
 更多通道说明：Coming soon...
 
+<br/>
+
 # 🔗 相关项目
 
 - [bot-on-anything](https://github.com/zhayujie/bot-on-anything)：轻量和高可扩展的大模型应用框架，支持接入Slack, Telegram, Discord, Gmail等海外平台，可作为本项目的补充使用。
@@ -367,7 +373,7 @@ FAQs： <https://github.com/zhayujie/chatgpt-on-wechat/wiki/FAQs>
 
 # 🛠️ 开发
 
-欢迎接入更多应用渠道，参考 [Terminal代码](https://github.com/zhayujie/chatgpt-on-wechat/blob/master/channel/terminal/terminal_channel.py) 实现接收和发送消息逻辑即可接入。 同时欢迎贡献新的插件，参考 [插件说明文档](https://github.com/zhayujie/chatgpt-on-wechat/tree/master/plugins)。
+欢迎接入更多应用通道，参考 [Terminal代码](https://github.com/zhayujie/chatgpt-on-wechat/blob/master/channel/terminal/terminal_channel.py) 新增自定义通道，实现接收和发送消息逻辑即可完成接入。 同时欢迎贡献新的插件，参考 [插件开发文档](https://github.com/zhayujie/chatgpt-on-wechat/tree/master/plugins)。
 
 # ✉ 联系
 
