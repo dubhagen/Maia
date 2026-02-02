@@ -8,19 +8,19 @@
   <a href="https://github.com/zhayujie/chatgpt-on-wechat"><img src="https://img.shields.io/github/stars/zhayujie/chatgpt-on-wechat?style=flat-square" alt="Stars"></a> <br/>
 </p>
 
-**CowAgent** 是基于大模型的超级AI助理，能够主动思考和任务规划、操作计算机和外部资源、创造和执行Skill、拥有长期记忆并不断成长。CowAgent 支持灵活切换多种模型，能处理文本、语音、图片、文件等多模态消息，可接入网页、飞书、钉钉、企业微信应用、微信公众号中使用，7*24小时运行于你的个人电脑或服务器中。
+**CowAgent** 是基于大模型的超级AI助理，能够主动思考和任务规划、操作计算机和外部资源、创造和执行Skills、拥有长期记忆并不断成长。CowAgent 支持灵活切换多种模型，能处理文本、语音、图片、文件等多模态消息，可接入网页、飞书、钉钉、企业微信应用、微信公众号中使用，7*24小时运行于你的个人电脑或服务器中。
 
 # 简介
 
-> 该项目既是一个可以开箱即用的AI助理，也是一个支持高度扩展的Agent框架，可以通过为项目扩展大模型接口、接入渠道、内置工具、Skill系统来灵活实现各种定制需求。核心功能如下：
+> 该项目既是一个可以开箱即用的超级AI助理，也是一个支持高度扩展的Agent框架，可以通过为项目扩展大模型接口、接入渠道、内置工具、Skills系统来灵活实现各种定制需求。核心能力如下：
 
--  ✅   **多端部署：** 有多种部署方式可选择且功能完备，目前已支持网页、微信公众号、企业微信应用、飞书、钉钉等部署方式
--  ✅   **基础对话：** 私聊及群聊的AI智能回复，支持多轮会话上下文记忆，基础模型支持OpenAI, Claude, Gemini, DeepSeek, 通义千问, Kimi, 文心一言, 讯飞星火, ChatGLM, MiniMax, GiteeAI, ModelScope, LinkAI
--  ✅   **语音能力：** 可识别语音消息，通过文字或语音回复，支持 openai(whisper/tts), azure, baidu, google 等多种语音模型
--  ✅   **图像能力：** 支持图片生成、图片识别、图生图，可选择 Dall-E-3, stable diffusion, replicate, midjourney, CogView-3, vision模型
--  ✅   **丰富插件：** 支持自定义插件扩展，已实现多角色切换、敏感词过滤、聊天记录总结、文档总结和对话、联网搜索、智能体等内置插件
--  ✅   **Agent能力：** 支持访问浏览器、终端、文件系统、搜索引擎等各类工具，并可通过多智能体协作完成复杂任务，基于 [AgentMesh](https://github.com/MinimalFuture/AgentMesh) 框架实现
--  ✅   **知识库：** 通过上传知识库自定义专属机器人，可作为数字分身、智能客服、企业智能体使用，基于 [LinkAI](https://link-ai.tech) 实现
+-  ✅  **复杂任务规划**：能够理解复杂任务并自主规划执行，持续思考和调用工具直到完成目标，支持通过工具操作访问文件、终端、浏览器、定时任务等系统资源
+-  ✅  **长期记忆：** 自动将对话记忆持久化至本地文件和数据库中，包括全局记忆和天级记忆，支持关键词及向量检索
+-  ✅  **技能系统：** 内置Skills创造器、网络搜索、图像识别等多种技能，支持通过自然语言对话完成Skills开发
+-  ✅  **多模态消息：** 支持对文本、图片、语音、文件等多类型消息进行解析、处理、生成、发送等操作
+-  ✅  **多模型接入：** 支持OpenAI, Claude, Gemini, DeepSeek, MiniMax、GLM、通义千问, Kimi等国内外主流模型厂商
+-  ✅  **多端部署：** 支持运行在本地计算机或服务器，可集成到网页、飞书、钉钉、微信公众号、企业微信应用中使用
+-  ✅  **知识库：** 集成企业知识库能力，让Agent成为专属数字员工，基于[LinkAI](https://link-ai.tech)平台实现
 
 ## 声明
 
@@ -58,7 +58,7 @@ DEMO视频(对话模式)：https://cdn.link-ai.tech/doc/cow_demo.mp4
 
 # 🏷 更新日志
 
->**2025.05.23：** [1.7.6版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.7.6) 优化web网页channel、新增 [AgentMesh多智能体插件](https://github.com/zhayujie/chatgpt-on-wechat/blob/master/plugins/agent/README.md)、百度语音合成优化、企微应用`access_token`获取优化、支持`claude-4-sonnet`和`claude-4-opus`模型
+>**2025.05.23：** [1.7.6版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.7.6) 优化web网页channel、新增 [AgentMesh](https://github.com/zhayujie/chatgpt-on-wechat/blob/master/plugins/agent/README.md)多智能体插件、百度语音合成优化、企微应用`access_token`获取优化、支持`claude-4-sonnet`和`claude-4-opus`模型
 
 >**2025.04.11：** [1.7.5版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.7.5) 新增支持 [wechatferry](https://github.com/zhayujie/chatgpt-on-wechat/pull/2562) 协议、新增 deepseek 模型、新增支持腾讯云语音能力、新增支持 ModelScope 和 Gitee-AI API接口
 
@@ -74,15 +74,14 @@ DEMO视频(对话模式)：https://cdn.link-ai.tech/doc/cow_demo.mp4
 
 项目提供了一键安装、启动、管理程序的脚本，可以选择使用脚本快速运行，也可以根据详细指引一步步安装运行。
 
-- 详细文档：[快速开始](https://docs.link-ai.tech/cow/quick-start)
-
-- 一键安装脚本说明：[一键安装脚本](https://github.com/zhayujie/chatgpt-on-wechat/wiki/%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E5%90%AF%E5%8A%A8%E8%84%9A%E6%9C%AC)
+在终端执行以下命令：
 
 ```bash
-bash <(curl -sS https://cdn.link-ai.tech/code/cow/install.sh)
+bash <(curl -sS https://cdn.link-ai.tech/code/cow/run.sh)
 ```
 
-- 项目管理脚本说明：[项目管理脚本](https://github.com/zhayujie/chatgpt-on-wechat/wiki/%E9%A1%B9%E7%9B%AE%E7%AE%A1%E7%90%86%E8%84%9A%E6%9C%AC)
+- 脚本说明文档：[一键安装脚本](https://github.com/zhayujie/chatgpt-on-wechat/wiki/CowAgentQuickStart)
+
 
 ## 一、准备
 
@@ -134,7 +133,7 @@ pip3 install -r requirements-optional.txt
 # config.json 文件内容示例
 {
   "channel_type": "web",                                      # 接入渠道类型，默认为web，支持修改为:terminal, wechatmp, wechatmp_service, wechatcom_app, dingtalk, feishu
-  "model": "gpt-4o-mini",                                     # 模型名称, 支持 gpt-4o-mini, gpt-4.1, gpt-4o, deepseek-reasoner, wenxin, xunfei, glm-4, claude-3-7-sonnet-latest, moonshot等
+  "model": "gpt-4.1-mini",                                     # 模型名称, 支持 gpt-4o-mini, gpt-4.1, gpt-4o, deepseek-reasoner, wenxin, xunfei, glm-4, claude-3-7-sonnet-latest, moonshot等
   "open_ai_api_key": "YOUR API KEY",                          # 如果使用openAI模型则填入上面创建的 OpenAI API KEY
   "open_ai_api_base": "https://api.openai.com/v1",            # OpenAI接口代理地址，修改此项可接入第三方模型接口
   "proxy": "",                                                # 代理客户端的ip和端口，国内环境开启代理的需要填写该项，如 "127.0.0.1:7890"
