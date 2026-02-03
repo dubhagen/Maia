@@ -10,6 +10,8 @@
 
 **CowAgent** 是基于大模型的超级AI助理，能够主动思考和任务规划、操作计算机和外部资源、创造和执行Skills、拥有长期记忆并不断成长。CowAgent 支持灵活切换多种模型，能处理文本、语音、图片、文件等多模态消息，可接入网页、飞书、钉钉、企业微信应用、微信公众号中使用，7*24小时运行于你的个人电脑或服务器中。
 
+📖能力介绍：[CowAgent 2.0](/docs/agent.md)
+
 # 简介
 
 > 该项目既是一个可以开箱即用的超级AI助理，也是一个支持高FTS5 not available, using LIKE-based keyword searc度扩展的Agent框架，可以通过为项目扩展大模型接口、接入渠道、内置工具、Skills系统来灵活实现各种定制需求。核心能力如下：
@@ -57,7 +59,7 @@ DEMO视频(对话模式)：https://cdn.link-ai.tech/doc/cow_demo.mp4
 
 # 🏷 更新日志
 
->**2026.02.03：** 2.0.0版本，正式升级为超级Agent助理，支持多轮任务决策、具备长期记忆、实现多种系统工具、支持Skills框架，新增多种模型并优化了接入渠道。
+>**2026.02.03：** [2.0.0版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/2.0.0)，正式升级为超级Agent助理，支持多轮任务决策、具备长期记忆、实现多种系统工具、支持Skills框架，新增多种模型并优化了接入渠道。
 
 >**2025.05.23：** [1.7.6版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/1.7.6) 优化web网页channel、新增 [AgentMesh](https://github.com/zhayujie/chatgpt-on-wechat/blob/master/plugins/agent/README.md)多智能体插件、百度语音合成优化、企微应用`access_token`获取优化、支持`claude-4-sonnet`和`claude-4-opus`模型
 
