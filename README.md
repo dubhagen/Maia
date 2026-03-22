@@ -9,7 +9,7 @@
   [中文] | [<a href="docs/en/README.md">English</a>] | [<a href="docs/ja/README.md">日本語</a>]
 </p>
 
-**CowAgent** 是基于大模型的超级AI助理，能够主动思考和任务规划、操作计算机和外部资源、创造和执行Skills、拥有长期记忆并不断成长。CowAgent 支持灵活切换多种模型，能处理文本、语音、图片、文件等多模态消息，可接入网页、飞书、钉钉、企微智能机器人、QQ、企微自建应用、微信公众号中使用，7*24小时运行于你的个人电脑或服务器中。
+**CowAgent** 是基于大模型的超级AI助理，能够主动思考和任务规划、操作计算机和外部资源、创造和执行Skills、拥有长期记忆并不断成长。CowAgent 支持灵活切换多种模型，能处理文本、语音、图片、文件等多模态消息，可接入微信、飞书、钉钉、企微智能机器人、QQ、企微自建应用、微信公众号、网页中使用，7*24小时运行于你的个人电脑或服务器中。
 
 <p align="center">
   <a href="https://cowagent.ai/">🌐 官网</a> &nbsp;·&nbsp;
@@ -29,7 +29,7 @@
 -  ✅  **技能系统：** 实现了Skills创建和运行的引擎，内置多种技能，并支持通过自然语言对话完成自定义Skills开发
 -  ✅  **多模态消息：** 支持对文本、图片、语音、文件等多类型消息进行解析、处理、生成、发送等操作
 -  ✅  **多模型接入：** 支持OpenAI, Claude, Gemini, DeepSeek, MiniMax、GLM、Qwen、Kimi、Doubao等国内外主流模型厂商
--  ✅  **多端部署：** 支持运行在本地计算机或服务器，可集成到飞书、钉钉、企业微信、QQ、微信公众号、网页中使用
+-  ✅  **多端部署：** 支持运行在本地计算机或服务器，可集成到微信、飞书、钉钉、企业微信、QQ、微信公众号、网页中使用
 
 ## 声明
 
@@ -149,7 +149,7 @@ pip3 install -r requirements-optional.txt
 ```bash
 # config.json 文件内容示例
 {
-  "channel_type": "web",                                      # 接入渠道类型，默认为web，支持修改为:feishu,dingtalk,wecom_bot,qq,wechatcom_app,wechatmp_service,wechatmp,terminal
+  "channel_type": "weixin",                                   # 接入渠道类型，默认为weixin, 支持修改为 feishu,dingtalk,wecom_bot,qq,wechatcom_app,wechatmp_service,wechatmp,terminal
   "model": "MiniMax-M2.7",                                    # 模型名称
   "minimax_api_key": "",                                      # MiniMax API Key
   "zhipu_ai_api_key": "",                                     # 智谱GLM API Key
@@ -630,7 +630,24 @@ Coding Plan 是各厂商推出的编程包月套餐，所有厂商均可通过 O
 支持同时可接入多个通道，配置时可通过逗号进行分割，例如 `"channel_type": "feishu,dingtalk"`。
 
 <details>
-<summary>1. Web</summary>
+<summary>1. Weixin - 微信</summary>
+
+接入个人微信，扫码登录即可使用，无需公网 IP，支持文本、图片、语音、文件等消息收发。
+
+```json
+{
+    "channel_type": "weixin"
+}
+```
+
+启动后终端会显示二维码，使用微信扫码授权即可，也可以在 Web 控制台的「通道」页面中扫码接入。登录凭证会自动保存至 `~/.weixin_cow_credentials.json`，下次启动无需重新扫码，如需重新登录删除该文件后重启即可。
+
+详细步骤和参数说明参考 [微信接入](https://docs.cowagent.ai/channels/weixin)
+
+</details>
+
+<details>
+<summary>2. Web</summary>
 
 项目启动后会默认运行Web控制台，配置如下：
 
@@ -647,7 +664,7 @@ Coding Plan 是各厂商推出的编程包月套餐，所有厂商均可通过 O
 </details>
 
 <details>
-<summary>2. Feishu - 飞书</summary>
+<summary>3. Feishu - 飞书</summary>
 
 飞书支持两种事件接收模式：WebSocket 长连接（推荐）和 Webhook。
 
@@ -683,7 +700,7 @@ Coding Plan 是各厂商推出的编程包月套餐，所有厂商均可通过 O
 </details>
 
 <details>
-<summary>3. DingTalk - 钉钉</summary>
+<summary>4. DingTalk - 钉钉</summary>
 
 钉钉需要在开放平台创建智能机器人应用，将以下配置填入 `config.json`：
 
@@ -698,7 +715,7 @@ Coding Plan 是各厂商推出的编程包月套餐，所有厂商均可通过 O
 </details>
 
 <details>
-<summary>4. WeCom Bot - 企微智能机器人</summary>
+<summary>5. WeCom Bot - 企微智能机器人</summary>
 
 企微智能机器人使用 WebSocket 长连接模式，无需公网 IP 和域名，配置简单：
 
@@ -714,7 +731,7 @@ Coding Plan 是各厂商推出的编程包月套餐，所有厂商均可通过 O
 </details>
 
 <details>
-<summary>5. QQ - QQ 机器人</summary>
+<summary>6. QQ - QQ 机器人</summary>
 
 QQ 机器人使用 WebSocket 长连接模式，无需公网 IP 和域名，支持 QQ 单聊、群聊和频道消息：
 
@@ -730,7 +747,7 @@ QQ 机器人使用 WebSocket 长连接模式，无需公网 IP 和域名，支�
 </details>
 
 <details>
-<summary>6. WeCom App - 企业微信应用</summary>
+<summary>7. WeCom App - 企业微信应用</summary>
 
 企业微信自建应用接入需在后台创建应用并启用消息回调，配置示例：
 
@@ -750,7 +767,7 @@ QQ 机器人使用 WebSocket 长连接模式，无需公网 IP 和域名，支�
 </details>
 
 <details>
-<summary>7. WeChat MP - 微信公众号</summary>
+<summary>8. WeChat MP - 微信公众号</summary>
 
 本项目支持订阅号和服务号两种公众号，通过服务号（`wechatmp_service`）体验更佳。
 
@@ -785,7 +802,7 @@ QQ 机器人使用 WebSocket 长连接模式，无需公网 IP 和域名，支�
 </details>
 
 <details>
-<summary>8. Terminal - 终端</summary>
+<summary>9. Terminal - 终端</summary>
 
 修改 `config.json` 中的 `channel_type` 字段：
 
