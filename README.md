@@ -15,6 +15,7 @@
   <a href="https://cowagent.ai/">🌐 官网</a> &nbsp;·&nbsp;
   <a href="https://docs.cowagent.ai/">📖 文档中心</a> &nbsp;·&nbsp;
   <a href="https://docs.cowagent.ai/guide/quick-start">🚀 快速开始</a> &nbsp;·&nbsp;
+  <a href="https://skills.cowagent.ai/">🧩 技能广场</a> &nbsp;·&nbsp;
   <a href="https://link-ai.tech/cowagent/create">☁️ 在线体验</a>
 </p>
 
@@ -25,7 +26,7 @@
 
 -  ✅  **自主任务规划**：能够理解复杂任务并自主规划执行，持续思考和调用工具直到完成目标
 -  ✅  **长期记忆：** 自动将对话记忆持久化至本地文件和数据库中，包括核心记忆和日级记忆，支持关键词及向量检索
--  ✅  **技能系统：** Skills 安装和运行的引擎，支持从 Skill Hub、GitHub 等安装技能，或通过对话创造 Skills
+-  ✅  **技能系统：** Skills 安装和运行的引擎，支持从 [Skill Hub](https://skills.cowagent.ai/)、GitHub 等一键安装技能，或通过对话创造 Skills
 -  ✅  **工具系统：** 内置文件读写、终端执行、浏览器操作、定时任务等工具，Agent 自主调用以完成复杂任务
 -  ✅  **CLI系统：** 提供终端命令和对话命令，支持进程管理、技能安装、配置修改等操作
 -  ✅  **多模态消息：** 支持对文本、图片、语音、文件等多类型消息进行解析、处理、生成、发送等操作
@@ -69,6 +70,8 @@
 <br/>
 
 # 🏷 更新日志
+
+>**2026.04.01：** [2.0.5版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/2.0.5)，Cow CLI 命令系统、Skill Hub 开源、浏览器工具、企微扫码创建、多项优化和修复。
 
 >**2026.03.22：** [2.0.4版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/2.0.4)，新增个人微信通道（微信扫码即用）、新增 MiniMax-M2.7 和 GLM-5-Turbo 模型、run.sh 脚本重构、日文文档及多项修复。
 
@@ -868,8 +871,10 @@ QQ 机器人使用 WebSocket 长连接模式，无需公网 IP 和域名，支�
 
 # 🔗 相关项目
 
+- [Cow Skill Hub](https://github.com/zhayujie/cow-skill-hub)：开源的 AI Agent 技能广场，浏览、搜索、安装和发布技能，支持 CowAgent、OpenClaw、Claude Code 等多种 Agent。
 - [bot-on-anything](https://github.com/zhayujie/bot-on-anything)：轻量和高可扩展的大模型应用框架，支持接入 Slack, Telegram, Discord, Gmail 等海外平台，可作为本项目的补充使用。
-- [AgentMesh](https://github.com/MinimalFuture/AgentMesh)：开源的多智能体( Multi-Agent )框架，可以通过多智能体团队的协同来解决复杂问题。本项目基于该框架实现了[Agent 插件](https://github.com/zhayujie/chatgpt-on-wechat/blob/master/plugins/agent/README.md)，可访问终端、浏览器、文件系统、搜索引擎 等各类工具，并实现了多智能体协同。
+- [AgentMesh](https://github.com/MinimalFuture/AgentMesh)：开源的多智能体( Multi-Agent )框架，可以通过多智能体团队的协同来解决复杂问题。
+
 
 
 
@@ -881,7 +886,7 @@ FAQs： <https://github.com/zhayujie/chatgpt-on-wechat/wiki/FAQs>
 
 # 🛠️ 开发
 
-欢迎接入更多应用通道，参考 [飞书通道](https://github.com/zhayujie/chatgpt-on-wechat/blob/master/channel/feishu/feishu_channel.py) 新增自定义通道，实现接收和发送消息逻辑即可完成接入。同时欢迎贡献新的 Skills，参考 [技能创建文档](https://docs.cowagent.ai/skills/create)。
+欢迎接入更多应用通道，参考 [飞书通道](https://github.com/zhayujie/chatgpt-on-wechat/blob/master/channel/feishu/feishu_channel.py) 新增自定义通道，实现接收和发送消息逻辑即可完成接入。同时欢迎贡献新的 Skills，向 [Skill Hub](https://skills.cowagent.ai/submit) 提交技能。
 
 # ✉ 联系
 
