@@ -1,11 +1,11 @@
 © 2026 dubhagen
 
-<p align="center"><img src= "https://github.com/user-attachments/assets/eca9a9ec-8534-4615-9e0f-96c5ac1d10a3" alt="Chatgpt-on-Wechat" width="550" /></p>
+<p align="center"><img src= "https://github.com/user-attachments/assets/eca9a9ec-8534-4615-9e0f-96c5ac1d10a3" alt="CowAgent" width="550" /></p>
 
 <p align="center">
-  <a href="https://github.com/zhayujie/chatgpt-on-wechat/releases/latest"><img src="https://img.shields.io/github/v/release/zhayujie/chatgpt-on-wechat" alt="Latest release"></a>
-  <a href="https://github.com/zhayujie/chatgpt-on-wechat/blob/master/LICENSE"><img src="https://img.shields.io/github/license/zhayujie/chatgpt-on-wechat" alt="License: MIT"></a>
-  <a href="https://github.com/zhayujie/chatgpt-on-wechat"><img src="https://img.shields.io/github/stars/zhayujie/chatgpt-on-wechat?style=flat-square" alt="Stars"></a> <br/>
+  <a href="https://github.com/zhayujie/CowAgent/releases/latest"><img src="https://img.shields.io/github/v/release/zhayujie/CowAgent" alt="Latest release"></a>
+  <a href="https://github.com/zhayujie/CowAgent/blob/master/LICENSE"><img src="https://img.shields.io/github/license/zhayujie/CowAgent" alt="License: MIT"></a>
+  <a href="https://github.com/zhayujie/CowAgent"><img src="https://img.shields.io/github/stars/zhayujie/CowAgent?style=flat-square" alt="Stars"></a> <br/>
   [中文] | [<a href="docs/en/README.md">English</a>] | [<a href="docs/ja/README.md">日本語</a>]
 </p>
 
@@ -72,17 +72,17 @@
 
 # 🏷 更新日志
 
->**2026.04.01：** [2.0.5版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/2.0.5)，Cow CLI 命令系统、Skill Hub 开源、浏览器工具、企微扫码创建、多项优化和修复。
+>**2026.04.01：** [2.0.5版本](https://github.com/zhayujie/CowAgent/releases/tag/2.0.5)，Cow CLI 命令系统、Skill Hub 开源、浏览器工具、企微扫码创建、多项优化和修复。
 
->**2026.03.22：** [2.0.4版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/2.0.4)，新增个人微信通道（微信扫码即用）、新增 MiniMax-M2.7 和 GLM-5-Turbo 模型、run.sh 脚本重构、日文文档及多项修复。
+>**2026.03.22：** [2.0.4版本](https://github.com/zhayujie/CowAgent/releases/tag/2.0.4)，新增个人微信通道（微信扫码即用）、新增 MiniMax-M2.7 和 GLM-5-Turbo 模型、run.sh 脚本重构、日文文档及多项修复。
 
->**2026.03.18：** [2.0.3版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/2.0.3)，新增企微智能机器人和 QQ 通道、支持 Coding Plan、新增多个模型、Web 端文件处理、记忆系统升级。
+>**2026.03.18：** [2.0.3版本](https://github.com/zhayujie/CowAgent/releases/tag/2.0.3)，新增企微智能机器人和 QQ 通道、支持 Coding Plan、新增多个模型、Web 端文件处理、记忆系统升级。
 
->**2026.02.27：** [2.0.2版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/2.0.2)，Web 控制台全面升级（流式对话、模型/技能/记忆/通道/定时任务/日志管理）、支持多通道同时运行、会话持久化存储、新增多个模型。
+>**2026.02.27：** [2.0.2版本](https://github.com/zhayujie/CowAgent/releases/tag/2.0.2)，Web 控制台全面升级（流式对话、模型/技能/记忆/通道/定时任务/日志管理）、支持多通道同时运行、会话持久化存储、新增多个模型。
 
->**2026.02.13：** [2.0.1版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/2.0.1)，内置 Web Search 工具、智能上下文裁剪策略、运行时信息动态更新、Windows 兼容性适配，修复定时任务记忆丢失、飞书连接等多项问题。
+>**2026.02.13：** [2.0.1版本](https://github.com/zhayujie/CowAgent/releases/tag/2.0.1)，内置 Web Search 工具、智能上下文裁剪策略、运行时信息动态更新、Windows 兼容性适配，修复定时任务记忆丢失、飞书连接等多项问题。
 
->**2026.02.03：** [2.0.0版本](https://github.com/zhayujie/chatgpt-on-wechat/releases/tag/2.0.0)，正式升级为超级 Agent 助理，支持多轮任务决策、具备长期记忆、实现多种系统工具、支持 Skills 框架，新增多种模型并优化了接入渠道。
+>**2026.02.03：** [2.0.0版本](https://github.com/zhayujie/CowAgent/releases/tag/2.0.0)，正式升级为超级 Agent 助理，支持多轮任务决策、具备长期记忆、实现多种系统工具、支持 Skills 框架，新增多种模型并优化了接入渠道。
 
 更多更新历史请查看: [更新日志](https://docs.cowagent.ai/releases)
 
@@ -126,11 +126,11 @@ irm https://cdn.link-ai.tech/code/cow/run.ps1 | iex
 **(1) 克隆项目代码：**
 
 ```bash
-git clone https://github.com/zhayujie/chatgpt-on-wechat
-cd chatgpt-on-wechat/
+git clone https://github.com/zhayujie/CowAgent
+cd CowAgent/
 ```
 
-若遇到网络问题可使用国内仓库地址：https://gitee.com/zhayujie/chatgpt-on-wechat
+若遇到网络问题可使用国内仓库地址：https://gitee.com/zhayujie/CowAgent
 
 **(2) 安装核心依赖 (必选)：**
 
@@ -222,7 +222,7 @@ cow install-browser
 <details>
 <summary>2. 其他配置</summary>
 
-+ `model`: 模型名称，Agent 模式下推荐使用 `MiniMax-M2.7`、`glm-5-turbo`、`kimi-k2.5`、`qwen3.6-plus`、`claude-sonnet-4-6`、`gemini-3.1-pro-preview`，全部模型名称参考[common/const.py](https://github.com/zhayujie/chatgpt-on-wechat/blob/master/common/const.py)文件
++ `model`: 模型名称，Agent 模式下推荐使用 `MiniMax-M2.7`、`glm-5-turbo`、`kimi-k2.5`、`qwen3.6-plus`、`claude-sonnet-4-6`、`gemini-3.1-pro-preview`，全部模型名称参考[common/const.py](https://github.com/zhayujie/CowAgent/blob/master/common/const.py)文件
 + `character_desc`：普通对话模式下的机器人系统提示词。在 Agent 模式下该配置不生效，由工作空间中的文件内容构成。
 + `subscribe_msg`：订阅消息，公众号和企业微信 channel 中请填写，当被订阅时会自动回复， 可使用特殊占位符。目前支持的占位符有{trigger_prefix}，在程序中它会自动替换成 bot 的触发词。
 </details>
@@ -234,7 +234,7 @@ cow install-browser
 + `linkai_api_key`: LinkAI Api Key，可在 [控制台](https://link-ai.tech/console/interface) 创建
 </details>
 
-注：全部配置项说明可在 [`config.py`](https://github.com/zhayujie/chatgpt-on-wechat/blob/master/config.py) 文件中查看。
+注：全部配置项说明可在 [`config.py`](https://github.com/zhayujie/CowAgent/blob/master/config.py) 文件中查看。
 
 ## 三、运行
 
@@ -882,18 +882,28 @@ QQ 机器人使用 WebSocket 长连接模式，无需公网 IP 和域名，支�
 
 # 🔎 常见问题
 
-FAQs： <https://github.com/zhayujie/chatgpt-on-wechat/wiki/FAQs>
+FAQs： <https://github.com/zhayujie/CowAgent/wiki/FAQs>
 
 或直接在线咨询 [项目小助手](https://link-ai.tech/app/Kv2fXJcH)  (知识库持续完善中，回复供参考)
 
 # 🛠️ 开发
 
-欢迎接入更多应用通道，参考 [飞书通道](https://github.com/zhayujie/chatgpt-on-wechat/blob/master/channel/feishu/feishu_channel.py) 新增自定义通道，实现接收和发送消息逻辑即可完成接入。同时欢迎贡献新的 Skills，向 [Skill Hub](https://skills.cowagent.ai/submit) 提交技能。
+欢迎接入更多应用通道，参考 [飞书通道](https://github.com/zhayujie/CowAgent/blob/master/channel/feishu/feishu_channel.py) 新增自定义通道，实现接收和发送消息逻辑即可完成接入。同时欢迎贡献新的 Skills，向 [Skill Hub](https://skills.cowagent.ai/submit) 提交技能。
 
 # ✉ 联系
 
-欢迎提交PR、Issues进行反馈，以及通过 🌟Star 支持并关注项目更新。项目运行遇到问题可以查看 [常见问题列表](https://github.com/zhayujie/chatgpt-on-wechat/wiki/FAQs) ，以及前往 [Issues](https://github.com/zhayujie/chatgpt-on-wechat/issues) 中搜索。个人开发者可加入开源交流群参与更多讨论，企业用户可联系[产品客服](https://cdn.link-ai.tech/portal/linkai-customer-service.png)咨询。
+欢迎提交PR、Issues进行反馈，以及通过 🌟Star 支持并关注项目更新。项目运行遇到问题可以查看 [常见问题列表](https://github.com/zhayujie/CowAgent/wiki/FAQs) ，以及前往 [Issues](https://github.com/zhayujie/CowAgent/issues) 中搜索。个人开发者可加入开源交流群参与更多讨论，企业用户可联系[产品客服](https://cdn.link-ai.tech/portal/linkai-customer-service.png)咨询。
 
 # 🌟 贡献者
 
-![cow contributors](https://contrib.rocks/image?repo=zhayujie/chatgpt-on-wechat&max=1000)
+![cow contributors](https://contrib.rocks/image?repo=zhayujie/CowAgent&max=1000)
+
+# 📌 项目更名说明
+
+本项目原名 `chatgpt-on-wechat`（GitHub 原地址：https://github.com/zhayujie/chatgpt-on-wechat），
+于 2026.04.13 正式更名为 **CowAgent**。GitHub 已自动设置重定向，原有链接仍可正常访问。
+
+如需更新本地仓库的远程地址（可选）：
+```bash
+git remote set-url origin https://github.com/zhayujie/CowAgent.git
+```
