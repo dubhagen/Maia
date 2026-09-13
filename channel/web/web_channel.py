@@ -482,6 +482,76 @@ def _build_preview_url(abs_path: str) -> str:
     return f"/preview/{_encode_dir_token(directory)}/{quote(name)}"
 
 
+# Media links the agent embeds in its reply markdown are workspace-relative
+# (e.g. `images/x.png`, saved under the agent workspace by the image/video
+# skills). The browser would resolve those against the console URL and 404,
+# so they only render for the default agent whose workspace happens to match
+# the serve root. Rewriting them to an absolute /api/file URL makes them load
+# for every agent. Only *relative* refs are touched — absolute paths, http(s)
+# URLs, file:// and already-routed /api or /preview links are left untouched,
+# so nothing that worked before (including the default agent) changes.
+_MD_IMAGE_RE = re.compile(r"(!\[[^\]]*\]\()([^)\s]+)(\s*(?:\"[^\"]*\")?\s*\))")
+_HTML_IMG_SRC_RE = re.compile(r"(<img\b[^>]*?\bsrc=[\"'])([^\"']+)([\"'])", re.IGNORECASE)
+
+
+def _is_relative_media_ref(ref: str) -> bool:
+    """True for a workspace-relative media ref that needs absolutizing."""
+    if not ref:
+        return False
+    ref = ref.strip()
+    # Scheme (http, https, data, file, mailto), protocol-relative, site-absolute
+    # (/api/file, /preview), home (~) or Windows drive paths all resolve on their
+    # own — leave them alone.
+    if re.match(r"^[a-zA-Z][\w+.-]*:", ref):
+        return False
+    if ref.startswith(("//", "/", "~")):
+        return False
+    if re.match(r"^[A-Za-z]:[\\/]", ref):
+        return False
+    return True
+
+
+def _rewrite_relative_media(content: str, workspace_root: str) -> str:
+    """Rewrite workspace-relative media refs in markdown/HTML to /api/file URLs.
+
+    ``workspace_root`` is the absolute root the relative refs are anchored to
+    (the agent's workspace, or the open project dir). Refs that escape the root
+    or don't resolve to an existing file are left untouched, so this never turns
+    a harmless relative link into a broken absolute one.
+    """
+    if not content or not workspace_root:
+        return content
+    root_real = os.path.realpath(workspace_root)
+
+    def _to_api_url(ref: str) -> Optional[str]:
+        if not _is_relative_media_ref(ref):
+            return None
+        rel = ref.split("?", 1)[0].split("#", 1)[0]
+        abs_path = os.path.realpath(os.path.join(root_real, rel))
+        # Confine to the workspace root: a ref like `../../etc/passwd` must not
+        # be turned into a servable URL.
+        try:
+            if os.path.commonpath([abs_path, root_real]) != root_real:
+                return None
+        except ValueError:
+            return None
+        if not os.path.isfile(abs_path):
+            return None
+        return f"/api/file?path={quote(abs_path)}"
+
+    def _md_repl(m: re.Match) -> str:
+        url = _to_api_url(m.group(2))
+        return f"{m.group(1)}{url}{m.group(3)}" if url else m.group(0)
+
+    def _img_repl(m: re.Match) -> str:
+        url = _to_api_url(m.group(2))
+        return f"{m.group(1)}{url}{m.group(3)}" if url else m.group(0)
+
+    out = _MD_IMAGE_RE.sub(_md_repl, content)
+    out = _HTML_IMG_SRC_RE.sub(_img_repl, out)
+    return out
+
+
 def _build_artifact_payload(data: dict) -> dict:
     """Turn an agent `artifact` event into an SSE payload for the web clients."""
     file_path = data.get("path", "")
@@ -946,9 +1016,20 @@ class WebChannel(ChatChannel):
                 seqs = self._fetch_latest_pair_seqs(
                     session_id, context.get("agent_id")
                 )
+                # Absolutize workspace-relative media so images/videos the agent
+                # embedded render for non-default agents too. Only affects the
+                # displayed copy; TTS below still reads the original text.
+                display_content = content
+                if reply.type == ReplyType.TEXT and content:
+                    try:
+                        display_content = _rewrite_relative_media(
+                            content, _get_workspace_root(session_id, agent_id)
+                        )
+                    except Exception as e:
+                        logger.debug(f"[WebChannel] media rewrite skipped: {e}")
                 self._publish_sse_event(request_id, {
                     "type": "done",
-                    "content": content,
+                    "content": display_content,
                     "request_id": request_id,
                     "timestamp": time.time(),
                     "user_seq": seqs.get("user_seq"),
@@ -992,6 +1073,13 @@ class WebChannel(ChatChannel):
                 if reply.type == ReplyType.TEXT and context.get("on_event") is not None:
                     logger.debug(f"Polling skipped SSE text reply for session {session_id}")
                     return
+                if reply.type == ReplyType.TEXT and content:
+                    try:
+                        content = _rewrite_relative_media(
+                            content, _get_workspace_root(session_id, agent_id)
+                        )
+                    except Exception as e:
+                        logger.debug(f"[WebChannel] media rewrite skipped: {e}")
                 response_data = {
                     "type": str(reply.type),
                     "content": content,
@@ -8748,18 +8836,33 @@ class HistoryHandler:
             if not session_id:
                 return json.dumps({"status": "error", "message": "session_id required"})
 
+            agent_id = _request_agent_id(params)
             from agent.memory import get_conversation_store
             store = get_conversation_store(
-                _get_workspace_root(agent_id=_request_agent_id(params))
+                _get_workspace_root(agent_id=agent_id)
             )
             result = store.load_history_page(
                 session_id=session_id,
                 page=int(params.page),
                 page_size=int(params.page_size),
             )
+            # Same workspace-relative media rewrite the live SSE path applies,
+            # so images/videos survive a page reload for non-default agents.
+            history_root = None
+            try:
+                history_root = _get_workspace_root(session_id, agent_id)
+            except Exception as e:
+                logger.debug(f"[WebChannel] history workspace root skipped: {e}")
             for msg in result.get("messages") or []:
                 if msg.get("role") != "assistant":
                     continue
+                if history_root and isinstance(msg.get("content"), str):
+                    try:
+                        msg["content"] = _rewrite_relative_media(
+                            msg["content"], history_root
+                        )
+                    except Exception as e:
+                        logger.debug(f"[WebChannel] history media rewrite skipped: {e}")
                 _add_subagent_displays(msg.get("steps"))
                 _add_delegate_displays(msg.get("steps"))
                 artifacts = _artifacts_from_steps(msg.get("steps"), session_id)

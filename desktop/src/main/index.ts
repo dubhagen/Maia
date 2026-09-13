@@ -1,4 +1,4 @@
-import { app, BrowserWindow, session, shell, ipcMain, dialog, nativeImage, Notification, systemPreferences, crashReporter } from 'electron'
+import { app, BrowserWindow, session, shell, ipcMain, dialog, nativeImage, Notification, systemPreferences, crashReporter, Menu, clipboard, net } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import os from 'os'
@@ -221,6 +221,96 @@ function saveWindowState() {
   }
 }
 
+function isZhLocale(): boolean {
+  try {
+    return /^zh/i.test(app.getLocale() || '')
+  } catch {
+    return false
+  }
+}
+
+// Read an image's bytes regardless of scheme: http(s) backend URLs go through
+// Electron's `net` (honours the app session, so the auth token in the query is
+// enough), while data: URLs are decoded inline.
+async function fetchImageBuffer(srcURL: string): Promise<Uint8Array> {
+  if (srcURL.startsWith('data:')) {
+    const comma = srcURL.indexOf(',')
+    const meta = srcURL.slice(5, comma)
+    const data = srcURL.slice(comma + 1)
+    const buf = meta.includes('base64')
+      ? Buffer.from(decodeURIComponent(data.replace(/\s/g, '')), 'base64')
+      : Buffer.from(decodeURIComponent(data))
+    return new Uint8Array(buf)
+  }
+  // net.fetch lands in Electron 28; the Win7 legacy build (Electron 22) lacks
+  // it, so fall back to a raw http(s) request there.
+  if (typeof net?.fetch === 'function') {
+    const res = await net.fetch(srcURL)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return new Uint8Array(await res.arrayBuffer())
+  }
+  return await new Promise<Uint8Array>((resolve, reject) => {
+    const client = srcURL.startsWith('https:') ? require('https') : http
+    client
+      .get(srcURL, (res: http.IncomingMessage) => {
+        if (!res.statusCode || res.statusCode >= 400) {
+          reject(new Error(`HTTP ${res.statusCode}`))
+          res.resume()
+          return
+        }
+        const chunks: Buffer[] = []
+        res.on('data', (c: Buffer) => chunks.push(c))
+        res.on('end', () => resolve(new Uint8Array(Buffer.concat(chunks))))
+        res.on('error', reject)
+      })
+      .on('error', reject)
+  })
+}
+
+// Pick a sensible download filename: the `path=` query the backend file
+// endpoint uses names the real file, otherwise fall back to the URL tail.
+function imageFileName(srcURL: string): string {
+  try {
+    const u = new URL(srcURL)
+    const p = u.searchParams.get('path')
+    const raw = p ? p.split(/[\\/]/).pop() : u.pathname.split('/').pop()
+    const name = (raw || '').split('?')[0]
+    if (name && /\.[a-z0-9]+$/i.test(name)) return name
+  } catch {
+    /* not a parseable URL (e.g. data:) */
+  }
+  return `image-${Date.now()}.png`
+}
+
+async function saveImageFromUrl(srcURL: string): Promise<void> {
+  try {
+    const buf = await fetchImageBuffer(srcURL)
+    const opts = { defaultPath: path.join(app.getPath('downloads'), imageFileName(srcURL)) }
+    const result = mainWindow
+      ? await dialog.showSaveDialog(mainWindow, opts)
+      : await dialog.showSaveDialog(opts)
+    if (result.canceled || !result.filePath) return
+    fs.writeFileSync(result.filePath, buf)
+  } catch (err) {
+    console.error('[Electron] Save image failed:', err)
+    dialog.showErrorBox(
+      isZhLocale() ? '保存失败' : 'Save failed',
+      isZhLocale() ? '无法保存该图片。' : 'Could not save the image.'
+    )
+  }
+}
+
+async function copyImageFromUrl(srcURL: string): Promise<void> {
+  try {
+    const buf = await fetchImageBuffer(srcURL)
+    const img = nativeImage.createFromBuffer(Buffer.from(buf))
+    if (img.isEmpty()) throw new Error('decode failed')
+    clipboard.writeImage(img)
+  } catch (err) {
+    console.error('[Electron] Copy image failed:', err)
+  }
+}
+
 function createWindow() {
   const state = loadWindowState()
 
@@ -311,6 +401,27 @@ function createWindow() {
       console.warn(`[Electron] Blocked navigation to dropped file: ${url}`)
       e.preventDefault()
     }
+  })
+
+  // Native right-click menu for images. The renderer runs from file:// (or the
+  // dev server), so Chromium's built-in "Save image as…" resolves the src
+  // against the wrong origin and does nothing. Provide our own Save / Copy that
+  // fetch the bytes ourselves — this is what makes chat images (inline and in
+  // the lightbox) downloadable on desktop, matching the browser console.
+  mainWindow.webContents.on('context-menu', (_e, params) => {
+    if (params.mediaType !== 'image' || !params.srcURL) return
+    const zh = isZhLocale()
+    const menu = Menu.buildFromTemplate([
+      {
+        label: zh ? '图片另存为…' : 'Save Image As…',
+        click: () => void saveImageFromUrl(params.srcURL),
+      },
+      {
+        label: zh ? '复制图片' : 'Copy Image',
+        click: () => void copyImageFromUrl(params.srcURL),
+      },
+    ])
+    menu.popup({ window: mainWindow ?? undefined })
   })
 
   // Close-to-tray: hide the window instead of destroying it, so the tray's
