@@ -3847,11 +3847,18 @@ button.composer-menu-item.joined:hover { background: #FEF2F2; color: #b91c1c; cu
 button.composer-menu-item.joined:hover .joined-check { display: none; }
 button.composer-menu-item.joined:hover .joined-remove { display: inline; color: #b91c1c; }
 .composer-menu-item.joined.is-owner { cursor: default; }
+/* The owner row never turns into a red "remove" affordance on hover — it is the
+   main Agent and stays put. */
+.composer-menu-item.joined.is-owner:hover { background: transparent; color: inherit; }
 .composer-menu-badge {
     font-size: 10px; font-weight: 500; padding: 1px 7px; border-radius: 999px;
     background: #f1f5f9; color: #64748b;
 }
 .dark .composer-menu-badge { background: rgba(255,255,255,.08); color: #94a3b8; }
+/* The "main Agent" badge is the one standing marker in the roster, so it reads
+   in the brand green rather than the muted grey of an ordinary badge. */
+.composer-menu-badge.owner-badge { background: #4ABE6E; color: #fff; }
+.dark .composer-menu-badge.owner-badge { background: #4ABE6E; color: #fff; }
 .composer-menu-item .agent-avatar { flex-shrink: 0; }
 .composer-menu-sep { height: 1px; margin: 5px 6px; background: #eef2f6; }
 .dark .composer-menu-sep { background: rgba(255, 255, 255, 0.08); }
