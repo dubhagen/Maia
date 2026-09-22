@@ -14,7 +14,7 @@
 
 - Do not modify `docker/Dockerfile.latest`, the default `docker/docker-compose.yml`, or the CI image build.
 - Install `@tencent-qqmail/agently-cli` at exactly `1.0.18`; install Node from the NodeSource `20.x` channel only when the optional overlay is used.
-- Persist `/home/agent/.agently-cli`, `/home/agent/.local/share/agently-cli`, and `/home/agent/.npm-global` through host paths under `./cow-data/agent-mail/`.
+- Persist `/home/agent/.agently-cli`, `/home/agent/.local/share/agently-cli`, and `/home/agent/.npm-global` through host paths under the first Compose file's project directory, `./cow-data/agent-mail/` (which is `docker/cow-data/agent-mail/` in this checkout).
 - Never run `agently-cli auth login` or `npx skills add` automatically; the user performs those commands after the service starts.
 - The wrapper must be idempotent, run the application as the existing `agent` user, and fail before starting CowAgent if dependency installation fails.
 - Do not place tokens, API keys, or generated credentials in the repository.
@@ -55,23 +55,25 @@
         - ./cow-data/agent-mail/config:/home/agent/.agently-cli
         - ./cow-data/agent-mail/share:/home/agent/.local/share/agently-cli
         - ./cow-data/agent-mail/npm-global:/home/agent/.npm-global
-        - ./docker/agent-mail/entrypoint.sh:/docker-entrypoint-init.d/agent-mail-entrypoint.sh:ro
+        - ./agent-mail/entrypoint.sh:/docker-entrypoint-init.d/agent-mail-entrypoint.sh:ro
       entrypoint: ["/bin/bash", "/docker-entrypoint-init.d/agent-mail-entrypoint.sh"]
+      environment:
+        PATH: /home/agent/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   ```
 
   The overlay is used with `docker compose -f docker/docker-compose.yml -f docker/docker-compose.agent-mail.yml up -d` and does not duplicate base environment or ports.
 
 - [ ] **Step 4: Add the idempotent wrapper**
 
-  Implement the wrapper with `set -eu`, `NPM_GLOBAL_PREFIX=/home/agent/.npm-global`, and `AGENTLY_CLI_VERSION=1.0.18`. If `node` or `$NPM_GLOBAL_PREFIX/bin/agently-cli` is absent, install `curl` and `ca-certificates`, run the NodeSource `20.x` setup, install `nodejs`, configure npm's global prefix, and run `npm install --global --prefix "$NPM_GLOBAL_PREFIX" "@tencent-qqmail/agently-cli@${AGENTLY_CLI_VERSION}"`. Export `PATH="$NPM_GLOBAL_PREFIX/bin:$PATH"` before the check and handoff so the `agent` user can run the persisted CLI. Then create the two config directories, chown the three mounted trees to `agent:agent`, and `exec /entrypoint.sh`.
+  Implement the wrapper with `set -euo pipefail`, `NPM_GLOBAL_PREFIX=/home/agent/.npm-global`, and `AGENTLY_CLI_VERSION=1.0.18`. If `node` or `$NPM_GLOBAL_PREFIX/bin/agently-cli` is absent, install `curl` and `ca-certificates`, run the NodeSource `20.x` setup, install `nodejs`, configure npm's global prefix, and run `npm install --global --prefix "$NPM_GLOBAL_PREFIX" "@tencent-qqmail/agently-cli@${AGENTLY_CLI_VERSION}"`. Export `PATH="$NPM_GLOBAL_PREFIX/bin:$PATH"` before the check and handoff so the `agent` user can run the persisted CLI. Then create the two config directories, chown the three mounted trees to `agent:agent`, and `exec /entrypoint.sh`.
 
 - [ ] **Step 5: Document first-run authentication**
 
   Document the overlay command and these explicit, user-run post-start commands:
 
   ```sh
-  docker compose exec -u agent chatgpt-on-wechat agently-cli auth login
-  docker compose exec -u agent chatgpt-on-wechat npx -y skills add https://agent.qq.com --skill -g -y
+  docker compose -f docker/docker-compose.yml -f docker/docker-compose.agent-mail.yml exec -u agent chatgpt-on-wechat agently-cli auth login
+  docker compose -f docker/docker-compose.yml -f docker/docker-compose.agent-mail.yml exec -u agent chatgpt-on-wechat npx -y skills add https://agent.qq.com --skill -g -y
   ```
 
   State that credentials and the npm prefix persist under `./cow-data/agent-mail/`, the default compose path is unchanged, and the overlay is optional.
