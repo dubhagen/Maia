@@ -44,6 +44,16 @@ def test_agent_mail_initializer_installs_a_pinned_cli_without_interactive_setup(
     assert "exec /entrypoint.sh" in wrapper
 
 
+def test_agent_mail_initializer_reinstalls_an_unverified_persistent_cli_version():
+    """An old executable must not bypass the pinned package version check."""
+    wrapper = (ROOT / "docker/agent-mail/entrypoint.sh").read_text()
+
+    assert "has_pinned_agently_cli" in wrapper
+    assert "@tencent-qqmail/agently-cli/package.json" in wrapper
+    assert '"$AGENTLY_CLI_VERSION"' in wrapper
+    assert "if ! has_pinned_agently_cli; then" in wrapper
+
+
 def test_agent_mail_guide_keeps_authentication_as_a_user_run_step():
     """The guide must expose opt-in startup and explicit post-start authentication."""
     guide = (ROOT / "docs/guide/agent-mail.mdx").read_text()
@@ -60,3 +70,10 @@ def test_agent_mail_guide_keeps_authentication_as_a_user_run_step():
     assert "./cow-data/agent-mail/" in guide
     assert "optional" in guide.lower()
     assert "default" in guide.lower()
+
+
+def test_agent_mail_guide_is_listed_in_the_english_installation_navigation():
+    """The new English guide must be discoverable from the established installation pages."""
+    docs_config = (ROOT / "docs/docs.json").read_text()
+
+    assert '"guide/agent-mail"' in docs_config
