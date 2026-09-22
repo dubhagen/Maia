@@ -8,11 +8,11 @@ Start CowAgent with the base compose file and the overlay:
 docker compose -f docker/docker-compose.yml -f docker/docker-compose.agent-mail.yml up -d
 ```
 
-On its first start, the overlay installs the pinned Agent Mail CLI and persists its credentials and npm prefix under `./cow-data/agent-mail/`. After the container is running, authenticate and add the skill as the non-root `agent` user:
+On its first start, the overlay installs the pinned Agent Mail CLI and persists its credentials and npm prefix under `./cow-data/agent-mail/` relative to the first compose file. In this checkout, that is `docker/cow-data/agent-mail/`. After the container is running, authenticate and add the skill as the non-root `agent` user:
 
 ```sh
-docker compose exec -u agent chatgpt-on-wechat agently-cli auth login
-docker compose exec -u agent chatgpt-on-wechat npx -y skills add https://agent.qq.com --skill -g -y
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.agent-mail.yml exec -u agent chatgpt-on-wechat agently-cli auth login
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.agent-mail.yml exec -u agent chatgpt-on-wechat npx -y skills add https://agent.qq.com --skill -g -y
 ```
 
-The `config`, `share`, and `npm-global` directories below `./cow-data/agent-mail/` survive container recreation and image upgrades. Keep these directories private because they contain your Agent Mail credentials.
+The `config`, `share`, and `npm-global` directories below `docker/cow-data/agent-mail/` survive container recreation and image upgrades. Keep these directories private because they contain your Agent Mail credentials.

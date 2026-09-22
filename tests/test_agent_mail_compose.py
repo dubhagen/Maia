@@ -16,8 +16,13 @@ def test_agent_mail_overlay_persists_the_runtime_and_wraps_the_base_entrypoint()
     assert "./cow-data/agent-mail/share:/home/agent/.local/share/agently-cli" in overlay
     assert "./cow-data/agent-mail/npm-global:/home/agent/.npm-global" in overlay
     assert (
-        "./docker/agent-mail/entrypoint.sh:"
+        "./agent-mail/entrypoint.sh:"
         "/docker-entrypoint-init.d/agent-mail-entrypoint.sh:ro" in overlay
+    )
+    assert "./docker/agent-mail/entrypoint.sh" not in overlay
+    assert (
+        "PATH: /home/agent/.npm-global/bin:/usr/local/sbin:/usr/local/bin:"
+        "/usr/sbin:/usr/bin:/sbin:/bin" in overlay
     )
     assert (
         'entrypoint: ["/bin/bash", '
@@ -29,7 +34,7 @@ def test_agent_mail_initializer_installs_a_pinned_cli_without_interactive_setup(
     """A missing runtime must trigger the pinned install, never an interactive login."""
     wrapper = (ROOT / "docker/agent-mail/entrypoint.sh").read_text()
 
-    assert "set -eu" in wrapper
+    assert "set -euo pipefail" in wrapper
     assert "AGENTLY_CLI_VERSION=1.0.18" in wrapper
     assert 'PATH="$NPM_GLOBAL_PREFIX/bin:$PATH"' in wrapper
     assert 'command -v node' in wrapper
@@ -62,12 +67,18 @@ def test_agent_mail_guide_keeps_authentication_as_a_user_run_step():
         "docker compose -f docker/docker-compose.yml "
         "-f docker/docker-compose.agent-mail.yml up -d" in guide
     )
-    assert "docker compose exec -u agent chatgpt-on-wechat agently-cli auth login" in guide
     assert (
-        "docker compose exec -u agent chatgpt-on-wechat "
+        "docker compose -f docker/docker-compose.yml "
+        "-f docker/docker-compose.agent-mail.yml exec -u agent "
+        "chatgpt-on-wechat agently-cli auth login" in guide
+    )
+    assert (
+        "docker compose -f docker/docker-compose.yml "
+        "-f docker/docker-compose.agent-mail.yml exec -u agent chatgpt-on-wechat "
         "npx -y skills add https://agent.qq.com --skill -g -y" in guide
     )
     assert "./cow-data/agent-mail/" in guide
+    assert "docker/cow-data/agent-mail/" in guide
     assert "optional" in guide.lower()
     assert "default" in guide.lower()
 
@@ -77,3 +88,10 @@ def test_agent_mail_guide_is_listed_in_the_english_installation_navigation():
     docs_config = (ROOT / "docs/docs.json").read_text()
 
     assert '"guide/agent-mail"' in docs_config
+
+
+def test_agent_mail_persistent_credentials_are_ignored_by_git():
+    """Generated Agent Mail credentials must not be staged with source changes."""
+    gitignore = (ROOT / ".gitignore").read_text()
+
+    assert "docker/cow-data/agent-mail/" in gitignore

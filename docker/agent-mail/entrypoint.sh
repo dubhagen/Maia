@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -euo pipefail
 
 NPM_GLOBAL_PREFIX=/home/agent/.npm-global
 AGENTLY_CLI_VERSION=1.0.18
