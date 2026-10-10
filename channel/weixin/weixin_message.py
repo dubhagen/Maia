@@ -35,7 +35,6 @@ class WeixinMessage(ChatMessage):
         self.msg_id = str(msg.get("message_id", msg.get("seq", uuid.uuid4().hex[:8])))
         self.create_time = msg.get("create_time_ms", 0)
         self.context_token = msg.get("context_token", "")
-        self._file_download_path = None
         self.is_group = False  # Weixin plugin only supports direct chat
         self.is_at = False
 
@@ -158,7 +157,7 @@ class WeixinMessage(ChatMessage):
 
     def _file_save_path(self, item: dict) -> str:
         """Give each attachment its own path with a bounded display basename."""
-        if self._file_download_path is None:
+        if getattr(self, "_file_download_path", None) is None:
             name = safe_filename(item.get("file_item", {}).get("file_name")) or "file.bin"
             prefix = f"wx_{uuid.uuid4().hex}_"
             # Keep the component within Linux's byte limit, including the prefix.
