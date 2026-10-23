@@ -7,10 +7,12 @@ Login via QR code scan through the ilink bot API.
 
 import glob
 import json
+import mimetypes
 import os
 import threading
 import time
 from typing import Tuple
+from urllib.parse import unquote, urlparse
 
 import requests
 
@@ -47,6 +49,79 @@ _ADOPT_LOCK = threading.Lock()
 # token -> instance of every Weixin channel logged in in this process. Guarded
 # by _ADOPT_LOCK.
 _ACTIVE_LOGINS = {}
+
+# mimetypes lacks Office formats on older Pythons and on Windows depends on
+# the registry, so common types are pinned here.
+_CONTENT_TYPE_EXTS = {
+    "image/jpeg": ".jpg",
+    "image/jpg": ".jpg",
+    "image/png": ".png",
+    "image/gif": ".gif",
+    "image/webp": ".webp",
+    "video/mp4": ".mp4",
+    "audio/mpeg": ".mp3",
+    "audio/mp4": ".m4a",
+    "audio/wav": ".wav",
+    "audio/x-wav": ".wav",
+    "audio/amr": ".amr",
+    "audio/silk": ".silk",
+    "application/pdf": ".pdf",
+    "application/msword": ".doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+    "application/vnd.ms-excel": ".xls",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
+    "application/vnd.ms-powerpoint": ".ppt",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
+    "application/zip": ".zip",
+    "application/x-zip-compressed": ".zip",
+    "application/x-7z-compressed": ".7z",
+    "application/x-rar-compressed": ".rar",
+    "application/vnd.rar": ".rar",
+    "application/gzip": ".gz",
+    "application/x-tar": ".tar",
+    "application/json": ".json",
+    "text/plain": ".txt",
+    "text/markdown": ".md",
+    "text/csv": ".csv",
+    "text/html": ".html",
+}
+
+
+def _valid_ext(ext: str) -> str:
+    ext = (ext or "").lower()
+    if 1 < len(ext) <= 12 and ext[1:].isalnum():
+        return ext
+    return ""
+
+
+def _filename_from_disposition(disposition: str) -> str:
+    """Extract the filename from a Content-Disposition header, if any."""
+    if not disposition:
+        return ""
+    for part in disposition.split(";"):
+        key, _, value = part.strip().partition("=")
+        key = key.strip().lower()
+        value = value.strip().strip('"')
+        if key == "filename*" and value:
+            # RFC 5987: charset'lang'percent-encoded-name
+            return unquote(value.split("'", 2)[-1])
+        if key == "filename" and value:
+            return value
+    return ""
+
+
+def _guess_download_ext(url: str, headers) -> str:
+    """Pick a file extension for a downloaded URL so the saved file keeps its type."""
+    ext = _valid_ext(os.path.splitext(urlparse(url).path)[1])
+    if ext:
+        return ext
+    ext = _valid_ext(os.path.splitext(
+        _filename_from_disposition(headers.get("Content-Disposition", "")))[1])
+    if ext:
+        return ext
+    ct = headers.get("Content-Type", "").split(";")[0].strip().lower()
+    ext = _CONTENT_TYPE_EXTS.get(ct) or _valid_ext(mimetypes.guess_extension(ct) or "")
+    return ext or ".bin"
 
 
 def _console_print(*args, **kwargs):
@@ -887,7 +962,8 @@ class WeixinChannel(ChatChannel):
             if getattr(reply, "file_type", "") == "video":
                 self._send_video(reply.content, receiver, context_token)
             else:
-                self._send_file(reply.content, receiver, context_token)
+                self._send_file(reply.content, receiver, context_token,
+                                file_name=getattr(reply, "file_name", ""))
         elif reply.type in (ReplyType.VIDEO, ReplyType.VIDEO_URL):
             self._send_video(reply.content, receiver, context_token)
         elif reply.type == ReplyType.VOICE:
@@ -996,7 +1072,8 @@ class WeixinChannel(ChatChannel):
             if downloaded:
                 remove_download(local_path)
 
-    def _send_file(self, file_path_or_url: str, receiver: str, context_token: str):
+    def _send_file(self, file_path_or_url: str, receiver: str, context_token: str,
+                   file_name: str = ""):
         local_path, downloaded = self._resolve_media(file_path_or_url)
         if not local_path:
             self._send_text("[File send failed: file not found]", receiver, context_token)
@@ -1008,7 +1085,7 @@ class WeixinChannel(ChatChannel):
                 context_token=context_token,
                 encrypt_query_param=result["encrypt_query_param"],
                 aes_key_b64=result["aes_key_b64"],
-                file_name=os.path.basename(local_path),
+                file_name=file_name or os.path.basename(local_path),
                 file_size=result["raw_size"],
             )
             self._check_send_response(resp, receiver)
@@ -1057,21 +1134,7 @@ class WeixinChannel(ChatChannel):
             try:
                 resp = requests.get(local_path, timeout=60, stream=True)
                 resp.raise_for_status()
-                ct = resp.headers.get("Content-Type", "")
-                ext = ".bin"
-                if "jpeg" in ct or "jpg" in ct:
-                    ext = ".jpg"
-                elif "png" in ct:
-                    ext = ".png"
-                elif "gif" in ct:
-                    ext = ".gif"
-                elif "webp" in ct:
-                    ext = ".webp"
-                elif "mp4" in ct:
-                    ext = ".mp4"
-                elif "pdf" in ct:
-                    ext = ".pdf"
-
+                ext = _guess_download_ext(local_path, resp.headers)
                 tmp_path = state_dir.tmp_file("wx_media", ext)
                 save_response(resp, tmp_path, MAX_FILE_BYTES)
                 return tmp_path
