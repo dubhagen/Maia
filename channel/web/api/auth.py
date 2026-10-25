@@ -57,21 +57,21 @@ class McpOAuthCallbackHandler:
 
         if params.error:
             logger.warning(f"[MCP-OAuth] callback error: {params.error} {params.error_description}")
-            return _page("授权失败", f"{params.error}: {params.error_description or ''}")
+            return _page("Authorization failed", f"{params.error}: {params.error_description or ''}")
 
         if not params.code or not params.state:
-            return _page("参数缺失", "回调缺少 code 或 state 参数。")
+            return _page("Missing parameters", "The callback is missing code or state.")
 
         try:
             from agent.tools.mcp.mcp_oauth import pop_pending
             from agent.tools.mcp.mcp_client import notify_server_authorized
         except Exception as e:
             logger.warning(f"[MCP-OAuth] callback import failed: {e}")
-            return _page("内部错误", "OAuth 模块不可用。")
+            return _page("Internal error", "The OAuth module is unavailable.")
 
         handler = pop_pending(params.state)
         if handler is None:
-            return _page("会话已过期", "授权请求不存在或已过期，请重新触发授权。")
+            return _page("Session expired", "That authorization request is missing or expired. Start it again.")
 
         try:
             ok = handler.finish_authorization(params.code)
@@ -80,13 +80,13 @@ class McpOAuthCallbackHandler:
             ok = False
 
         if not ok:
-            return _page("授权失败", "换取令牌失败，请重试。")
+            return _page("Authorization failed", "Could not exchange the code for a token. Try again.")
 
         notify_server_authorized(handler.server_name)
         logger.info(f"[MCP-OAuth] Server '{handler.server_name}' authorized via web callback")
         return _page(
-            "授权成功",
-            f"MCP 服务 “{handler.server_name}” 已授权，可以返回聊天继续使用了。",
+            "Authorization succeeded",
+            f"MCP server \"{handler.server_name}\" is authorized. You can return to the chat.",
         )
 
 
@@ -115,7 +115,7 @@ class AuthLoginHandler:
             logger.warning("[WebChannel] Invalid login attempt")
             return json.dumps({"status": "error", "message": "Wrong password"})
         token = _create_auth_token()
-        web.setcookie("cow_auth_token", token, expires=_session_expire_seconds(),
+        web.setcookie("maia_auth_token", token, expires=_session_expire_seconds(),
                        path="/", httponly=True, samesite="Lax")
         # Also return the token in the body: the desktop client (file:// origin)
         # can't rely on the cookie and sends it back via an Authorization header.
@@ -125,5 +125,5 @@ class AuthLoginHandler:
 class AuthLogoutHandler:
     def POST(self):
         web.header('Content-Type', 'application/json; charset=utf-8')
-        web.setcookie("cow_auth_token", "", expires=-1, path="/")
+        web.setcookie("maia_auth_token", "", expires=-1, path="/")
         return json.dumps({"status": "success"})

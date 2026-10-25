@@ -8,6 +8,8 @@ second one unable to open a debug port.
 """
 
 import os
+import subprocess
+import time
 
 import pytest
 
@@ -58,6 +60,15 @@ def test_a_zombie_does_not_count_as_alive():
     if pid == 0:
         os._exit(0)
     try:
+        deadline = time.time() + 2
+        while time.time() < deadline:
+            state = subprocess.run(
+                ["ps", "-p", str(pid), "-o", "state="],
+                capture_output=True, text=True, errors="replace", timeout=5,
+            ).stdout.strip()
+            if state.startswith("Z"):
+                break
+            time.sleep(0.01)
         # Not reaped yet, so the pid still exists but the process is gone.
         assert ChromeLauncher._pid_alive(pid) is False
     finally:

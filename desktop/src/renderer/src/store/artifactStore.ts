@@ -11,7 +11,7 @@ import type { ArtifactListItem, ArtifactOrigin, FileKind } from '../types'
 const ART_PAGE_SIZE = 48
 // Matches TITLE_MAX in api/artifacts.py.
 export const ART_TITLE_MAX = 120
-const SCOPE_KEY = 'cow_artifacts_scope'
+const SCOPE_KEY = 'maia_artifacts_scope'
 const NOTICE_MS = 2400
 
 export type KindFilter = '' | 'web' | 'doc' | 'image' | 'media' | 'other'

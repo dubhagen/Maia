@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CowAgent Console</title>
+    <title>Maia Console</title>
     <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
     <!-- Vendored third-party assets (no external CDN dependency).
          See channel/web/static/vendor/README.md for sources & versions. -->
@@ -30,9 +30,9 @@
                 },
                 colors: {
                     primary: {
-                        50: '#EDFDF3', 100: '#D4FAE2', 200: '#ABF4C7', 300: '#74E9A4',
-                        400: '#4ABE6E', 500: '#35A85B', 600: '#228547', 700: '#1C6B3B',
-                        800: '#1A5532', 900: '#16462A',
+                        50: '#F2F5FE', 100: '#E0E8FC', 200: '#C5D4FA', 300: '#9BB6F6',
+                        400: '#6B8EF0', 500: '#4169E1', 600: '#2F52C4', 700: '#243F9A',
+                        800: '#1C3278', 900: '#16285F',
                     }
                 },
                 animation: {
@@ -59,43 +59,25 @@
          This runs synchronously in <head> so the correct class is on <html>
          before any CSS or body rendering occurs. -->
     <script>
-    // Map an arbitrary locale string (zh-CN, en-US, fr ...) to 'zh' / 'zh-Hant' / 'en',
-    // or '' when unrecognized so callers can fall through to the next source.
-    window.__cowNormalizeLang__ = function(raw) {
-        if (!raw) return '';
-        var v = String(raw).trim().toLowerCase().replace('_', '-');
-        if (v === 'auto') return '';
-        // Handle Traditional Chinese variants first (more specific)
-        if (v === 'zh-hant' || v.indexOf('zh-hant-') === 0 || v === 'zh-tw' || v === 'zh-hk') return 'zh-Hant';
-        // Then Simplified Chinese
-        if (v.indexOf('zh') === 0) return 'zh';
-        if (v.indexOf('en') === 0) return 'en';
-        return '';
-    };
-    // Resolve the console language by priority:
-    //   user choice (localStorage) -> backend-detected -> browser -> 'zh'.
-    window.__cowResolveLang__ = function() {
-        return window.__cowNormalizeLang__(localStorage.getItem('cow_lang'))
-            || window.__cowNormalizeLang__(window.__COW_DEFAULT_LANG__)
-            || window.__cowNormalizeLang__(navigator.language || (navigator.languages && navigator.languages[0]))
-            || 'zh';
-    };
+    // English is the only console language.
+    window.__maiaNormalizeLang__ = function() { return 'en'; };
+    window.__maiaResolveLang__ = function() { return 'en'; };
     (function() {
-        // Backend-resolved default language (from cow_lang config / auto-detect).
-        window.__COW_DEFAULT_LANG__ = '{{COW_DEFAULT_LANG}}';
-        var theme = localStorage.getItem('cow_theme') || 'dark';
+        // Backend-resolved default language (from maia_lang config / auto-detect).
+        window.__MAIA_DEFAULT_LANG__ = '{{MAIA_DEFAULT_LANG}}';
+        var theme = localStorage.getItem('maia_theme') || 'dark';
         if (theme === 'dark') document.documentElement.classList.add('dark');
-        if (localStorage.getItem('cow_sidebar_collapsed') === '1') {
+        if (localStorage.getItem('maia_sidebar_collapsed') === '1') {
             document.documentElement.classList.add('sidebar-collapsed');
         }
         // A customised menu is drawn by menu.js; keep the built-in one in
         // sidebar.html from showing first. The timer is the way out should
         // that script never run.
-        if (localStorage.getItem('cow_menu_cache')) {
+        if (localStorage.getItem('maia_menu_cache')) {
             document.documentElement.classList.add('menu-pending');
             setTimeout(function () { document.documentElement.classList.remove('menu-pending'); }, 3000);
         }
-        document.documentElement.setAttribute('lang', window.__cowResolveLang__());
+        document.documentElement.setAttribute('lang', 'en');
     })();
     </script>
 </head>
@@ -163,8 +145,6 @@
 
 <!--#include templates/modals/vendor.html-->
 
-<!--#include templates/modals/custom-provider.html-->
-
 <!--#include templates/modals/task-edit.html-->
 
 <!--#include templates/modals/run-detail.html-->
@@ -218,11 +198,7 @@
     <script defer src="/assets/js/views/sessions.js"></script>
     <script defer src="/assets/js/views/config.js"></script>
     <script defer src="/assets/js/views/models.js"></script>
-    <script defer src="/assets/js/views/models-custom-provider.js"></script>
     <script defer src="/assets/js/views/channels.js"></script>
-    <script defer src="/assets/js/views/channels-weixin.js"></script>
-    <script defer src="/assets/js/views/channels-wecom.js"></script>
-    <script defer src="/assets/js/views/channels-feishu.js"></script>
     <script defer src="/assets/js/views/tasks.js"></script>
     <script defer src="/assets/js/views/tasks-modal.js"></script>
     <script defer src="/assets/js/views/skills.js"></script>

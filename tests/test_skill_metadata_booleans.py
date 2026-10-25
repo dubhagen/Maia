@@ -4,8 +4,8 @@ from agent.skills.types import Skill, SkillEntry
 
 
 def test_quoted_false_does_not_override_missing_requirements(monkeypatch):
-    monkeypatch.delenv('COW_TEST_REQUIRED_KEY', raising=False)
-    metadata = parse_metadata({'metadata': {'always': 'false', 'requires': {'env': ['COW_TEST_REQUIRED_KEY']}}})
+    monkeypatch.delenv('MAIA_TEST_REQUIRED_KEY', raising=False)
+    metadata = parse_metadata({'metadata': {'always': 'false', 'requires': {'env': ['MAIA_TEST_REQUIRED_KEY']}}})
     entry = SkillEntry(Skill('test', 'Test', '', '', 'custom', ''), metadata)
     assert metadata.always is False
     assert not should_include_skill(entry)

@@ -6,7 +6,7 @@
 // Session Panel
 // =====================================================================
 
-const SESSION_PANEL_KEY = 'cow_session_panel_open';
+const SESSION_PANEL_KEY = 'maia_session_panel_open';
 let sessionPanelOpen = localStorage.getItem(SESSION_PANEL_KEY) === '1';
 // Whether the history panel was open before entering the team page, so it can
 // be restored on the way out (the team page force-closes it for room).
@@ -196,7 +196,6 @@ const _SESSION_PAGE_SIZE = 50;
 // Kept as data rather than only as DOM because grouping by project reorders the
 // whole list, which cannot be done by appending page by page.
 let _sessionItems = [];
-// 'time' (今天/昨天/更早, the behavior before projects existed) or 'project'.
 // The backend decides, based on how many spaces are in use across all sessions.
 let _sessionGroupMode = 'time';
 // User-chosen order of project spaces (paths + '__default__'), from the backend.
@@ -206,7 +205,7 @@ const DEFAULT_SPACE_KEY = '__default__';
 
 // Which project groups are collapsed, persisted per-browser so the choice
 // survives reloads. Keyed by space key (project path or the default sentinel).
-const _COLLAPSED_KEY = 'cow_collapsed_projects';
+const _COLLAPSED_KEY = 'maia_collapsed_projects';
 function _loadCollapsed() {
     try { return new Set(JSON.parse(localStorage.getItem(_COLLAPSED_KEY) || '[]')); }
     catch (e) { return new Set(); }
@@ -440,7 +439,7 @@ function renameProject(path, currentName) {
     });
 }
 
-// Delete a project record. Only the CowAgent record is removed; files stay and
+// Delete a project record. Only the Maia record is removed; files stay and
 // bound sessions revert to the default workspace.
 function deleteProject(path, name) {
     showConfirmModal(
@@ -629,7 +628,7 @@ function _reattachStream(sid) {
 function switchSession(newSessionId, agentId) {
     if (agentId && agentId !== activeAgentId) {
         activeAgentId = agentId;
-        localStorage.setItem('cow_active_agent', activeAgentId);
+        localStorage.setItem('maia_active_agent', activeAgentId);
     }
     if (newSessionId === sessionId) {
         if (currentView !== 'chat') navigateTo('chat');

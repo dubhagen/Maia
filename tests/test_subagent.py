@@ -113,7 +113,7 @@ def test_builtin_templates_are_always_available(workspace):
 def test_user_template_is_loaded_from_the_workspace(workspace):
     directory = workspace / "subagents"
     directory.mkdir(parents=True)
-    (directory / "翻译.md").write_text(
+    (directory / "translate.md").write_text(
         "---\nname: translator\ndescription: Translate documents.\ntools: read, write\n---\n"
         "You translate text and preserve formatting.\n",
         encoding="utf-8",
@@ -230,13 +230,12 @@ def test_the_repo_ships_a_guide_that_documents_the_real_format():
         # Wording the tool listing does not also carry, or this would still
         # pass with the rule itself deleted.
         ("en", "needs deep research or broad information gathering"),
-        ("zh", "大范围信息采集的独立任务"),
     ],
 )
 def test_the_prompt_tells_the_agent_when_to_delegate(language, marker):
     """Left to the tool description alone the model competes it against ~30
     other tools and just searches directly, which is what happened in
-    practice. The rule has to be in the prompt itself, in both languages."""
+    practice. The rule has to be in the prompt itself."""
     from agent.prompt.builder import _build_tooling_section
 
     class FakeTool:

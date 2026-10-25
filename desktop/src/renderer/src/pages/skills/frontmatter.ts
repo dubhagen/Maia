@@ -9,7 +9,7 @@ function yamlScalar(raw: string): string {
  * renderer as-is it becomes a giant bold heading and a horizontal rule. Pull it
  * out so name/description show as a proper header instead.
  *
- * Frontmatter nests: `metadata.cowagent.requires.anyEnv` is a list four levels
+ * Frontmatter nests: `metadata.maia.requires.anyEnv` is a list four levels
  * down. Read line by line with no regard for indentation, each container key
  * showed up as an empty row and the list under it vanished. So this walks the
  * indentation instead: a nested map becomes one row per leaf, keyed by its

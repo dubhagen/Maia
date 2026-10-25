@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Cpu, Bot, ShieldCheck, Settings, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
-import { t, getLang, setLang, localizedLabel, type Lang } from '../../i18n'
+import { t, localizedLabel } from '../../i18n'
 import apiClient from '../../api/client'
 import { product } from '@product'
 import type { ConfigData, ProviderMeta } from '../../types'
@@ -34,15 +34,15 @@ interface BasicSettingsProps {
   onOpenModels?: () => void
 }
 
-const BasicSettings: React.FC<BasicSettingsProps> = ({ baseUrl, onLangChange, onOpenModels }) => {
+const BasicSettings: React.FC<BasicSettingsProps> = ({ baseUrl, onOpenModels }) => {
   const [config, setConfig] = useState<ConfigData | null>(null)
   const [loading, setLoading] = useState(true)
   // When arriving from the context pie's "Config" action, scroll to and briefly
   // highlight the max-context-tokens field (signal set in sessionStorage).
   const [highlightBudget, setHighlightBudget] = useState(false)
   useEffect(() => {
-    if (sessionStorage.getItem('cow_focus_max_tokens') !== '1') return
-    sessionStorage.removeItem('cow_focus_max_tokens')
+    if (sessionStorage.getItem('maia_focus_max_tokens') !== '1') return
+    sessionStorage.removeItem('maia_focus_max_tokens')
     const el = document.getElementById('cfg-max-tokens')
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -189,7 +189,7 @@ const BasicSettings: React.FC<BasicSettingsProps> = ({ baseUrl, onLangChange, on
       setPwDirty(false)
 
       const ids = data.providers ? Object.keys(data.providers) : []
-      const current = showManagedApiKey ? 'linkai' : data.use_linkai ? 'linkai' : data.bot_type || ids[0] || ''
+      const current = data.bot_type || ids[0] || 'litellm'
       setProvider(current)
       const meta = data.providers?.[current] as ProviderMeta | undefined
       // Managed key: show the masked value for the current provider's key field.
@@ -276,12 +276,10 @@ const BasicSettings: React.FC<BasicSettingsProps> = ({ baseUrl, onLangChange, on
         : model
     // With a managed model source the provider selector is hidden; route through
     // the managed provider so credentials resolve consistently.
-    const isLinkai = CustomModelPicker ? true : provider === 'linkai'
     try {
       await apiClient.updateConfig({
-        model: finalModel,
-        use_linkai: isLinkai,
-        bot_type: isLinkai ? '' : provider,
+        bot_type: provider || 'litellm',
+        ...(finalModel ? { model: finalModel } : {}),
       })
       setModelStatus(t('config_saved'))
       const fresh = await apiClient.getConfig()
@@ -293,8 +291,7 @@ const BasicSettings: React.FC<BasicSettingsProps> = ({ baseUrl, onLangChange, on
   }
 
   const currentKeyField =
-    (config?.providers?.[provider] as ProviderMeta | undefined)?.api_key_field ||
-    (showManagedApiKey ? 'linkai_api_key' : undefined)
+    (config?.providers?.[provider] as ProviderMeta | undefined)?.api_key_field
 
   const saveApiKey = async () => {
     if (!apiKeyDirty || !currentKeyField) return
@@ -394,16 +391,6 @@ const BasicSettings: React.FC<BasicSettingsProps> = ({ baseUrl, onLangChange, on
       setPermStatus(t('config_save_error'))
     }
     setTimeout(() => setPermStatus(''), 2000)
-  }
-
-  const changeLanguage = async (lang: Lang) => {
-    setLang(lang)
-    onLangChange?.()
-    try {
-      await apiClient.updateConfig({ cow_lang: lang })
-    } catch {
-      /* non-blocking */
-    }
   }
 
   if (loading) {
@@ -682,16 +669,6 @@ const BasicSettings: React.FC<BasicSettingsProps> = ({ baseUrl, onLangChange, on
       {/* System — language + notification preferences (client-side, no save) */}
       <Card icon={<Settings size={16} />} title={t('config_system')}>
         <div className="space-y-4">
-          <Field label={t('config_language')} hint={t('config_language_hint')}>
-            <Dropdown
-              value={getLang()}
-              options={[
-                { value: 'zh', label: '简体中文' },
-                { value: 'en', label: 'English' },
-              ]}
-              onChange={(v) => changeLanguage(v as Lang)}
-            />
-          </Field>
           <div className="flex items-center justify-between py-1">
             <div>
               <div className="text-sm font-medium text-content">{t('config_task_notify')}</div>

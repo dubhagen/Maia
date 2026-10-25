@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from agent.memory.summarizer import MemoryFlushManager
 
-OLD_MEMORY = "- the user prefers concise answers\n- the user maintains CowAgent\n"
+OLD_MEMORY = "- the user prefers concise answers\n- the user maintains Maia\n"
 LLM_REPLY = (
     "[MEMORY]\n- a freshly distilled fact\n\n[DREAM]\nI dreamed about truncation\n"
 )

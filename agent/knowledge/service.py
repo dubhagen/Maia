@@ -262,7 +262,7 @@ class KnowledgeService:
                 line = f"{line} — {summary}"
             return line
 
-        lines = ["# 知识库目录", ""]
+        lines = ["# Knowledge", ""]
         # Root-level documents first (no category dir).
         root_docs = [(rel, title) for rel, title in all_entries if "/" not in rel]
         for rel, title in root_docs:

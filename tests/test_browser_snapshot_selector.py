@@ -9,10 +9,10 @@ from agent.tools.browser.browser_service import BrowserService
 def page():
     playwright = pytest.importorskip('playwright.sync_api')
     chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-    executable = os.environ.get('COW_TEST_BROWSER_EXECUTABLE', chrome)
+    executable = os.environ.get('MAIA_TEST_BROWSER_EXECUTABLE', chrome)
     if not Path(executable).is_file():
-        pytest.skip('Set COW_TEST_BROWSER_EXECUTABLE to an installed browser')
-    with tempfile.TemporaryDirectory(prefix='cow-snapshot-test-') as profile:
+        pytest.skip('Set MAIA_TEST_BROWSER_EXECUTABLE to an installed browser')
+    with tempfile.TemporaryDirectory(prefix='maia-snapshot-test-') as profile:
         with playwright.sync_playwright() as driver:
             context = driver.chromium.launch_persistent_context(profile, executable_path=executable, headless=True, args=['--disable-background-networking', '--disable-component-update'])
             page = context.new_page()
@@ -34,14 +34,14 @@ def test_snapshot_selector_scopes_actual_dom_and_references(page):
     result = service(page)._do_snapshot('#chosen')
     assert 'Inside' in result
     assert 'Outside' not in result
-    assert page.evaluate('Object.keys(window.__cowRefMap).length') == 1
+    assert page.evaluate('Object.keys(window.__maiaRefMap).length') == 1
 
 
 def test_default_snapshot_still_covers_full_document(page):
     result = service(page)._do_snapshot()
     assert 'Inside' in result
     assert 'Outside' in result
-    assert page.evaluate('Object.keys(window.__cowRefMap).length') == 2
+    assert page.evaluate('Object.keys(window.__maiaRefMap).length') == 2
 
 
 def test_missing_snapshot_selector_reports_error(page):

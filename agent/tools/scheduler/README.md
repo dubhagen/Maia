@@ -1,150 +1,134 @@
-# 定时任务工具 (Scheduler Tool)
+# Scheduler
 
-## 功能简介
+The scheduler tool lets the agent create, manage, and run scheduled tasks. It supports:
 
-定时任务工具允许 Agent 创建、管理和执行定时任务，支持：
-
-- ⏰ **定时提醒**: 在指定时间发送消息
-- 🔄 **周期性任务**: 按固定间隔或 cron 表达式重复执行
-- 🔧 **动态工具调用**: 定时执行其他工具并发送结果（如搜索新闻、查询天气等）
-- 📋 **任务管理**: 查询、启用、禁用、删除任务
-
-## 安装依赖
+- **Reminders**: send a message at a set time
+- **Recurring tasks**: repeat on a fixed interval or a cron expression
+- **Dynamic tool calls**: run another tool on a schedule and send the result (for example, read a schedule file)
+- **Task management**: list, enable, disable, and delete tasks
 
 ```bash
 pip install croniter>=2.0.0
 ```
 
-## 使用方法
+The agent can create scheduled tasks from natural language. There are two kinds.
 
-### 1. 创建定时任务
+## Fixed message
 
-Agent 可以通过自然语言创建定时任务，支持两种类型：
+Send a predefined message.
 
-#### 1.1 静态消息任务
+**Example:**
 
-发送预定义的消息：
-
-**示例对话：**
 ```
-用户: 每天早上9点提醒我开会
-Agent: [调用 scheduler 工具]
+User: Remind me about the meeting every day at 9:00
+Agent: [calls the scheduler tool]
       action: create
-      name: 每日开会提醒
-      message: 该开会了！
+      name: Daily meeting reminder
+      message: Time for the meeting!
       schedule_type: cron
       schedule_value: 0 9 * * *
 ```
 
-#### 1.2 动态工具调用任务
+## Dynamic tool call
 
-定时执行工具并发送结果：
+Run a tool on a schedule and send the result.
 
-**示例对话：**
+**Example:**
+
 ```
-用户: 每天早上8点帮我读取一下今日日程
-Agent: [调用 scheduler 工具]
+User: Every day at 8:00, read today's schedule for me
+Agent: [calls the scheduler tool]
       action: create
-      name: 每日日程
+      name: Daily schedule
       tool_call:
         tool_name: read
         tool_params:
-          file_path: ~/cow/schedule.txt
-        result_prefix: 📅 今日日程
+          file_path: ~/maia/schedule.txt
+        result_prefix: 📅 Today's schedule
       schedule_type: cron
       schedule_value: 0 8 * * *
 ```
 
-**工具调用参数说明：**
-- `tool_name`: 要调用的工具名称（如 `bash`、`read`、`write` 等内置工具）
-- `tool_params`: 工具的参数（字典格式）
-- `result_prefix`: 可选，在结果前添加的前缀文本
+**Tool-call parameters:**
 
-**注意：** 如果要使用 skills（如 bocha-search），需要通过 `bash` 工具调用 skill 脚本
+- `tool_name`: the tool to call (built-in tools such as `bash`, `read`, or `write`)
+- `tool_params`: the tool's arguments (a dictionary)
+- `result_prefix`: optional text placed before the result
 
-### 2. 支持的调度类型
+**Note:** To use a skill (such as bocha-search), call the skill script through the `bash` tool.
 
-#### Cron 表达式 (`cron`)
-使用标准 cron 表达式：
+## Cron expressions
 
 ```
-0 9 * * *      # 每天 9:00
-0 */2 * * *    # 每 2 小时
-30 8 * * 1-5   # 工作日 8:30
-0 0 1 * *      # 每月 1 号
+0 9 * * *      # every day at 9:00
+0 */2 * * *    # every 2 hours
+30 8 * * 1-5   # weekdays at 8:30
+0 0 1 * *      # the 1st of each month
 ```
 
-#### 固定间隔 (`interval`)
-以秒为单位的间隔：
+## Interval in seconds
 
 ```
-3600           # 每小时
-86400          # 每天
-1800           # 每 30 分钟
+3600           # every hour
+86400          # every day
+1800           # every 30 minutes
 ```
 
-#### 一次性任务 (`once`)
-指定具体时间（ISO 格式）：
+## A specific time (ISO format)
 
 ```
 2024-12-25T09:00:00
 2024-12-31T23:59:59
 ```
 
-### 3. 查询任务列表
+## Managing tasks
 
 ```
-用户: 查看我的定时任务
-Agent: [调用 scheduler 工具]
+User: Show my scheduled tasks
+Agent: [calls the scheduler tool]
       action: list
 ```
 
-### 4. 查看任务详情
-
 ```
-用户: 查看任务 abc123 的详情
-Agent: [调用 scheduler 工具]
+User: Show details for task abc123
+Agent: [calls the scheduler tool]
       action: get
       task_id: abc123
 ```
 
-### 5. 删除任务
-
 ```
-用户: 删除任务 abc123
-Agent: [调用 scheduler 工具]
+User: Delete task abc123
+Agent: [calls the scheduler tool]
       action: delete
       task_id: abc123
 ```
 
-### 6. 启用/禁用任务
-
 ```
-用户: 暂停任务 abc123
-Agent: [调用 scheduler 工具]
+User: Pause task abc123
+Agent: [calls the scheduler tool]
       action: disable
       task_id: abc123
 
-用户: 恢复任务 abc123
-Agent: [调用 scheduler 工具]
+User: Resume task abc123
+Agent: [calls the scheduler tool]
       action: enable
       task_id: abc123
 ```
 
-## 任务存储
+## Storage
 
-任务保存在 JSON 文件中：
+Tasks are stored in a JSON file:
+
 ```
-~/cow/scheduler/tasks.json
+~/maia/scheduler/tasks.json
 ```
 
-任务数据结构：
+**Fixed-message task:**
 
-**静态消息任务：**
 ```json
 {
   "id": "abc123",
-  "name": "每日提醒",
+  "name": "Daily reminder",
   "enabled": true,
   "created_at": "2024-01-01T10:00:00",
   "updated_at": "2024-01-01T10:00:00",
@@ -154,22 +138,23 @@ Agent: [调用 scheduler 工具]
   },
   "action": {
     "type": "send_message",
-    "content": "该开会了！",
-    "receiver": "wxid_xxx",
-    "receiver_name": "张三",
+    "content": "Time for the meeting!",
+    "receiver": "user-1",
+    "receiver_name": "Alex",
     "is_group": false,
-    "channel_type": "wechat"
+    "channel_type": "web"
   },
   "next_run_at": "2024-01-02T09:00:00",
   "last_run_at": "2024-01-01T09:00:00"
 }
 ```
 
-**动态工具调用任务：**
+**Dynamic tool-call task:**
+
 ```json
 {
   "id": "def456",
-  "name": "每日日程",
+  "name": "Daily schedule",
   "enabled": true,
   "created_at": "2024-01-01T10:00:00",
   "updated_at": "2024-01-01T10:00:00",
@@ -181,107 +166,100 @@ Agent: [调用 scheduler 工具]
     "type": "tool_call",
     "tool_name": "read",
     "tool_params": {
-      "file_path": "~/cow/schedule.txt"
+      "file_path": "~/maia/schedule.txt"
     },
-    "result_prefix": "📅 今日日程",
-    "receiver": "wxid_xxx",
-    "receiver_name": "张三",
+    "result_prefix": "📅 Today's schedule",
+    "receiver": "user-1",
+    "receiver_name": "Alex",
     "is_group": false,
-    "channel_type": "wechat"
+    "channel_type": "web"
   },
   "next_run_at": "2024-01-02T08:00:00"
 }
 ```
 
-## 后台服务
+## Background service
 
-定时任务由后台服务 `SchedulerService` 管理：
+`SchedulerService` runs the tasks:
 
-- 每 30 秒检查一次到期任务
-- 自动执行到期任务
-- 计算下次执行时间
-- 记录执行历史和错误
+- Checks for due tasks every 30 seconds
+- Runs due tasks automatically
+- Computes the next run time
+- Records run history and errors
 
-服务在 Agent 初始化时自动启动，无需手动配置。
+The service starts when the agent initializes. No manual setup is required.
 
-## 接收者确定
+## Who receives the message
 
-定时任务会发送给**创建任务时的对话对象**：
+A scheduled task is delivered to the conversation where it was created:
 
-- 如果在私聊中创建，发送给该用户
-- 如果在群聊中创建，发送到该群
-- 接收者信息在创建时自动保存
+- Created in a direct chat: sent to that user
+- Created in a group chat: sent to that group
+- The recipient is saved automatically at creation time
 
-## 常见用例
+## More examples
 
-### 1. 每日提醒（静态消息）
 ```
-用户: 每天早上8点提醒我吃药
-Agent: ✅ 定时任务创建成功
-       任务ID: a1b2c3d4
-       调度: 每天 8:00
-       消息: 该吃药了！
-```
-
-### 2. 工作日提醒（静态消息）
-```
-用户: 工作日下午6点提醒我下班
-Agent: [创建 cron: 0 18 * * 1-5]
-       消息: 该下班了！
+User: Remind me to take my medicine every day at 8:00
+Agent: Scheduled task created
+       Task ID: a1b2c3d4
+       Schedule: every day at 8:00
+       Message: Time to take your medicine!
 ```
 
-### 3. 倒计时提醒（静态消息）
 ```
-用户: 1小时后提醒我
-Agent: [创建 interval: 3600]
-```
-
-### 4. 每日日程推送（动态工具调用）
-```
-用户: 每天早上8点帮我读取今日日程
-Agent: ✅ 定时任务创建成功
-       任务ID: schedule001
-       调度: 每天 8:00
-       工具: read(file_path='~/cow/schedule.txt')
-       前缀: 📅 今日日程
+User: On weekdays at 6:00pm, remind me to finish work
+Agent: [creates cron: 0 18 * * 1-5]
+       Message: Time to wrap up for the day!
 ```
 
-### 5. 定时文件备份（动态工具调用）
 ```
-用户: 每天晚上11点备份工作文件
-Agent: [创建 cron: 0 23 * * *]
-       工具: bash(command='cp ~/cow/work.txt ~/cow/backup/work_$(date +%Y%m%d).txt')
-       前缀: ✅ 文件已备份
+User: Remind me in 1 hour
+Agent: [creates interval: 3600]
 ```
 
-### 6. 周报提醒（静态消息）
 ```
-用户: 每周五下午5点提醒我写周报
-Agent: [创建 cron: 0 17 * * 5]
-       消息: 📊 该写周报了！
-```
-
-### 4. 特定日期提醒
-```
-用户: 12月25日早上9点提醒我圣诞快乐
-Agent: [创建 once: 2024-12-25T09:00:00]
+User: Every day at 8:00, read today's schedule for me
+Agent: Scheduled task created
+       Task ID: schedule001
+       Schedule: every day at 8:00
+       Tool: read(file_path='~/maia/schedule.txt')
+       Prefix: 📅 Today's schedule
 ```
 
-## 注意事项
+```
+User: Back up my work files every night at 11:00
+Agent: [creates cron: 0 23 * * *]
+       Tool: bash(command='cp ~/maia/work.txt ~/maia/backup/work_$(date +%Y%m%d).txt')
+       Prefix: ✅ Files backed up
+```
 
-1. **时区**: 使用系统本地时区
-2. **精度**: 检查间隔为 30 秒，实际执行可能有 ±30 秒误差
-3. **持久化**: 任务保存在文件中，重启后自动恢复
-4. **一次性任务**: 执行后自动禁用，不会删除（可手动删除）
-5. **错误处理**: 执行失败会记录错误，不影响其他任务
+```
+User: Every Friday at 5:00pm, remind me to write the weekly report
+Agent: [creates cron: 0 17 * * 5]
+       Message: 📊 Time to write the weekly report!
+```
 
-## 技术实现
+```
+User: On December 25 at 9:00am, wish me a merry Christmas
+Agent: [creates once: 2024-12-25T09:00:00]
+```
 
-- **TaskStore**: 任务持久化存储
-- **SchedulerService**: 后台调度服务
-- **SchedulerTool**: Agent 工具接口
-- **Integration**: 与 AgentBridge 集成
+## Notes
 
-## 依赖
+1. **Timezone**: the system local timezone
+2. **Precision**: the check interval is 30 seconds, so a run may be off by about ±30 seconds
+3. **Persistence**: tasks are stored in a file and restored after a restart
+4. **One-shot tasks**: disabled after they run, not deleted (you can delete them manually)
+5. **Errors**: a failed run is recorded and does not affect other tasks
 
-- `croniter`: Cron 表达式解析（轻量级，仅 ~50KB）
+## Components
+
+- **TaskStore**: persists tasks
+- **SchedulerService**: background scheduler
+- **SchedulerTool**: the agent tool
+- **Integration**: connects the scheduler to AgentBridge
+
+## Dependency
+
+- `croniter`: parses cron expressions (about 50KB)

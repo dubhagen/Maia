@@ -7,7 +7,7 @@
                     <i class="fas fa-bolt text-primary-500"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <h3 id="skill-add-title" class="text-base font-semibold text-slate-800 dark:text-slate-100" data-i18n="skill_add">添加技能</h3>
+                    <h3 id="skill-add-title" class="text-base font-semibold text-slate-800 dark:text-slate-100" data-i18n="skill_add">Add skill</h3>
                     <p id="skill-add-subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 hidden"></p>
                 </div>
                 <button type="button" id="skill-add-close"
@@ -22,33 +22,27 @@
                 <div id="skill-step-input">
                     <div class="cap-tabs mb-5">
                         <button type="button" class="cap-tab active" data-skill-tab="market">
-                            <i class="fas fa-store text-[11px]"></i><span data-i18n="skill_add_tab_market">从市场安装</span>
+                            <i class="fas fa-store text-[11px]"></i><span data-i18n="skill_add_tab_market">From a market</span>
                         </button>
                         <button type="button" class="cap-tab" data-skill-tab="upload">
-                            <i class="fas fa-upload text-[11px]"></i><span data-i18n="skill_add_tab_upload">本地上传</span>
+                            <i class="fas fa-upload text-[11px]"></i><span data-i18n="skill_add_tab_upload">Upload</span>
                         </button>
                         <button type="button" class="cap-tab" data-skill-tab="create">
-                            <i class="fas fa-pen-to-square text-[11px]"></i><span data-i18n="skill_add_tab_create">表单创建</span>
+                            <i class="fas fa-pen-to-square text-[11px]"></i><span data-i18n="skill_add_tab_create">Write one</span>
                         </button>
                     </div>
 
                     <div id="skill-pane-market" class="space-y-4">
                         <div>
-                            <label class="cap-label" data-i18n="skill_source">来源</label>
-                            <div class="grid grid-cols-3 gap-2" id="skill-source-options">
-                                <button type="button" class="skill-source-opt" data-source="hub">
-                                    <i class="fas fa-cube"></i><span>Cow Skill Hub</span>
-                                </button>
-                                <button type="button" class="skill-source-opt" data-source="github">
+                            <label class="cap-label" data-i18n="skill_source">Source</label>
+                            <div class="grid grid-cols-1 gap-2" id="skill-source-options">
+                                <button type="button" class="skill-source-opt active" data-source="github">
                                     <i class="fab fa-github"></i><span>GitHub</span>
-                                </button>
-                                <button type="button" class="skill-source-opt" data-source="clawhub">
-                                    <i class="fas fa-paw"></i><span>ClawHub</span>
                                 </button>
                             </div>
                         </div>
                         <div>
-                            <label class="cap-label" id="skill-value-label" data-i18n="skill_value_hub">技能名称</label>
+                            <label class="cap-label" id="skill-value-label" data-i18n="skill_value_github">Git URL</label>
                             <input id="skill-value-input" type="text" class="cap-input cap-input-mono" autocomplete="off" spellcheck="false">
                             <p id="skill-source-hint" class="text-xs text-slate-400 dark:text-slate-500 mt-1.5"></p>
                         </div>
@@ -60,12 +54,12 @@
                                 <i id="skill-dropzone-icon" class="fas fa-file-arrow-up text-slate-400"></i>
                             </div>
                             <p id="skill-dropzone-text" class="text-sm text-slate-600 dark:text-slate-300">
-                                <span data-i18n="skill_upload_drop">拖拽技能到这里，或</span>
-                                <button type="button" id="skill-pick-file" class="text-primary-500 hover:text-primary-600 font-medium cursor-pointer" data-i18n="skill_upload_pick_file">选择文件</button>
+                                <span data-i18n="skill_upload_drop">Drop a skill here, or</span>
+                                <button type="button" id="skill-pick-file" class="text-primary-500 hover:text-primary-600 font-medium cursor-pointer" data-i18n="skill_upload_pick_file">choose a file</button>
                                 <span class="text-slate-300 dark:text-slate-600">/</span>
-                                <button type="button" id="skill-pick-folder" class="text-primary-500 hover:text-primary-600 font-medium cursor-pointer" data-i18n="skill_upload_pick_folder">选择文件夹</button>
+                                <button type="button" id="skill-pick-folder" class="text-primary-500 hover:text-primary-600 font-medium cursor-pointer" data-i18n="skill_upload_pick_folder">a folder</button>
                             </p>
-                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1.5" data-i18n="skill_upload_types">支持 .zip / .tar.gz 压缩包、SKILL.md 或整个技能文件夹，最大 50 MB</p>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1.5" data-i18n="skill_upload_types">.zip / .tar.gz archive, a SKILL.md, or a whole skill folder, up to 50 MB</p>
                         </div>
                         <input type="file" id="skill-file-input" class="hidden" accept=".zip,.tar.gz,.tgz,.md">
                         <input type="file" id="skill-folder-input" class="hidden" webkitdirectory multiple>
@@ -74,26 +68,26 @@
                     <!-- Write a new skill: no preview step, what is typed is what gets written -->
                     <div id="skill-pane-create" class="hidden space-y-4">
                         <div>
-                            <label class="cap-label" for="skill-create-name" data-i18n="skill_new_name">名称</label>
+                            <label class="cap-label" for="skill-create-name" data-i18n="skill_new_name">Name</label>
                             <input id="skill-create-name" type="text" maxlength="64" placeholder="weather-api"
                                    oninput="renderSkillNamePreview()" autocomplete="off" spellcheck="false"
                                    class="cap-input">
-                            <p id="skill-create-name-preview" class="mt-1.5 text-xs text-slate-400 dark:text-slate-500 font-mono break-all" data-i18n="skill_new_name_hint">将作为技能目录名，仅保留小写字母、数字和连字符</p>
+                            <p id="skill-create-name-preview" class="mt-1.5 text-xs text-slate-400 dark:text-slate-500 font-mono break-all" data-i18n="skill_new_name_hint">Becomes the skill directory: lowercase letters, digits and hyphens</p>
                         </div>
                         <div>
-                            <label class="cap-label" for="skill-create-desc" data-i18n="skill_new_desc">描述</label>
+                            <label class="cap-label" for="skill-create-desc" data-i18n="skill_new_desc">Description</label>
                             <textarea id="skill-create-desc" rows="3" class="cap-input resize-y"></textarea>
-                            <p class="mt-1.5 text-xs text-slate-400 dark:text-slate-500" data-i18n="skill_new_desc_hint">Agent 靠描述决定何时使用该技能，写清用途和触发场景</p>
+                            <p class="mt-1.5 text-xs text-slate-400 dark:text-slate-500" data-i18n="skill_new_desc_hint">The description is what tells the agent when to use this skill, so say what it does and when</p>
                         </div>
                         <div>
-                            <label class="cap-label" for="skill-create-body" data-i18n="skill_new_body">说明内容</label>
+                            <label class="cap-label" for="skill-create-body" data-i18n="skill_new_body">Instructions</label>
                             <textarea id="skill-create-body" rows="7" placeholder="## Usage&#10;&#10;..."
                                       class="cap-input cap-input-mono resize-y"></textarea>
-                            <p class="mt-1.5 text-xs text-slate-400 dark:text-slate-500" data-i18n="skill_new_body_hint">SKILL.md 正文，可留空后续在技能详情页编辑</p>
+                            <p class="mt-1.5 text-xs text-slate-400 dark:text-slate-500" data-i18n="skill_new_body_hint">The body of SKILL.md. Can be left empty and written later in the skill view</p>
                         </div>
                         <div>
                             <div class="flex items-center justify-between mb-1.5">
-                                <label class="cap-label" style="margin-bottom:0" data-i18n="skill_new_files">附件</label>
+                                <label class="cap-label" style="margin-bottom:0" data-i18n="skill_new_files">Files</label>
                                 <!-- One entry point for both kinds of pick, the way the composer's
                                      attach button offers them: a native file dialog cannot browse
                                      for files and for a directory at once, so which one it opens
@@ -104,17 +98,17 @@
                                 <div class="relative">
                                     <button type="button" id="skill-create-attach-btn" onclick="toggleSkillAttachMenu(event)"
                                             class="text-xs text-primary-500 hover:text-primary-600 cursor-pointer">
-                                        <i class="fas fa-paperclip text-[10px] mr-1"></i><span data-i18n="skill_new_files_add">添加</span>
+                                        <i class="fas fa-paperclip text-[10px] mr-1"></i><span data-i18n="skill_new_files_add">Add</span>
                                     </button>
                                     <div id="skill-create-attach-menu" class="attach-menu skill-attach-menu hidden">
                                         <button type="button" onclick="selectSkillCreateFiles()" class="attach-menu-item">
                                             <i class="fas fa-file-arrow-up"></i>
-                                            <span data-i18n="skill_new_files_pick">选择文件</span>
+                                            <span data-i18n="skill_new_files_pick">Choose files</span>
                                         </button>
                                         <button type="button" id="skill-create-folder-option" onclick="selectSkillCreateFolder()"
                                                 class="attach-menu-item">
                                             <i class="fas fa-folder-plus"></i>
-                                            <span data-i18n="skill_new_files_pick_folder">选择文件夹</span>
+                                            <span data-i18n="skill_new_files_pick_folder">Choose folder</span>
                                         </button>
                                     </div>
                                 </div>
@@ -122,7 +116,7 @@
                             <!-- A picked folder can be dozens of files, so the list scrolls rather
                                  than pushing the create button off the dialog. -->
                             <div id="skill-create-files-list" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
-                            <p id="skill-create-files-empty" class="text-xs text-slate-400 dark:text-slate-500" data-i18n="skill_new_files_hint">脚本、模板等资源文件，将放入技能目录</p>
+                            <p id="skill-create-files-empty" class="text-xs text-slate-400 dark:text-slate-500" data-i18n="skill_new_files_hint">Scripts, templates and other resources, bundled into the skill directory</p>
                         </div>
                         <input id="skill-create-files" type="file" class="hidden" multiple>
                         <input id="skill-create-folder" type="file" class="hidden" multiple webkitdirectory directory>
@@ -135,13 +129,13 @@
                 <div id="skill-step-preview" class="hidden">
                     <div class="flex items-start gap-2.5 px-3.5 py-3 mb-4 rounded-xl bg-amber-50 dark:bg-amber-900/15 border border-amber-200/70 dark:border-amber-500/20">
                         <span class="flex items-center h-5 flex-shrink-0"><i class="fas fa-shield-halved text-amber-500 text-[13px]"></i></span>
-                        <p class="text-xs leading-5 text-amber-800 dark:text-amber-200" data-i18n="skill_preview_warning">技能可以包含脚本并由 Agent 执行，请确认来源可信、内容符合预期后再安装。</p>
+                        <p class="text-xs leading-5 text-amber-800 dark:text-amber-200" data-i18n="skill_preview_warning">Skills can include scripts the agent will run. Install only from sources you trust, after checking the content.</p>
                     </div>
                     <div class="flex items-center gap-2 mb-3">
                         <span id="skill-preview-count" class="text-sm font-medium text-slate-700 dark:text-slate-200"></span>
                         <label id="skill-preview-all-wrap" class="ml-auto hidden items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
                             <input type="checkbox" id="skill-preview-all" class="rounded accent-primary-500" checked>
-                            <span data-i18n="skill_preview_select_all">全选</span>
+                            <span data-i18n="skill_preview_select_all">Select all</span>
                         </label>
                     </div>
                     <div id="skill-preview-list" class="space-y-3"></div>
@@ -153,7 +147,7 @@
                     <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center">
                         <i class="fas fa-check text-primary-500 text-xl"></i>
                     </div>
-                    <p class="text-base font-semibold text-slate-800 dark:text-slate-100" data-i18n="skill_installed_title">安装完成</p>
+                    <p class="text-base font-semibold text-slate-800 dark:text-slate-100" data-i18n="skill_installed_title">Installed</p>
                     <p id="skill-done-desc" class="text-sm text-slate-500 dark:text-slate-400 mt-1"></p>
                     <div id="skill-done-names" class="flex flex-wrap justify-center gap-1.5 mt-4"></div>
                 </div>
@@ -163,12 +157,12 @@
                 <button type="button" id="skill-add-back"
                         class="hidden inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400
                                hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer transition-colors">
-                    <i class="fas fa-arrow-left text-xs"></i><span data-i18n="skill_back_edit">返回修改</span>
+                    <i class="fas fa-arrow-left text-xs"></i><span data-i18n="skill_back_edit">Back</span>
                 </button>
                 <div class="flex-1"></div>
                 <button type="button" id="skill-add-cancel"
                         class="px-4 py-2 rounded-lg border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 text-sm font-medium
-                               hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer transition-colors" data-i18n="mcp_cancel">取消</button>
+                               hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer transition-colors" data-i18n="mcp_cancel">Cancel</button>
                 <button type="button" id="skill-add-primary"
                         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium
                                cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed">

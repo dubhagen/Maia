@@ -1,5 +1,4 @@
 #!/bin/bash
-#后台运行Chat_on_webchat执行脚本
 
 cd `dirname $0`/..
 export BASE_DIR=`pwd`

@@ -2,11 +2,8 @@
 """A scheduled skill_call must know whether its receiver is a group.
 
 ``_execute_skill_call`` read the group flag from ``action["isgroup"]`` while the
-other three executors in the same module read ``action["is_group"]``. The key a
-task actually carries is never found, so ``is_group`` was always False and a
-scheduled skill result aimed at a group was sent as a private message: for Feishu
-that means ``receive_id_type="open_id"`` with a ``chat_id`` receiver, which the
-API rejects, so the task silently never delivered.
+other executors in the same module read ``action["is_group"]``. The key a
+task actually carries is ``is_group``.
 """
 
 from agent.tools.scheduler import integration
@@ -44,35 +41,35 @@ def _run(monkeypatch, action):
     return ok, bridge.context
 
 
-def _feishu_action(**extra):
+def _action(**extra):
     action = {
         "call_name": "digest",
         "receiver": "oc_group_1",
-        "channel_type": "feishu",
+        "channel_type": "terminal",
     }
     action.update(extra)
     return action
 
 
-def test_skill_call_to_a_feishu_group_uses_chat_id(monkeypatch):
-    ok, context = _run(monkeypatch, _feishu_action(is_group=True))
+def test_skill_call_to_a_group_sets_the_group_flag(monkeypatch):
+    ok, context = _run(monkeypatch, _action(is_group=True))
     assert ok is True
     assert context.get("isgroup") is True
-    assert context.get("receive_id_type") == "chat_id", context.get("receive_id_type")
+    assert "receive_id_type" not in context
 
 
-def test_skill_call_to_a_feishu_user_uses_open_id(monkeypatch):
-    ok, context = _run(monkeypatch, _feishu_action(is_group=False))
+def test_skill_call_to_a_user_is_not_a_group(monkeypatch):
+    ok, context = _run(monkeypatch, _action(is_group=False))
     assert ok is True
     assert context.get("isgroup") is False
-    assert context.get("receive_id_type") == "open_id"
+    assert "receive_id_type" not in context
 
 
 def test_skill_call_without_the_flag_is_not_a_group(monkeypatch):
-    ok, context = _run(monkeypatch, _feishu_action())
+    ok, context = _run(monkeypatch, _action())
     assert ok is True
     assert context.get("isgroup") is False
-    assert context.get("receive_id_type") == "open_id"
+    assert "receive_id_type" not in context
 
 
 def test_group_flag_reaches_the_context_for_other_channels(monkeypatch):

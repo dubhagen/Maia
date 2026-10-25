@@ -8,7 +8,7 @@ import { loadAppConfig } from './themes'
 // Let the web layer override the window icon/title at runtime and remember it,
 // so it also applies on the next launch before the page loads.
 
-// The cache lives under ~/.cow, which every desktop build on the machine
+// The cache lives under ~/.maia, which every desktop build on the machine
 // shares, so a build with a fixed name and icon must neither read nor write it.
 function runtimeIconTitleEnabled(): boolean {
   return loadAppConfig()?.runtimeIconTitle !== false
@@ -45,7 +45,7 @@ let getMainWindow: (() => BrowserWindow | null) | null = null
 let getTrayIcon: (() => Electron.Tray | null) | null = null
 
 function cacheDir(): string {
-  const root = process.env.COW_HOME || path.join(os.homedir(), '.cow')
+  const root = process.env.MAIA_HOME || path.join(os.homedir(), '.maia')
   return path.join(root, CACHE_DIRNAME)
 }
 

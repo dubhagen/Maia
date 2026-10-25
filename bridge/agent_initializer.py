@@ -103,7 +103,7 @@ class AgentInitializer:
         Initialize agent initializer
         
         Args:
-            bridge: COW bridge instance
+            bridge: MAIA bridge instance
             agent_bridge: AgentBridge instance (for create_agent method)
         """
         self.bridge = bridge
@@ -181,7 +181,7 @@ class AgentInitializer:
         skill_manager = self._initialize_skill_manager(workspace_root, session_id)
         
         # Build system prompt
-        prompt_builder = PromptBuilder(workspace_dir=workspace_root, language="zh")
+        prompt_builder = PromptBuilder(workspace_dir=workspace_root, language="en")
         runtime_info = self._get_runtime_info(workspace_root)
         runtime_info["agent_id"] = profile.id
         runtime_info["agent_name"] = profile.name
@@ -818,7 +818,7 @@ class AgentInitializer:
     
     def _load_env_file(self):
         """Load environment variables from .env file"""
-        env_file = expand_path("~/.cow/.env")
+        env_file = expand_path("~/.maia/.env")
         if os.path.exists(env_file):
             try:
                 from dotenv import load_dotenv
@@ -896,10 +896,8 @@ class AgentInitializer:
 
         Delegates to the shared factory so agent init, knowledge sync and
         index rebuild all select the same provider:
-          A. Default (no `embedding_provider` in config.json):
-             Auto-init OpenAI -> LinkAI fallback.
-          B. Explicit (`embedding_provider` is set):
-             Initialize the requested vendor.
+        An empty embedding_model leaves embeddings off. A set id uses the
+        LiteLLM endpoint.
         """
         from agent.memory import create_default_embedding_provider
         return create_default_embedding_provider()
@@ -1217,14 +1215,23 @@ class AgentInitializer:
         from config import conf
         
         key_mapping = {
-            "open_ai_api_key": "OPENAI_API_KEY",
-            "open_ai_api_base": "OPENAI_API_BASE",
-            "gemini_api_key": "GEMINI_API_KEY",
-            "claude_api_key": "CLAUDE_API_KEY",
-            "linkai_api_key": "LINKAI_API_KEY",
+            "litellm_api_key": "LITELLM_API_KEY",
+            "litellm_api_base": "LITELLM_API_BASE",
+            "model": "LITELLM_MODEL",
+            "image_model": "LITELLM_IMAGE_MODEL",
+            "vision_model": "LITELLM_VISION_MODEL",
+            "embedding_model": "LITELLM_EMBEDDING_MODEL",
+            "asr_model": "LITELLM_ASR_MODEL",
+            "tts_model": "LITELLM_TTS_MODEL",
         }
+        _drop_env = (
+            "OPENAI_API_KEY", "OPENAI_API_BASE", "GEMINI_API_KEY", "CLAUDE_API_KEY",
+            "ANTHROPIC_API_KEY", "LINKAI_API_KEY", "DEEPSEEK_API_KEY", "DEEPSEEK_API_BASE",
+            "DASHSCOPE_API_KEY", "ARK_API_KEY", "MOONSHOT_API_KEY", "ZHIPU_API_KEY",
+            "MINIMAX_API_KEY", "MIMO_API_KEY", "QIANFAN_API_KEY",
+        )
         
-        env_file = expand_path("~/.cow/.env")
+        env_file = expand_path("~/.maia/.env")
         
         # Read existing env vars (key -> value)
         existing_env_vars = {}
@@ -1241,6 +1248,11 @@ class AgentInitializer:
         
         # Sync config.json values into .env (add/update/remove)
         updated = False
+        for env_key in _drop_env:
+            if env_key in existing_env_vars:
+                existing_env_vars.pop(env_key, None)
+                os.environ.pop(env_key, None)
+                updated = True
         for config_key, env_key in key_mapping.items():
             raw = conf().get(config_key, "")
             value = raw.strip() if raw else ""

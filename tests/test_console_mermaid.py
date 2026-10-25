@@ -106,4 +106,4 @@ def test_preview_controls_only_show_on_a_rendered_diagram():
     assert f"{done} .code-copy-btn" in css
     assert ".mermaid-block.mermaid-fullscreen" in css
     i18n = _read("channel/web/static/js/core/i18n.js")
-    assert i18n.count("mermaid_preview:") == 3
+    assert i18n.count("mermaid_preview:") == 1

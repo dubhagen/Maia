@@ -91,7 +91,7 @@ SAFETY:
         self._description_template = self.description
         # Desktop runs on the user's own machine (often non-technical users),
         # so require explicit confirmation for destructive ops outside the workspace.
-        if os.environ.get("COW_DESKTOP") == "1":
+        if os.environ.get("MAIA_DESKTOP") == "1":
             self._description_template = self._description_template.replace(
                 "- For destructive commands out of workspace ({cwd}), explain and confirm first",
                 "- For delete or destructive operations on files out of workspace ({cwd}), "
@@ -150,7 +150,7 @@ SAFETY:
             )
 
         # Security check: Prevent direct access to the credential file
-        if re.search(r'\.cow[/\\]\.env', command):
+        if re.search(r'\.maia[/\\]\.env', command):
             return ToolResult.fail(
                 "Error: Access denied. API keys and credentials must be accessed through the env_config tool only."
             )
@@ -184,11 +184,11 @@ SAFETY:
                 _attr = {}
                 _cow_utils.apply_client_source(_attr)
                 _header_to_env = {
-                    "X-Agent-Run-Id": "COW_AGENT_RUN_ID",
-                    "X-Client-Source": "COW_CLIENT_SOURCE",
-                    "X-Client-OS": "COW_CLIENT_OS",
-                    "X-Client-Version": "COW_CLIENT_VERSION",
-                    "X-Deployment-Id": "COW_DEPLOYMENT_ID",
+                    "X-Agent-Run-Id": "MAIA_AGENT_RUN_ID",
+                    "X-Client-Source": "MAIA_CLIENT_SOURCE",
+                    "X-Client-OS": "MAIA_CLIENT_OS",
+                    "X-Client-Version": "MAIA_CLIENT_VERSION",
+                    "X-Deployment-Id": "MAIA_DEPLOYMENT_ID",
                 }
                 for _h, _e in _header_to_env.items():
                     if _attr.get(_h):
@@ -196,8 +196,8 @@ SAFETY:
             except Exception:
                 pass
 
-            # Load environment variables from ~/.cow/.env if it exists
-            env_file = expand_path("~/.cow/.env")
+            # Load environment variables from ~/.maia/.env if it exists
+            env_file = expand_path("~/.maia/.env")
             dotenv_vars = {}
             if os.path.exists(env_file):
                 try:
@@ -310,7 +310,7 @@ SAFETY:
                                 from types import SimpleNamespace
                                 result = SimpleNamespace(
                                     returncode=1,
-                                    stdout='{"error": "图片无法解析", "reason": "该图片格式可能不受支持，或图片文件存在问题", "suggestion": "请尝试其他图片"}',
+                                    stdout='{"error": "Could not read the image", "reason": "The format may be unsupported, or the file is damaged", "suggestion": "Try another image"}',
                                     stderr=''
                                 )
                                 logger.info("[Bash] Converted exit 126 to user-friendly image error message for vision skill")
@@ -627,7 +627,7 @@ SAFETY:
         if re.search(r"\bfindstr\b[^\r\n]*(?:^|\s)-[a-z]", lower):
             corrections.append(
                 'findstr uses /I and a quoted search string, for example '
-                'findstr /I "cow agent"; it does not accept grep-style -i/-e flags'
+                'findstr /I "maia agent"; it does not accept grep-style -i/-e flags'
             )
         if "/dev/null" in lower:
             corrections.append("redirect to nul, for example >nul 2>&1, not /dev/null")

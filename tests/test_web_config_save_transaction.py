@@ -17,7 +17,7 @@ from channel.web.api.config import ConfigHandler
 @pytest.fixture
 def console(tmp_path, monkeypatch):
     original = config.config
-    monkeypatch.setenv("COW_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("MAIA_DATA_DIR", str(tmp_path))
     path = tmp_path / "config.json"
     seed = {
         "model": "gpt-4o-mini",

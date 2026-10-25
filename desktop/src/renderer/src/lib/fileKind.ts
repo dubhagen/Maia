@@ -134,12 +134,12 @@ export function formatSize(bytes?: number): string {
 // emitted (see the workspace_ref branch in web_channel.post_message). History
 // only persists the prompt text, so this is the only way back to a chip.
 const MARKER_TYPES: Record<string, Attachment['file_type'] | 'workspace_dir'> = {
-  工作空间文件: 'workspace_ref', 工作空间檔案: 'workspace_ref', 'Workspace file': 'workspace_ref',
-  工作空间目录: 'workspace_dir', 工作空间目錄: 'workspace_dir', 'Workspace directory': 'workspace_dir',
-  图片: 'image', 圖片: 'image', Image: 'image',
-  视频: 'video', 影片: 'video', Video: 'video',
-  目录: 'directory', 目錄: 'directory', Directory: 'directory',
-  文件: 'file', 檔案: 'file', File: 'file',
+  'Workspace file': 'workspace_ref',
+  'Workspace directory': 'workspace_dir',
+  Image: 'image',
+  Video: 'video',
+  Directory: 'directory',
+  File: 'file',
 }
 
 /**

@@ -26,7 +26,7 @@ def _plugins_resource_dir():
 def _plugins_data_dir():
     """Writable dir for plugin runtime config (plugins.json). In a frozen
     bundle the resource dir is read-only, so redirect writes to the data root
-    (~/.cow); from source it stays the CWD-relative ./plugins."""
+    (~/.maia); from source it stays the CWD-relative ./plugins."""
     if getattr(sys, "frozen", False):
         d = os.path.join(get_data_root(), "plugins")
         os.makedirs(d, exist_ok=True)
@@ -54,8 +54,8 @@ class PluginManager:
             plugincls.version = kwargs.get("version") if kwargs.get("version") != None else "1.0"
             plugincls.namecn = kwargs.get("namecn") if kwargs.get("namecn") != None else name
             plugincls.hidden = kwargs.get("hidden") if kwargs.get("hidden") != None else False
-            # enabled 默认 True；示例性插件可在装饰器中显式传 enabled=False，
-            # 首次启动写入 plugins.json 时即为关闭状态，避免拦截用户消息。
+            
+            
             plugincls.enabled = kwargs.get("enabled", True)
             if self.current_plugin_path == None:
                 raise Exception("Plugin path not set")
@@ -159,11 +159,11 @@ class PluginManager:
     @staticmethod
     def _load_all_config():
         """
-        背景: 目前插件配置存放于每个插件目录的config.json下，docker运行时不方便进行映射，故增加统一管理的入口，优先
-        加载 plugins/config.json，原插件目录下的config.json 不受影响
+        Load every plugin's config from plugins/config.json into the global config.
 
-        从 plugins/config.json 中加载所有插件的配置并写入 config.py 的全局配置中，供插件中使用
-        插件实例中通过 config.pconf(plugin_name) 即可获取该插件的配置
+        Per-plugin config.json files still work. plugins/config.json is the shared
+        entry point, which is easier to mount in Docker. A plugin reads its config
+        with config.pconf(plugin_name).
         """
         all_config_path = os.path.join(_plugins_resource_dir(), "config.json")
         try:
@@ -185,10 +185,10 @@ class PluginManager:
         for plugin_name in os.listdir(plugins_dir):
             plugin_path = os.path.join(plugins_dir, plugin_name)
             if os.path.isdir(plugin_path):
-                # 判断插件是否包含同名__init__.py文件
+                
                 main_module_path = os.path.join(plugin_path, "__init__.py")
                 if os.path.isfile(main_module_path):
-                    # 导入插件
+                    
                     import_path = "plugins.{}".format(plugin_name)
                     try:
                         self.current_plugin_path = plugin_path
@@ -223,7 +223,7 @@ class PluginManager:
             else:
                 self.plugins[name].enabled = pconf["plugins"][rawname]["enabled"]
                 self.plugins[name].priority = pconf["plugins"][rawname]["priority"]
-                self.plugins._update_heap(name)  # 更新下plugins中的顺序
+                self.plugins._update_heap(name)  
         if modified:
             self.save_config()
         return new_plugins
@@ -232,7 +232,7 @@ class PluginManager:
         for event in self.listening_plugins.keys():
             self.listening_plugins[event].sort(key=lambda name: self.plugins[name].priority, reverse=True)
 
-    def activate_plugins(self):  # 生成新开启的插件实例
+    def activate_plugins(self):  
         failed_plugins = []
         for name, plugincls in self.plugins.items():
             if plugincls.enabled:
@@ -274,7 +274,7 @@ class PluginManager:
 
     # IM-channel-only plugins that make no sense in the single-user desktop app
     # and, worse, write config.json into their bundle dir on init — which breaks
-    # the macOS code-signature seal of the packaged .app. cow_cli stays enabled
+    # the macOS code-signature seal of the packaged .app. maia_cli stays enabled
     # so desktop chat commands (/status, /help, ...) keep working.
     DESKTOP_DISABLED_PLUGINS = {
         "GODCMD", "KEYWORD", "BANWORDS", "ROLE", "DUNGEON", "HELLO", "FINISH",
@@ -285,7 +285,7 @@ class PluginManager:
         plugins.json (bundle default or user copy) says. Runs after scan (which
         syncs enabled from plugins.json) and before activate, so denied plugins
         are never instantiated and never write into the read-only bundle."""
-        if os.environ.get("COW_DESKTOP") != "1":
+        if os.environ.get("MAIA_DESKTOP") != "1":
             return
         for name in list(self.plugins.keys()):
             if name.upper() in self.DESKTOP_DISABLED_PLUGINS and self.plugins[name].enabled:
@@ -295,7 +295,7 @@ class PluginManager:
     def load_plugins(self):
         self.load_config()
         self.scan_plugins()
-        # 加载全量插件配置
+        
         self._load_all_config()
         pconf = self.pconf
         logger.debug("plugins.json config={}".format(pconf))
@@ -335,7 +335,7 @@ class PluginManager:
     def enable_plugin(self, name: str):
         name = name.upper()
         if name not in self.plugins:
-            return False, "插件不存在"
+            return False, "Plugin does not exist"
         if not self.plugins[name].enabled:
             self.plugins[name].enabled = True
             rawname = self.plugins[name].name
@@ -343,9 +343,9 @@ class PluginManager:
             self.save_config()
             failed_plugins = self.activate_plugins()
             if name in failed_plugins:
-                return False, "插件开启失败"
-            return True, "插件已开启"
-        return True, "插件已开启"
+                return False, "Failed to enable the plugin"
+            return True, "Plugin enabled"
+        return True, "Plugin enabled"
 
     def disable_plugin(self, name: str):
         name = name.upper()
@@ -369,7 +369,7 @@ class PluginManager:
             pkgmgr.check_dulwich()
         except Exception as e:
             logger.error("Failed to install plugin, {}".format(e))
-            return False, "无法导入dulwich，安装插件失败"
+            return False, "Could not import dulwich. Plugin install failed."
         import re
 
         from dulwich import porcelain
@@ -386,22 +386,22 @@ class PluginManager:
                     repo = source["repo"][repo]["url"]
                     match = re.match(r"^(https?:\/\/|git@)([^\/:]+)[\/:]([^\/:]+)\/(.+).git$", repo)
                     if not match:
-                        return False, "安装插件失败，source中的仓库地址不合法"
+                        return False, "Plugin install failed. The repository URL in source.json is invalid."
                 else:
-                    return False, "安装插件失败，仓库地址不合法"
+                    return False, "Plugin install failed. The repository URL is invalid."
             except Exception as e:
                 logger.error("Failed to install plugin, {}".format(e))
-                return False, "安装插件失败，请检查仓库地址是否正确"
+                return False, "Plugin install failed. Check the repository URL."
         dirname = os.path.join("./plugins", match.group(4))
         try:
             repo = porcelain.clone(repo, dirname, checkout=True)
             if os.path.exists(os.path.join(dirname, "requirements.txt")):
-                logger.info("detect requirements.txt，installing...")
+                logger.info("detect requirements.txt, installing...")
             pkgmgr.install_requirements(os.path.join(dirname, "requirements.txt"))
-            return True, "安装插件成功，请使用 #scanp 命令扫描插件或重启程序，开启前请检查插件是否需要配置"
+            return True, "Plugin installed. Run #scanp or restart, and check whether the plugin needs configuration before enabling it."
         except Exception as e:
             logger.error("Failed to install plugin, {}".format(e))
-            return False, "安装插件失败，" + str(e)
+            return False, "Plugin install failed, " + str(e)
 
     def update_plugin(self, name: str):
         try:
@@ -410,12 +410,12 @@ class PluginManager:
             pkgmgr.check_dulwich()
         except Exception as e:
             logger.error("Failed to install plugin, {}".format(e))
-            return False, "无法导入dulwich，更新插件失败"
+            return False, "Could not import dulwich. Plugin update failed."
         from dulwich import porcelain
 
         name = name.upper()
         if name not in self.plugins:
-            return False, "插件不存在"
+            return False, "Plugin does not exist"
         if name in [
             "HELLO",
             "GODCMD",
@@ -426,22 +426,22 @@ class PluginManager:
             "FINISH",
             "DUNGEON",
         ]:
-            return False, "预置插件无法更新，请更新主程序仓库"
+            return False, "Built-in plugins cannot be updated. Update the application repository."
         dirname = self.plugins[name].path
         try:
             porcelain.pull(dirname, "origin")
             if os.path.exists(os.path.join(dirname, "requirements.txt")):
-                logger.info("detect requirements.txt，installing...")
+                logger.info("detect requirements.txt, installing...")
             pkgmgr.install_requirements(os.path.join(dirname, "requirements.txt"))
-            return True, "更新插件成功，请重新运行程序"
+            return True, "Plugin updated. Restart the application."
         except Exception as e:
             logger.error("Failed to update plugin, {}".format(e))
-            return False, "更新插件失败，" + str(e)
+            return False, "Plugin update failed, " + str(e)
 
     def uninstall_plugin(self, name: str):
         name = name.upper()
         if name not in self.plugins:
-            return False, "插件不存在"
+            return False, "Plugin does not exist"
         if name in self.instances:
             self.disable_plugin(name)
         dirname = self.plugins[name].path
@@ -457,7 +457,7 @@ class PluginManager:
             del self.pconf["plugins"][rawname]
             self.loaded[dirname] = None
             self.save_config()
-            return True, "卸载插件成功"
+            return True, "Plugin uninstalled"
         except Exception as e:
             logger.error("Failed to uninstall plugin, {}".format(e))
-            return False, "卸载插件失败，请手动删除文件夹完成卸载，" + str(e)
+            return False, "Plugin uninstall failed. Delete the folder manually, " + str(e)

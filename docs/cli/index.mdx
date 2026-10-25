@@ -1,38 +1,38 @@
 ---
 title: Commands Overview
-description: "Overview of CowAgent commands: use the cow CLI in a terminal to run, update and manage the service and skills, or type / commands in chat to check status and change settings."
+description: "Overview of Maia commands: use the maia CLI in a terminal to run, update and manage the service and skills, or type / commands in chat to check status and change settings."
 ---
 
-CowAgent provides two ways to interact via commands:
+Maia provides two ways to interact via commands:
 
-- **Terminal CLI** — Run `cow <command>` in your system terminal for service management, skill management, and other operations
-- **Chat Commands** — Type `/<command>` or `cow <command>` in any conversation to check status, manage skills, adjust configuration, etc.
+- **Terminal CLI** — Run `maia <command>` in your system terminal for service management, skill management, and other operations
+- **Chat Commands** — Type `/<command>` or `maia <command>` in any conversation to check status, manage skills, adjust configuration, etc.
 
-## Cow CLI
+## Maia CLI
 
-After deploying with the one-click install script, the `cow` command is automatically available. For manual installations, run:
+After deploying with the one-click install script, the `maia` command is automatically available. For manual installations, run:
 
 ```bash
 pip install -e .
 ```
 
-Then use the `cow` command from anywhere:
+Then use the `maia` command from anywhere:
 
 ```bash
-cow help
+maia help
 ```
 
 Example output:
 
 ```
-🐮 CowAgent CLI
+🐮 Maia CLI
 
-Usage: cow <command>
+Usage: maia <command>
 
 Service:
-  start     Start the CowAgent service
-  stop      Stop the CowAgent service
-  restart   Restart the CowAgent service
+  start     Start the Maia service
+  stop      Stop the Maia service
+  restart   Restart the Maia service
   update    Update code and restart service
   status    Show service status
   logs      View service logs
@@ -46,7 +46,7 @@ Memory & Knowledge:
 
 Data portability:
   backup    Back up config and agent workspace
-  restore   Restore a CowAgent backup
+  restore   Restore a Maia backup
 
 Others:
   help      Show this help message
@@ -80,7 +80,7 @@ In the Web console or any connected channel, type `/` to see command suggestions
 
 ## Command Availability
 
-| Command | Terminal (`cow`) | Chat (`/`) |
+| Command | Terminal (`maia`) | Chat (`/`) |
 | --- | :---: | :---: |
 | help | ✓ | ✓ |
 | version | ✓ | ✓ |

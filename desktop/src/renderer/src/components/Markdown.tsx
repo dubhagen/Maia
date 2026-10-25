@@ -35,8 +35,6 @@ const md: MarkdownIt = new MarkdownIt({
 })
 
 // CommonMark's flanking rules treat every Unicode punctuation alike, so
-// `是**"引号"**——` never opens emphasis: the quote after `**` is punctuation
-// while 是 before it is neither punctuation nor space, and the run degrades to
 // literal asterisks. Apply the CJK-friendly amendment
 // (github.com/tats-u/markdown-cjk-friendly): a `*` run with a CJK neighbour and
 // no adjacent whitespace both opens and closes. `_` keeps the stock rules,
@@ -66,7 +64,6 @@ _StateInline.prototype.scanDelims = function (start, canSplitWord) {
 
 // Fix greedy linkify: markdown-it's linkify swallows markdown emphasis (`*`)
 // and CJK full-width punctuation glued to a URL (common in LLM output like
-// `**https://x**，中文`), turning the whole tail into one broken link. Cut the
 // URL at the first such char and spill the remainder back as plain text.
 const _GREEDY_LINK_CUT = /[*\u3000-\u303F\uFF00-\uFFEF]/
 md.core.ruler.after('linkify', 'fix_greedy_linkify', (state) => {

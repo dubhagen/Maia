@@ -114,19 +114,8 @@ class Send(BaseTool):
             "mime_type": mime_type,
             "size": file_size,
             "size_formatted": self._format_size(file_size),
-            "message": message or f"正在发送 {file_name}"
+            "message": message or f"Sending {file_name}"
         }
-
-        try:
-            from common.cloud_client import get_website_base_url, copy_send_file
-
-            # Do nothing when in local env
-            if get_website_base_url():
-                url = copy_send_file(absolute_path, self.cwd)
-                if url:
-                    result["url"] = url
-        except Exception:
-            pass
 
         return ToolResult.success(result)
     
@@ -166,7 +155,7 @@ class Send(BaseTool):
             "url": url,
             "file_name": file_name,
             "mime_type": mime_type,
-            "message": message or f"正在发送 {file_name}",
+            "message": message or f"Sending {file_name}",
         }
         return ToolResult.success(result)
 

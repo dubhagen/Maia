@@ -226,10 +226,6 @@ class SkillLoader:
         elif not isinstance(description, str):
             description = str(description) if description else ''
         
-        # Special handling for linkai-agent: dynamically load apps from config.json
-        if name == 'linkai-agent':
-            description = self._load_linkai_agent_description(skill_dir, description)
-        
         if not description or not description.strip():
             diagnostics.append(f"Skill {name} has no description: {file_path}")
             return LoadSkillsResult(skills=[], diagnostics=diagnostics)
@@ -253,42 +249,6 @@ class SkillLoader:
         )
         
         return LoadSkillsResult(skills=[skill], diagnostics=diagnostics)
-    
-    def _load_linkai_agent_description(self, skill_dir: str, default_description: str) -> str:
-        """
-        Dynamically load LinkAI agent description from config.json
-        
-        :param skill_dir: Skill directory
-        :param default_description: Default description from SKILL.md
-        :return: Dynamic description with app list
-        """
-        import json
-        
-        config_path = os.path.join(skill_dir, "config.json")
-        
-        if not os.path.exists(config_path):
-            logger.debug("[SkillLoader] linkai-agent skipped: no config.json found")
-            return ""
-        
-        try:
-            with open(config_path, 'r', encoding='utf-8') as f:
-                config = json.load(f)
-            
-            apps = config.get("apps", [])
-            if not apps:
-                return default_description
-            
-            # Build dynamic description with app details
-            app_descriptions = "; ".join([
-                f"{app['app_name']}({app['app_code']}: {app['app_description']})"
-                for app in apps
-            ])
-            
-            return f"Call LinkAI apps/workflows. {app_descriptions}"
-        
-        except Exception as e:
-            logger.warning(f"[SkillLoader] Failed to load linkai-agent config: {e}")
-            return default_description
     
     def load_all_skills(
         self,

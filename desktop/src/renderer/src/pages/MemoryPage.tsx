@@ -85,14 +85,14 @@ const MemoryPage: React.FC<MemoryPageProps> = ({ baseUrl }) => {
   const defaultAgentId = useAgentStore((s) => s.defaultAgentId)
   const agents = useAgentStore((s) => s.agents)
   const [scopeAgentId, setScopeAgentId] = useState<string>(
-    () => localStorage.getItem('cow_memory_agent') || ''
+    () => localStorage.getItem('maia_memory_agent') || ''
   )
   const remembered = agents.some((a) => a.id === scopeAgentId) ? scopeAgentId : ''
   const viewingAgentId = multiAgent ? remembered || defaultAgentId : ''
 
   const setScope = (id: string) => {
     setScopeAgentId(id)
-    localStorage.setItem('cow_memory_agent', id)
+    localStorage.setItem('maia_memory_agent', id)
   }
 
   const category: MemoryCategory = tab === 'evolution' ? 'evolution' : 'memory'

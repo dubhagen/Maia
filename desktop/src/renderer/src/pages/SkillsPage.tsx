@@ -53,7 +53,7 @@ interface SkillsPageProps {
   baseUrl: string
 }
 
-const SKILL_HUB_URL = 'https://skills.cowagent.ai/'
+const SKILL_HUB_URL = ''
 const TOOLS_COLLAPSED_COUNT = 4
 const MCP_POLL_INTERVAL_MS = 1500
 const MCP_POLL_MAX_MS = 120000
@@ -74,7 +74,7 @@ const TOOL_ICONS: Record<string, LucideIcon> = {
 }
 
 /** Where the file list's own show/hide state is kept, as in the web console. */
-const SKILL_FILES_PANEL_KEY = 'cow_skill_files_panel'
+const SKILL_FILES_PANEL_KEY = 'maia_skill_files_panel'
 
 /**
  * A skill is addressed by name, not by path: which directory a name resolves to
@@ -154,7 +154,7 @@ const SkillContentView: React.FC<{
     <>
       {fields.length > 0 && (
         // The label column sizes to the longest key, up to a cap; past it a
-        // dotted path like `metadata.cowagent.requires.anyEnv` wraps at its
+        // dotted path like `metadata.maia.requires.anyEnv` wraps at its
         // dots rather than squeezing the values into a sliver.
         <dl className="mb-6 grid grid-cols-[minmax(5rem,9rem)_1fr] gap-x-4 gap-y-1.5 rounded-card border border-default bg-inset px-4 py-3 text-sm">
           {/* Index keys: a hand-written header may repeat a key. */}
@@ -840,7 +840,7 @@ const SkillsPage: React.FC<SkillsPageProps> = ({ baseUrl }) => {
                     count={skills.length}
                     action={
                       <>
-                        {!product.skills?.uploadOnly && (
+                        {!product.skills?.uploadOnly && SKILL_HUB_URL && (
                           <a
                             href={SKILL_HUB_URL}
                             target="_blank"

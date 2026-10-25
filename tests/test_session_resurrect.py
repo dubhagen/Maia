@@ -27,10 +27,10 @@ def test_reply_does_not_resurrect_deleted_session():
         # Turn starts: the user message is persisted eagerly.
         store.append_messages(
             sid,
-            [{"role": "user", "content": [{"type": "text", "text": "打开文档"}]}],
+            [{"role": "user", "content": [{"type": "text", "text": "Open the document"}]}],
             channel_type="web",
         )
-        assert _titles(store) == {sid: "打开文档"}
+        assert _titles(store) == {sid: "Open the document"}
 
         # User deletes the session while the agent is still running.
         store.clear_session(sid)
@@ -39,7 +39,7 @@ def test_reply_does_not_resurrect_deleted_session():
         stored = store.append_messages(
             sid,
             [
-                {"role": "assistant", "content": [{"type": "text", "text": "已打开"}]},
+                {"role": "assistant", "content": [{"type": "text", "text": "Opened"}]},
                 {"role": "user", "content": [{"type": "tool_result", "content": "ok"}]},
             ],
             channel_type="web",
@@ -58,18 +58,18 @@ def test_reply_still_persists_for_a_live_session():
 
         store.append_messages(
             sid,
-            [{"role": "user", "content": [{"type": "text", "text": "打开文档"}]}],
+            [{"role": "user", "content": [{"type": "text", "text": "Open the document"}]}],
             channel_type="web",
         )
         stored = store.append_messages(
             sid,
-            [{"role": "assistant", "content": [{"type": "text", "text": "已打开"}]}],
+            [{"role": "assistant", "content": [{"type": "text", "text": "Opened"}]}],
             channel_type="web",
             create_if_missing=False,
         )
 
         assert stored is True
-        assert _titles(store) == {sid: "打开文档"}
+        assert _titles(store) == {sid: "Open the document"}
         assert store.list_sessions()["sessions"][0]["msg_count"] == 2
 
 

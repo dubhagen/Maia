@@ -26,7 +26,7 @@ class _Resp:
 
 
 def _leftovers(sandbox):
-    return sorted(p.name for p in sandbox.glob("cow-skill-*"))
+    return sorted(p.name for p in sandbox.glob("maia-skill-*"))
 
 
 @pytest.fixture

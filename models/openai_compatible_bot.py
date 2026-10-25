@@ -4,7 +4,7 @@
 OpenAI-Compatible Bot Base Class
 
 Provides a common implementation for bots that are compatible with OpenAI's API format.
-This includes: OpenAI, LinkAI, Azure OpenAI, and many third-party providers.
+Chat requests go to the configured LiteLLM endpoint.
 """
 
 import json
@@ -12,19 +12,14 @@ import requests
 from typing import Optional
 from common.log import logger
 from agent.protocol.message_utils import drop_orphaned_tool_results_openai
-from models.openai.openai_http_client import OpenAIHTTPClient, OpenAIHTTPError
+from models.litellm.http_client import OpenAIHTTPClient, OpenAIHTTPError
 
 
 class OpenAICompatibleBot:
     """
     Base class for OpenAI-compatible bots.
     
-    Provides common tool calling implementation that can be inherited by:
-    - ChatGPTBot
-    - LinkAIBot  
-    - OpenAIBot
-    - AzureChatGPTBot
-    - Other OpenAI-compatible providers
+    Provides the shared tool-calling implementation used by the LiteLLM bot.
     
     Subclasses only need to override get_api_config() to provide their specific API settings.
     """
@@ -112,62 +107,47 @@ class OpenAICompatibleBot:
                     # Replace existing system message
                     messages[0] = {"role": "system", "content": system_prompt}
             
-            # Build request parameters
-            model_name = kwargs.get("model", api_config.get('model', 'gpt-5.4'))
-
-            # Models like gpt-6-astra only support tool calling via the Responses
-            # API (Chat Completions rejects tools with a non-"none" reasoning
-            # effort, and Astra has no "none"). Route them through Responses and
-            # translate the result back to Chat-Completions shape. ``api_type``
-            # lets endpoints that no longer serve /chat/completions force it.
-            from models.openai import responses_adapter as responses_adapter
-            if responses_adapter.use_responses_api(model_name, api_config.get("api_type")):
-                return self._call_with_tools_responses(
-                    model_name=model_name,
-                    messages=messages,
-                    tools=tools,
-                    stream=stream,
-                    api_config=api_config,
-                    kwargs=kwargs,
+            model_name = kwargs.get("model", api_config.get('model', ''))
+            if not model_name:
+                raise RuntimeError("model is not set")
+            if not api_config.get("api_base"):
+                raise RuntimeError(
+                    "litellm_api_base is required (for example http://127.0.0.1:4000/v1)"
                 )
+
             request_params = {
                 "model": model_name,
                 "messages": messages,
                 "temperature": kwargs.get("temperature", api_config.get('default_temperature', 0.9)),
                 "top_p": kwargs.get("top_p", api_config.get('default_top_p', 1.0)),
-                "frequency_penalty": kwargs.get("frequency_penalty", api_config.get('default_frequency_penalty', 0.0)),
-                "presence_penalty": kwargs.get("presence_penalty", api_config.get('default_presence_penalty', 0.0)),
                 "stream": stream
             }
-            # Ask for a final usage chunk on streaming calls so the agent can
-            # surface a real prompt_tokens count (context-usage indicator)
-            # instead of the char-based estimate. Providers that don't support
-            # stream_options simply ignore it or omit the usage chunk, in which
-            # case the agent falls back to the estimate — so this is safe to
-            # always request on the OpenAI-compatible path.
+            # Zero is the API default. Sending the key anyway makes Grok reject
+            # the request with "does not support parameter presencePenalty".
+            for key, default_key in (
+                ("frequency_penalty", "default_frequency_penalty"),
+                ("presence_penalty", "default_presence_penalty"),
+            ):
+                value = kwargs.get(key, api_config.get(default_key, 0.0))
+                try:
+                    value = float(value)
+                except (TypeError, ValueError):
+                    value = 0.0
+                if value:
+                    request_params[key] = value
             if stream:
                 request_params["stream_options"] = {"include_usage": True}
-            # GPT-5.x / o-series reasoning models only accept default
-            # temperature/top_p and reject penalty params.
-            is_gpt5_reasoning = self._is_gpt5_reasoning_model(model_name)
-            if is_gpt5_reasoning:
-                for key in ("temperature", "top_p", "frequency_penalty", "presence_penalty"):
-                    request_params.pop(key, None)
-            
-            # Add max_tokens if specified
+
             if kwargs.get("max_tokens"):
                 request_params["max_tokens"] = kwargs["max_tokens"]
-            
-            # Add tools if provided
+
             if tools:
                 request_params["tools"] = tools
                 request_params["tool_choice"] = kwargs.get("tool_choice", "auto")
-                # GPT-5.x reasoning models reject function tools combined with
-                # reasoning_effort on /v1/chat/completions unless it is "none".
-                # Force "none" so agent tool calling works without migrating to
-                # the Responses API.
-                if is_gpt5_reasoning:
-                    request_params["reasoning_effort"] = "none"
+
+            effort = kwargs.get("reasoning_effort")
+            if effort:
+                request_params["reasoning_effort"] = effort
             
             # Make API call with proper configuration
             api_key = api_config.get('api_key')
@@ -196,113 +176,13 @@ class OpenAICompatibleBot:
                     "status_code": 500
                 }
     
+    _SAMPLING_KEYS = ("temperature", "top_p", "frequency_penalty", "presence_penalty")
+
     @classmethod
-    def _responses_reasoning_effort(cls, model_name, kwargs) -> Optional[str]:
-        """Pick the reasoning effort for a Responses request.
-
-        Responses-only models (gpt-6*) have no "none" tier, so they only get an
-        explicit effort. For GPT-5.x / o-series the effort follows the thinking
-        toggle: disabled -> "none" (same as the Chat Completions tool path),
-        enabled -> the configured effort, or the model default when unset.
-        """
-        from models.openai import responses_adapter
-
-        effort = kwargs.get("reasoning_effort")
-        if responses_adapter.is_responses_only_model(model_name):
-            return effort
-        thinking = kwargs.get("thinking")
-        if isinstance(thinking, dict) and thinking.get("type") == "enabled":
-            return effort
-        if cls._is_gpt5_reasoning_model(model_name):
-            return "none"
-        return None
-
-    def _responses_as_chat_completion(self, *, model, messages, api_key=None,
-                                      api_base=None, timeout=None, max_tokens=None) -> dict:
-        """Run a non-streaming, tool-less Responses request and return it in
-        Chat-Completions shape. Raises ``OpenAIHTTPError`` like
-        ``chat_completions`` so callers keep their existing error handling."""
-        from models.openai import responses_adapter
-
-        payload = responses_adapter.build_responses_payload(
-            model=model,
-            messages=messages,
-            max_output_tokens=max_tokens,
-            reasoning_effort=self._responses_reasoning_effort(model, {}),
-        )
-        response = self._get_http_client().responses(
-            api_key=api_key, api_base=api_base, timeout=timeout,
-            stream=False, **payload,
-        )
-        result = responses_adapter.responses_to_chat_completion(response)
-        if result.get("error"):
-            raise OpenAIHTTPError(result.get("status_code") or 500, response, result.get("message") or "")
-        return result
-
-    def _call_with_tools_responses(self, *, model_name, messages, tools, stream,
-                                   api_config, kwargs):
-        """Tool-calling path over the Responses API.
-
-        Used for Responses-only models (e.g. gpt-6-astra) and whenever
-        ``api_type`` is "responses". Builds a Responses request from the
-        already-converted OpenAI-shaped ``messages`` / ``tools`` and translates
-        the Responses output (sync) or SSE events (stream) back into
-        Chat-Completions shape so the agent consumes it identically to the
-        ``/chat/completions`` path.
-        """
-        from models.openai import responses_adapter
-
-        payload = responses_adapter.build_responses_payload(
-            model=model_name,
-            messages=messages,
-            tools=tools,
-            tool_choice=kwargs.get("tool_choice", "auto") if tools else None,
-            max_output_tokens=kwargs.get("max_tokens"),
-            reasoning_effort=self._responses_reasoning_effort(model_name, kwargs),
-            response_format=kwargs.get("response_format"),
-        )
-        api_key = api_config.get("api_key")
-        api_base = api_config.get("api_base")
-        timeout = kwargs.get("request_timeout") or kwargs.get("timeout")
-
-        if stream:
-            return self._handle_responses_stream(payload, api_key, api_base, timeout, model_name)
-        return self._handle_responses_sync(payload, api_key, api_base, timeout)
-
-    def _handle_responses_sync(self, payload, api_key, api_base, timeout):
-        from models.openai import responses_adapter
-        try:
-            client = self._get_http_client()
-            response = client.responses(
-                api_key=api_key, api_base=api_base, timeout=timeout,
-                stream=False, **payload,
-            )
-            return responses_adapter.responses_to_chat_completion(response)
-        except OpenAIHTTPError as e:
-            logger.error(f"[{self.__class__.__name__}] responses sync error: "
-                         f"HTTP {e.status_code}: {e.message}")
-            return {"error": True, "message": e.message, "status_code": e.status_code or 500}
-        except Exception as e:
-            logger.error(f"[{self.__class__.__name__}] responses sync error: {e}")
-            return {"error": True, "message": str(e), "status_code": 500}
-
-    def _handle_responses_stream(self, payload, api_key, api_base, timeout, model_name):
-        from models.openai import responses_adapter
-        try:
-            client = self._get_http_client()
-            events = client.responses(
-                api_key=api_key, api_base=api_base, timeout=timeout,
-                stream=True, **payload,
-            )
-            for chunk in responses_adapter.responses_stream_to_chat_chunks(events, model_name):
-                yield chunk
-        except OpenAIHTTPError as e:
-            logger.error(f"[{self.__class__.__name__}] responses stream error: "
-                         f"HTTP {e.status_code}: {e.message}")
-            yield {"error": True, "message": e.message, "status_code": e.status_code or 500}
-        except Exception as e:
-            logger.error(f"[{self.__class__.__name__}] responses stream error: {e}")
-            yield {"error": True, "message": str(e), "status_code": 500}
+    def _sampling_rejected(cls, message: str) -> bool:
+        # Gateways report the same field as presence_penalty or presencePenalty.
+        text = (message or "").lower().replace("_", "")
+        return any(key.replace("_", "") in text for key in cls._SAMPLING_KEYS)
 
     def _get_http_client(self) -> OpenAIHTTPClient:
         """Build an HTTP client honoring the global proxy config.
@@ -322,13 +202,30 @@ class OpenAICompatibleBot:
         timeout = params.pop("request_timeout", None) or params.pop("timeout", None)
         try:
             client = self._get_http_client()
-            return client.chat_completions(
-                api_key=api_key,
-                api_base=api_base,
-                timeout=timeout,
-                stream=False,
-                **params,
-            )
+            try:
+                return client.chat_completions(
+                    api_key=api_key,
+                    api_base=api_base,
+                    timeout=timeout,
+                    stream=False,
+                    **params,
+                )
+            except OpenAIHTTPError as e:
+                if e.status_code == 400 and self._sampling_rejected(e.message):
+                    for key in self._SAMPLING_KEYS:
+                        params.pop(key, None)
+                    logger.info(
+                        "[%s] sampling params rejected; retrying once without them",
+                        self.__class__.__name__,
+                    )
+                    return client.chat_completions(
+                        api_key=api_key,
+                        api_base=api_base,
+                        timeout=timeout,
+                        stream=False,
+                        **params,
+                    )
+                raise
         except OpenAIHTTPError as e:
             logger.error(
                 f"[{self.__class__.__name__}] sync response error: "
@@ -360,13 +257,30 @@ class OpenAICompatibleBot:
         timeout = params.pop("request_timeout", None) or params.pop("timeout", None)
         try:
             client = self._get_http_client()
-            stream = client.chat_completions(
-                api_key=api_key,
-                api_base=api_base,
-                timeout=timeout,
-                stream=True,
-                **params,
-            )
+            try:
+                stream = client.chat_completions(
+                    api_key=api_key,
+                    api_base=api_base,
+                    timeout=timeout,
+                    stream=True,
+                    **params,
+                )
+            except OpenAIHTTPError as e:
+                if not (e.status_code == 400 and self._sampling_rejected(e.message)):
+                    raise
+                for key in self._SAMPLING_KEYS:
+                    params.pop(key, None)
+                logger.info(
+                    "[%s] sampling params rejected; retrying stream once without them",
+                    self.__class__.__name__,
+                )
+                stream = client.chat_completions(
+                    api_key=api_key,
+                    api_base=api_base,
+                    timeout=timeout,
+                    stream=True,
+                    **params,
+                )
             for chunk in stream:
                 yield chunk
         except OpenAIHTTPError as e:
@@ -558,10 +472,20 @@ class OpenAICompatibleBot:
                     max_tokens: int = 1000) -> dict:
         """Analyze an image using the OpenAI-compatible /chat/completions endpoint."""
         try:
+            from config import conf
             api_config = self.get_api_config()
-            vision_model = model or api_config.get("model", "gpt-4o")
+            vision_model = (
+                model
+                or (conf().get("vision_model") or "").strip()
+                or api_config.get("model")
+                or ""
+            )
+            if not vision_model:
+                return {"error": True, "message": "model is not set"}
             api_key = api_config.get("api_key", "")
-            api_base = (api_config.get("api_base") or "https://api.openai.com/v1").rstrip("/")
+            api_base = (api_config.get("api_base") or "").rstrip("/")
+            if not api_base:
+                return {"error": True, "message": "litellm_api_base is required"}
 
             messages = [{
                 "role": "user",
@@ -571,35 +495,14 @@ class OpenAICompatibleBot:
                 ],
             }]
 
-            from models.openai import responses_adapter
-            if responses_adapter.resolve_api_type(api_config.get("api_type")) == responses_adapter.API_TYPE_RESPONSES:
-                try:
-                    data = self._responses_as_chat_completion(
-                        model=vision_model, messages=messages, api_key=api_key,
-                        api_base=api_base, timeout=180,
-                    )
-                except OpenAIHTTPError as e:
-                    logger.error(f"[{self.__class__.__name__}] call_vision HTTP {e.status_code}: {e.message}")
-                    return {"error": True, "message": f"HTTP {e.status_code}: {e.message}"}
-                usage = data.get("usage", {})
-                return {
-                    "model": vision_model,
-                    "content": data["choices"][0]["message"].get("content") or "",
-                    "usage": {
-                        "prompt_tokens": usage.get("prompt_tokens", 0),
-                        "completion_tokens": usage.get("completion_tokens", 0),
-                        "total_tokens": usage.get("total_tokens", 0),
-                    },
-                }
-
             payload = {
                 "model": vision_model,
                 "messages": messages,
+                "max_tokens": max_tokens,
             }
-            headers = {
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            }
+            headers = {"Content-Type": "application/json"}
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
             resp = requests.post(
                 f"{api_base}/chat/completions",
                 headers=headers, json=payload, timeout=180,

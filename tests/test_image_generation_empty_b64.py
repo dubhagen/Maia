@@ -63,7 +63,7 @@ def test_item_without_usable_payload_writes_nothing(tmp_path, monkeypatch):
     assert list(tmp_path.iterdir()) == []
 
 
-def test_linkai_order_skips_empty_url():
+def test_url_first_order_skips_empty_url():
     b64 = base64.b64encode(PNG_BYTES).decode()
 
     raw = image_generation._decode_image_item({"url": "", "b64_json": b64}, url_first=True)

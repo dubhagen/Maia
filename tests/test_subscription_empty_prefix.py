@@ -10,9 +10,9 @@ def test_empty_prefixes_do_not_break_subscription(monkeypatch, prefixes):
 
 def test_configured_prefix_preserved(monkeypatch):
     monkeypatch.setattr(
-        config, "config", {"single_chat_prefix": ["cow", "other"], "subscribe_msg": "Type {trigger_prefix}"}
+        config, "config", {"single_chat_prefix": ["maia", "other"], "subscribe_msg": "Type {trigger_prefix}"}
     )
-    assert config.subscribe_msg() == "Type cow"
+    assert config.subscribe_msg() == "Type maia"
 
 
 def test_missing_prefix_preserved(monkeypatch):

@@ -21,7 +21,7 @@ def test_every_template_key_is_registered():
 
 def test_external_api_token_can_be_set_from_the_environment(tmp_path, monkeypatch):
     # An empty data dir makes load_config fall back to config-template.json.
-    monkeypatch.setenv("COW_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("MAIA_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("EXTERNAL_API_TOKEN", "sk-test-token")
     previous = config_module.config
     try:

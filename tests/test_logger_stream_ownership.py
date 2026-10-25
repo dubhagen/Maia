@@ -53,7 +53,7 @@ sys.stdout.flush()
 sys.stderr.write(json.dumps({'stdout_closed':original.closed,'messages':messages})+'\n')
 '''
     env = {**os.environ, "HOME": str(home), "USERPROFILE": str(home),
-           "COW_DATA_DIR": str(data), "PYTHONDONTWRITEBYTECODE": "1"}
+           "MAIA_DATA_DIR": str(data), "PYTHONDONTWRITEBYTECODE": "1"}
     command = [sys.executable, "-B", "-c", script, stream_kind]
     output_path = tmp_path / "stdout.txt"
     if stream_kind == "file":

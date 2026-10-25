@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS runs (
     -- top-level run. Lets a whole delegation tree be walked from any node.
     parent_run_id TEXT   NOT NULL DEFAULT '',
     -- Free-form external work handle and where it came from. task_source is
-    -- empty for a native CowAgent run; a non-empty value names the external
+    -- empty for a native Maia run; a non-empty value names the external
     -- system and task_id then addresses a work item within it. TEXT on purpose:
     -- it must hold external ids, never a foreign key into a table we own.
     task_id      TEXT    NOT NULL DEFAULT '',
@@ -2782,7 +2782,7 @@ def _default_db_path() -> Path:
         return MemoryConfig(workspace_root=str(default_ws)).get_db_path().resolve()
     except Exception:
         return (
-            Path(expand_path("~/cow")) / "memory" / "long-term" / "index.db"
+            Path(expand_path("~/maia")) / "memory" / "long-term" / "index.db"
         ).resolve()
 
 

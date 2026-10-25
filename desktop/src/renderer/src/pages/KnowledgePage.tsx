@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { t, tf, getLang } from '../i18n'
+import { t, tf } from '../i18n'
 import apiClient from '../api/client'
 import type {
   KnowledgeDir,
@@ -254,7 +254,7 @@ const KnowledgePage: React.FC<KnowledgePageProps> = ({ baseUrl }) => {
   const defaultAgentId = useAgentStore((s) => s.defaultAgentId)
   const agents = useAgentStore((s) => s.agents)
   const [scopeAgentId, setScopeAgentId] = useState<string>(
-    () => localStorage.getItem('cow_knowledge_agent') || ''
+    () => localStorage.getItem('maia_knowledge_agent') || ''
   )
   const remembered = agents.some((a) => a.id === scopeAgentId) ? scopeAgentId : ''
   const viewingAgentId = multiAgent ? remembered || defaultAgentId : ''
@@ -364,7 +364,7 @@ const KnowledgePage: React.FC<KnowledgePageProps> = ({ baseUrl }) => {
     // Another Agent's base replaces the open document, edit and all.
     if (!(await knowledgeEditor.getState().guard())) return
     setScopeAgentId(id)
-    localStorage.setItem('cow_knowledge_agent', id)
+    localStorage.setItem('maia_knowledge_agent', id)
   }
 
   // A save can rewrite the page's H1 - its title in the tree - and always moves
@@ -837,9 +837,7 @@ const MenuItem: React.FC<{ icon: LucideIcon; label: string; onClick: () => void 
 
 function templateFor(filename: string): string {
   const title = (filename || 'untitled').replace(/\.md$/i, '')
-  return getLang() === 'zh'
-    ? `# ${title}\n\n## 摘要\n\n\n## 关键点\n\n- \n\n## 参考\n\n`
-    : `# ${title}\n\n## Summary\n\n\n## Key points\n\n- \n\n## References\n\n`
+  return `# ${title}\n\n## Summary\n\n\n## Key points\n\n- \n\n## References\n\n`
 }
 
 const KnowledgeDialog: React.FC<{

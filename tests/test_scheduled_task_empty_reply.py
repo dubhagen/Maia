@@ -54,9 +54,7 @@ class EmptyResponseFallbackTest(unittest.TestCase):
     def setUp(self):
         # The fallback text is translated; pin the language so the assertion
         # doesn't depend on the runner's locale (CI defaults to English).
-        original = i18n.get_language()
-        i18n.set_language("zh")
-        self.addCleanup(i18n.set_language, original)
+        i18n.set_language("en")
 
     def test_empty_reply_returned_as_is_when_silence_allowed(self):
         response = _run_with_silent_model(_make_executor(allow_empty_response=True))
@@ -67,11 +65,13 @@ class EmptyResponseFallbackTest(unittest.TestCase):
         response = _run_with_silent_model(_make_executor(allow_empty_response=False))
 
         self.assertTrue(response)
-        self.assertIn("无法生成回复", response)
+        self.assertIn("can't generate a reply", response)
 
     def test_explicit_response_prompt_permits_silence_only_when_allowed(self):
-        self.assertIn("返回空", _make_executor(True)._explicit_response_prompt())
-        self.assertNotIn("返回空", _make_executor(False)._explicit_response_prompt())
+        allowed = _make_executor(True)._explicit_response_prompt().lower()
+        refused = _make_executor(False)._explicit_response_prompt().lower()
+        self.assertIn("empty", allowed)
+        self.assertNotIn("empty", refused)
 
 
 class _AgentBridge:

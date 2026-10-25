@@ -163,10 +163,9 @@ function initConfigView(data) {
     const providerEl = document.getElementById('cfg-provider');
     const providerOpts = Object.entries(configProviders).map(([pid, p]) => ({ value: pid, label: localizedLabel(p.label) }));
 
-    // if use_linkai is enabled, always select linkai as the provider
-    // Otherwise prefer bot_type from config, fall back to model-based detection
-    const detected = data.use_linkai ? 'linkai'
-        : (data.bot_type && configProviders[data.bot_type] ? data.bot_type : detectProvider(configCurrentModel));
+    const detected = data.bot_type && configProviders[data.bot_type]
+        ? data.bot_type
+        : detectProvider(configCurrentModel);
     cfgProviderValue = detected || (providerOpts[0] ? providerOpts[0].value : '');
 
     initDropdown(providerEl, providerOpts, cfgProviderValue, onProviderChange);
@@ -198,18 +197,7 @@ function initConfigView(data) {
     syncReasoningEffortOptions();
     document.getElementById('cfg-subagent').checked = data.subagent_enabled !== false;
     document.getElementById('cfg-self-evolution').checked = data.self_evolution_enabled === true;
-
-    // Reflect the current UI language (already resolved, may include the user's
-    // local choice) on the selector so it stays in sync with the top-right toggle.
-    const langSel = document.getElementById('cfg-lang-select');
-    if (langSel) {
-        initDropdown(
-            langSel,
-            [{ value: 'zh', label: '简体中文' }, { value: 'zh-Hant', label: '繁體中文' }, { value: 'en', label: 'English' }],
-            currentLang,
-            (val) => setLanguage(val)
-        );
-    }
+    if (data.discovery_error) showStatusText('cfg-model-status', data.discovery_error, true);
 
     // Default permission mode for new conversations. Applied on pick, like the
     // language selector: the card's save button belongs to the password field,
@@ -257,7 +245,6 @@ function initConfigView(data) {
 function detectProvider(model) {
     if (!model) return Object.keys(configProviders)[0] || '';
     for (const [pid, p] of Object.entries(configProviders)) {
-        if (pid === 'linkai') continue;
         if (p.models && p.models.includes(model)) return pid;
     }
     return Object.keys(configProviders)[0] || '';
@@ -292,10 +279,6 @@ function onProviderChange(pid) {
     const keyWrap = document.getElementById('cfg-api-key-wrap');
     const keyInput = document.getElementById('cfg-api-key');
 
-    // Only LinkAI (an aggregation platform) gets a link to its console for
-    // managing the aggregated key; other providers manage keys on their sites.
-    const cfgManageKey = document.getElementById('cfg-manage-key');
-    if (cfgManageKey) cfgManageKey.classList.toggle('hidden', cfgProviderValue !== 'linkai');
     if (keyField) {
         keyWrap.classList.remove('hidden');
         keyInput.classList.add('cfg-key-masked');
@@ -324,6 +307,7 @@ function onProviderChange(pid) {
             });
             keyInput.addEventListener('input', function() {
                 this.dataset.masked = '';
+                scheduleDiscoverFromForm();
             });
             keyInput._cfgBound = true;
         }
@@ -341,6 +325,10 @@ function onProviderChange(pid) {
         // Hint the version-path tail (e.g. /v1) so users are reminded to
         // include it themselves. We don't auto-rewrite anything server-side.
         apiBaseInput.placeholder = p.api_base_placeholder || 'https://...';
+        if (!apiBaseInput._cfgDiscoverBound) {
+            apiBaseInput.addEventListener('input', scheduleDiscoverFromForm);
+            apiBaseInput._cfgDiscoverBound = true;
+        }
     } else {
         document.getElementById('cfg-api-base-wrap').classList.add('hidden');
         apiBaseInput.value = '';
@@ -437,6 +425,28 @@ function syncReasoningEffortOptions() {
     );
 }
 
+function applyDiscoveredModelNames(names) {
+    const provider = configProviders[cfgProviderValue] || configProviders.litellm;
+    if (provider) provider.models = names;
+    const modelEl = document.getElementById('cfg-model-select');
+    if (!modelEl) return;
+    const current = getSelectedModel();
+    const opts = names.map(m => ({ value: m, label: m }));
+    opts.push({ value: '__custom__', label: t('config_custom_option') });
+    let selected = names[0] || '__custom__';
+    if (current && names.indexOf(current) !== -1) selected = current;
+    else if (current) selected = '__custom__';
+    initDropdown(modelEl, opts, selected, onModelSelectChange);
+    if (selected === '__custom__') {
+        cfgModelValue = '__custom__';
+        document.getElementById('cfg-model-custom-wrap').classList.remove('hidden');
+        const custom = document.getElementById('cfg-model-custom');
+        if (custom && current && names.indexOf(current) === -1) custom.value = current;
+    } else {
+        onModelSelectChange(selected);
+    }
+}
+
 function getSelectedModel() {
     if (cfgModelValue === '__custom__') {
         return document.getElementById('cfg-model-custom').value.trim();
@@ -457,29 +467,67 @@ function toggleApiKeyVisibility() {
 }
 
 function showStatus(elId, msgKey, isError) {
+    showStatusText(elId, t(msgKey), isError);
+}
+
+function showStatusText(elId, text, isError) {
     const el = document.getElementById(elId);
-    el.textContent = t(msgKey);
+    if (!el) return;
+    el.textContent = text || '';
     el.classList.toggle('text-red-500', !!isError);
     el.classList.toggle('text-primary-500', !isError);
-    el.classList.remove('opacity-0');
+    el.classList.toggle('opacity-0', !text);
     // Warning messages (errors) should stay visible, success messages auto-hide
-    if (!isError) {
+    if (text && !isError) {
         setTimeout(() => el.classList.add('opacity-0'), 2500);
     }
 }
 
+let _discoverTimer = null;
+function scheduleDiscoverFromForm() {
+    clearTimeout(_discoverTimer);
+    _discoverTimer = setTimeout(discoverFromForm, 400);
+}
+
+function discoverFromForm() {
+    const baseEl = document.getElementById('cfg-api-base');
+    const keyInput = document.getElementById('cfg-api-key');
+    if (!baseEl) return;
+    const apiBase = baseEl.value.trim();
+    let apiKey = keyInput ? keyInput.value.trim() : '';
+    if (keyInput && keyInput.dataset.masked === '1') apiKey = '';
+    const payload = { action: 'discover_models', provider_id: 'litellm', api_base: apiBase };
+    if (apiKey) payload.api_key = apiKey;
+    fetch('/api/models', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    }).then(r => r.json()).then(data => {
+        if (data.status !== 'success') {
+            showStatusText('cfg-model-status', data.message || t('config_save_error'), true);
+            return;
+        }
+        const names = (data.models || [])
+            .filter(item => (item.capabilities || []).indexOf('text') !== -1)
+            .map(item => item.name);
+        if (names.length) {
+            const status = document.getElementById('cfg-model-status');
+            if (status && status.classList.contains('text-red-500')) showStatusText('cfg-model-status', '', false);
+            applyDiscoveredModelNames(names);
+        } else {
+            showStatusText('cfg-model-status', 'The LiteLLM endpoint returned no chat models.', true);
+        }
+    }).catch(err => {
+        showStatusText('cfg-model-status', (err && err.message) ? err.message : String(err), true);
+    });
+}
+
 function saveModelConfig() {
     const model = getSelectedModel();
-    if (!model) return;
-
-    const updates = { model: model };
+    const updates = {};
+    if (model) updates.model = model;
     const p = configProviders[cfgProviderValue];
-    updates.use_linkai = (cfgProviderValue === 'linkai');
-    if (cfgProviderValue === 'linkai') {
-        updates.bot_type = '';
-    } else {
-        updates.bot_type = cfgProviderValue;
-    }
+    updates.bot_type = cfgProviderValue || 'litellm';
     if (p && p.api_base_key) {
         const base = document.getElementById('cfg-api-base').value.trim();
         if (base) updates[p.api_base_key] = base;
@@ -526,6 +574,7 @@ function saveModelConfig() {
                 });
             }
             showStatus('cfg-model-status', 'config_saved', false);
+            scheduleDiscoverFromForm();
         } else {
             showStatus('cfg-model-status', 'config_save_error', true);
         }
@@ -699,7 +748,7 @@ function externalApiExample(lang, reveal) {
 function renderExternalApi() {
     const s = externalApiState;
     const docs = document.getElementById('cfg-api-docs');
-    if (docs) docs.href = (currentLang === 'zh' ? 'https://docs.cowagent.ai/zh' : 'https://docs.cowagent.ai') + '/extensions/chat-api';
+    if (docs) docs.href = 'https://github.com/dubhagen/Maia/blob/master/docs/extensions/chat-api.mdx';
     document.getElementById('cfg-api-enabled').checked = !!s.enabled;
     document.getElementById('cfg-api-detail').classList.toggle('hidden', !s.enabled);
     if (!s.enabled) return;

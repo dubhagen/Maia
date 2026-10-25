@@ -29,19 +29,19 @@
     font-size: 0.875em;
 }
 .msg-content :not(pre) > code {
-    background: rgba(74, 190, 110, 0.1); color: #1C6B3B;
+    background: rgba(107, 142, 240, 0.1); color: #243F9A;
     padding: 2px 6px; border-radius: 4px;
     overflow-wrap: anywhere; word-break: break-word;
 }
 .dark .msg-content :not(pre) > code {
-    background: rgba(74, 190, 110, 0.15); color: #74E9A4;
+    background: rgba(107, 142, 240, 0.15); color: #9BB6F6;
 }
 .msg-content pre code { background: transparent; padding: 0; color: inherit; }
 .msg-content blockquote {
-    border-left: 3px solid #4ABE6E; padding: 0.5em 1em;
-    margin: 0.8em 0; background: rgba(74, 190, 110, 0.05); border-radius: 0 6px 6px 0;
+    border-left: 3px solid #6B8EF0; padding: 0.5em 1em;
+    margin: 0.8em 0; background: rgba(107, 142, 240, 0.05); border-radius: 0 6px 6px 0;
 }
-.dark .msg-content blockquote { background: rgba(74, 190, 110, 0.08); }
+.dark .msg-content blockquote { background: rgba(107, 142, 240, 0.08); }
 /* Tables scroll sideways inside their own wrapper instead of pushing the
    bubble wider than the column (see the table_open rule in createMd). */
 .msg-content .table-wrap { max-width: 100%; overflow-x: auto; margin: 0.8em 0; scrollbar-width: thin; }
@@ -56,8 +56,8 @@
 .msg-content th { background: #f1f5f9; font-weight: 600; }
 .dark .msg-content th { background: #111111; }
 .msg-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 0.5em 0; }
-.msg-content a { color: #35A85B; text-decoration: underline; }
-.msg-content a:hover { color: #228547; }
+.msg-content a { color: #4169E1; text-decoration: underline; }
+.msg-content a:hover { color: #2F52C4; }
 
 /* Links to workspace files: opened in the preview panel, not a new tab. */
 .msg-content a.ws-link {
@@ -79,7 +79,7 @@
     content: '▋';
     display: inline-block;
     margin-left: 2px;
-    color: #4ABE6E;
+    color: #6B8EF0;
     animation: blink 0.9s step-end infinite;
     font-size: 0.85em;
     vertical-align: middle;

@@ -10,11 +10,11 @@ def test_malformed_provider_does_not_break_skill_requirements(monkeypatch, field
     payload = {'api_key': 'fake-test-key', 'api_base': 'https://example.invalid'}
     payload[field] = value
     monkeypatch.setenv('SKILL_IMAGE_GENERATION_CUSTOM_PROVIDER', json.dumps(payload))
-    monkeypatch.delenv('COW_TEST_MISSING_KEY', raising=False)
-    entry = SkillEntry(Skill('image-generation', 'Test', '', '', 'custom', ''), parse_metadata({'metadata': {'requires': {'anyEnv': ['COW_TEST_MISSING_KEY']}}}))
+    monkeypatch.delenv('MAIA_TEST_MISSING_KEY', raising=False)
+    entry = SkillEntry(Skill('image-generation', 'Test', '', '', 'custom', ''), parse_metadata({'metadata': {'requires': {'anyEnv': ['MAIA_TEST_MISSING_KEY']}}}))
     assert not has_custom_provider('image-generation')
     assert not should_include_skill(entry)
-    assert get_missing_requirements(entry) == {'anyEnv': ['COW_TEST_MISSING_KEY']}
+    assert get_missing_requirements(entry) == {'anyEnv': ['MAIA_TEST_MISSING_KEY']}
 
 
 def test_valid_provider_still_satisfies_custom_configuration(monkeypatch):

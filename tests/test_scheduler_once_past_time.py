@@ -53,7 +53,8 @@ def test_once_task_with_a_past_run_time_is_refused_at_creation():
 
     result = _create(tool, schedule_value=past)
 
-    assert "错误" in result, result
+    assert "Error:" in result, result
+    assert "passed" in result.lower() or "future" in result.lower(), result
     assert tool.task_store.tasks == [], "a past one-time task must not be stored"
 
 
@@ -64,7 +65,8 @@ def test_once_task_with_a_zoned_past_run_time_is_refused_at_creation():
 
     result = _create(tool, schedule_value=past, timezone="Asia/Shanghai")
 
-    assert "错误" in result, result
+    assert "Error:" in result, result
+    assert "passed" in result.lower() or "future" in result.lower(), result
     assert tool.task_store.tasks == []
 
 
@@ -74,6 +76,6 @@ def test_once_task_with_a_future_run_time_is_still_created():
 
     result = _create(tool, schedule_value=future)
 
-    assert "创建成功" in result, result
+    assert "created" in result.lower(), result
     assert len(tool.task_store.tasks) == 1
     assert tool.task_store.tasks[0]["next_run_at"].startswith(future[:10])

@@ -5,7 +5,7 @@ Unit tests for the shared credential-path guard across the file tools.
 The read tool was hardened against credential access twice (issues #2863 and
 #2913), but the edit tool never applied the same check. Since a successful edit
 returns a unified diff, whose context lines include neighbouring file content,
-an unguarded edit leaked the contents of ~/.cow/.env straight into the model's
+an unguarded edit leaked the contents of ~/.maia/.env straight into the model's
 context. These tests pin the guard on every tool that can surface that content.
 
 HOME is redirected to a temp dir so the real credential file is never touched.
@@ -33,7 +33,7 @@ class _TempHomeCase(unittest.TestCase):
     #: ``expand_path`` -> ``os.path.expanduser('~')``, and on Windows
     #: ``ntpath.expanduser`` resolves the home directory from USERPROFILE while
     #: ignoring HOME entirely. Redirecting HOME alone therefore left the guard
-    #: comparing against the real ~/.cow/.env, so every assertion below failed
+    #: comparing against the real ~/.maia/.env, so every assertion below failed
     #: on Windows and the guard had no working coverage there.
     _HOME_VARS = ("HOME", "USERPROFILE")
 
@@ -43,12 +43,12 @@ class _TempHomeCase(unittest.TestCase):
         for name in self._HOME_VARS:
             os.environ[name] = self.tmp
 
-        os.makedirs(os.path.join(self.tmp, ".cow"))
-        self.env_path = os.path.join(self.tmp, ".cow", ".env")
+        os.makedirs(os.path.join(self.tmp, ".maia"))
+        self.env_path = os.path.join(self.tmp, ".maia", ".env")
         with open(self.env_path, "w", encoding="utf-8") as f:
             f.write(f"OPENAI_API_KEY={_SECRET}\nANTHROPIC_KEY=sk-ant-other\n")
 
-        self.workspace = os.path.join(self.tmp, "cow")
+        self.workspace = os.path.join(self.tmp, "maia")
         os.makedirs(self.workspace)
         self.config = {"cwd": self.workspace}
 
@@ -95,7 +95,7 @@ class TestEditCredentialGuard(_TempHomeCase):
 
     def test_tilde_path_blocked(self):
         result = Edit(self.config).execute(
-            {"path": "~/.cow/.env", "oldText": "", "newText": "x\n"}
+            {"path": "~/.maia/.env", "oldText": "", "newText": "x\n"}
         )
         self.assertEqual(result.status, "error")
         self.assertIn(_DENIED, str(result.result))
@@ -182,7 +182,7 @@ class TestSharedGuard(_TempHomeCase):
 
     def test_ordinary_paths_not_blocked(self):
         self.assertFalse(is_credential_path(os.path.join(self.workspace, "a.txt")))
-        self.assertFalse(is_credential_path(os.path.join(self.tmp, ".cow", "config.json")))
+        self.assertFalse(is_credential_path(os.path.join(self.tmp, ".maia", "config.json")))
 
 
 if __name__ == "__main__":

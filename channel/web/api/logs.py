@@ -91,7 +91,7 @@ class LogsDownloadHandler:
             raise web.internalerror()
 
         # Timestamped name so multiple downloads don't overwrite each other.
-        fname = f"cowagent-{time.strftime('%Y%m%d-%H%M%S')}.log"
+        fname = f"maia-{time.strftime('%Y%m%d-%H%M%S')}.log"
         web.header('Content-Type', 'text/plain; charset=utf-8')
         web.header('Content-Disposition', f'attachment; filename="{fname}"')
         web.header('Content-Length', str(len(data)))

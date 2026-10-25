@@ -576,7 +576,7 @@ def _switch_hint() -> str:
     cannot see anything "under the chat input". We name the console by build so
     the model can point the user to the right place, and keep it short.
     """
-    where = "the desktop app" if os.environ.get("COW_DESKTOP") == "1" else "the Web console"
+    where = "the desktop app" if os.environ.get("MAIA_DESKTOP") == "1" else "the Web console"
     return (
         f"To allow it, the user can change this session's permission in {where} "
         f"(or the global security setting). Do not retry the same call: use a "
@@ -926,57 +926,38 @@ def _check_bash_workspace_write(
 # Prompt text
 # ---------------------------------------------------------------------------
 
-def describe_mode(mode: str, language: str = "zh", cwd: Optional[str] = None) -> List[str]:
+def describe_mode(mode: str, language: str = "en", cwd: Optional[str] = None) -> List[str]:
     """Prompt lines telling the model what it may change this session.
 
-    Empty for full-access: with nothing gated there is nothing to say, and the
-    historical prompt stays byte-identical.
+    Empty for full-access: with nothing gated there is nothing to say.
+    ``language`` is accepted for older callers and ignored; the text is English.
     """
+    del language
     mode = normalize_mode(mode)
     if mode == FULL_ACCESS:
         return []
 
-    if language == "en":
-        if mode == READ_ONLY:
-            body = [
-                "This session is **read-only**: you cannot modify files, and shell "
-                "commands are limited to read-only utilities.",
-                "",
-                "- Investigating, reading and explaining are unaffected: `read`, `ls`, "
-                "`search_files`, `web_search`, `web_fetch` and read-only shell "
-                "commands all work.",
-                "- Do not attempt writes. If the task needs them, say so and ask the "
-                "user to switch this session's permission mode.",
-            ]
-        else:
-            area = f"`{cwd}`" if cwd else "the working directory"
-            body = [
-                f"This session is **workspace-write**: you may freely create and change "
-                f"files inside {area}.",
-                "",
-                "- Writes outside it are refused; reading anywhere is fine.",
-                "- `mcp.json`, `config.json`, `.env` and the session settings files "
-                "are not writable in this mode, even inside it.",
-                "- If the task genuinely needs to write elsewhere, explain why and let "
-                "the user switch the permission mode.",
-            ]
-        return ["## 🔐 Permissions", ""] + body + [""]
-
     if mode == READ_ONLY:
         body = [
-            "当前会话为**只读模式**：不能修改任何文件，命令行也仅限只读类命令。",
+            "This session is **read-only**: you cannot modify files, and shell "
+            "commands are limited to read-only utilities.",
             "",
-            "- 查看、分析、解释都不受影响：`read`、`ls`、`search_files`、`web_search`、"
-            "`web_fetch` 以及只读命令均可正常使用。",
-            "- 不要尝试写入。如果任务确实需要写入，请说明原因并提示用户切换该会话的权限模式。",
+            "- Investigating, reading and explaining are unaffected: `read`, `ls`, "
+            "`search_files`, `web_search`, `web_fetch` and read-only shell "
+            "commands all work.",
+            "- Do not attempt writes. If the task needs them, say so and ask the "
+            "user to switch this session's permission mode.",
         ]
     else:
-        area = f"`{cwd}`" if cwd else "当前工作目录"
+        area = f"`{cwd}`" if cwd else "the working directory"
         body = [
-            f"当前会话为**工作区可写模式**：可以在 {area} 内自由创建和修改文件。",
+            f"This session is **workspace-write**: you may freely create and change "
+            f"files inside {area}.",
             "",
-            "- 该目录之外的写入会被拒绝；读取不受限制。",
-            "- `mcp.json`、`config.json`、`.env` 和会话设置文件在该模式下不可修改，即使位于该目录内。",
-            "- 如果任务确实需要写到其他位置，请说明原因，由用户切换权限模式。",
+            "- Writes outside it are refused; reading anywhere is fine.",
+            "- `mcp.json`, `config.json`, `.env` and the session settings files "
+            "are not writable in this mode, even inside it.",
+            "- If the task genuinely needs to write elsewhere, explain why and let "
+            "the user switch the permission mode.",
         ]
-    return ["## 🔐 权限", ""] + body + [""]
+    return ["## 🔐 Permissions", ""] + body + [""]

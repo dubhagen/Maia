@@ -59,7 +59,7 @@ DEFAULT_CAPABILITIES = ["text"]
 
 def _store_path() -> str:
     """Path to the catalog overlay under the instance's shared workspace
-    (``<workspace>/system/models.json``, e.g. ``~/cow/system/models.json``)."""
+    (``<workspace>/system/models.json``, e.g. ``~/maia/system/models.json``)."""
     from common import state_dir
     return str(state_dir.models_catalog_file())
 

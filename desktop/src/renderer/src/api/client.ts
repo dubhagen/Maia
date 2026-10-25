@@ -68,7 +68,7 @@ export interface UploadResult {
   message?: string
 }
 
-const AUTH_TOKEN_KEY = 'cow_auth_token'
+const AUTH_TOKEN_KEY = 'maia_auth_token'
 
 class ApiClient {
   private baseUrl = 'http://127.0.0.1:9876'
@@ -398,7 +398,7 @@ class ApiClient {
       const res = await this.request<UploadResult>('/upload', {
         method: 'POST',
         body: JSON.stringify(body),
-        headers: { 'X-Cow-Desktop-Token': token },
+        headers: { 'X-Maia-Desktop-Token': token },
       })
       if (res?.status === 'success') return res
       console.warn('[api] import by path declined, falling back to upload:', res?.message)
@@ -451,7 +451,7 @@ class ApiClient {
   // ---------------------------------------------------------
 
   // Workspace endpoints accept an optional session so they resolve against the
-  // session's project dir (when one is open) instead of always ~/cow.
+  // session's project dir (when one is open) instead of always ~/maia.
   private sessionQuery(session?: string): string {
     return session ? `&session=${encodeURIComponent(session)}` : ''
   }
@@ -511,7 +511,7 @@ class ApiClient {
     return this.request(`/api/projects?session=${encodeURIComponent(session)}`)
   }
 
-  /** Bind the session to a project dir, or clear it (projectDir=null → ~/cow). */
+  /** Bind the session to a project dir, or clear it (projectDir=null → ~/maia). */
   async selectProject(session: string, projectDir: string | null): Promise<ProjectState & ApiResult> {
     return this.request('/api/projects/select', {
       method: 'POST',
@@ -908,33 +908,6 @@ class ApiClient {
     return this.request('/api/channels', {
       method: 'POST',
       body: JSON.stringify(body),
-    })
-  }
-
-  // Weixin QR login. Pass instance_id so a live card reads that channel's
-  // own code instead of opening a standalone session (which would mint a
-  // second instance on confirm).
-  async getWeixinQr(instanceId?: string): Promise<{ status: string; qrcode_url?: string; qr_image?: string; source?: string; message?: string }> {
-    const q = instanceId ? `?instance_id=${encodeURIComponent(instanceId)}` : ''
-    return this.request(`/api/weixin/qrlogin${q}`)
-  }
-
-  async weixinQrAction(action: 'poll' | 'refresh'): Promise<Record<string, unknown> & { status: string }> {
-    return this.request('/api/weixin/qrlogin', {
-      method: 'POST',
-      body: JSON.stringify({ action }),
-    })
-  }
-
-  // Feishu one-click register
-  async getFeishuRegister(): Promise<{ status: string; register_status?: string; qrcode_url?: string; qr_image?: string; expire_in?: number; message?: string }> {
-    return this.request('/api/feishu/register')
-  }
-
-  async feishuRegisterPoll(): Promise<Record<string, unknown> & { status: string }> {
-    return this.request('/api/feishu/register', {
-      method: 'POST',
-      body: JSON.stringify({ action: 'poll' }),
     })
   }
 

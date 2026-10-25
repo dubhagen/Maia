@@ -60,8 +60,8 @@ class TestCompactKnowledgeIndex(unittest.TestCase):
 
     def test_the_prompt_points_at_the_full_index_when_compacted(self):
         with _knowledge_dir(_index(per_category=20)) as ws:
-            prompt = "\n".join(_build_knowledge_section(ws, "zh"))
-        self.assertIn("索引较大，此处只列出标题", prompt)
+            prompt = "\n".join(_build_knowledge_section(ws, "en"))
+        self.assertIn("only titles are listed", prompt)
         self.assertIn("index.md", prompt)
         self.assertNotIn("xxxx", prompt)
 

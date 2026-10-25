@@ -9,8 +9,7 @@ model") and exactly one (line 289, set it), and nothing else -- so
 the word ``string`` to the user as the reply body.
 
 The two commands that take one argument from the user answer a wrong count
-instead: ``set_openai_api_key`` replies "请提供一个api_key" (line 305) and
-``set_gpt_model`` replies "请提供一个GPT模型" (line 319). The reply is built from
+with a usage reply. The reply is built from
 ``result`` either way (lines 449-453), so only this one branch can ship its
 internal placeholder.
 """
@@ -98,7 +97,7 @@ def test_extra_argument_gets_a_reply_that_is_not_the_placeholder(tmp_path, monke
     # The sentinel the command used to answer with: an internal placeholder
     # string, which tells the user nothing about what they typed wrong.
     assert reply.content != "string"
-    assert "模型" in reply.content
+    assert "model" in reply.content.lower()
 
 
 def test_no_argument_still_reports_the_current_model(tmp_path, monkeypatch):
@@ -109,8 +108,11 @@ def test_no_argument_still_reports_the_current_model(tmp_path, monkeypatch):
     assert CURRENT in reply.content
 
 
-def test_one_unknown_name_still_reports_it(tmp_path, monkeypatch):
-    reply, _ = _run("#model nosuchmodel", tmp_path, monkeypatch)
+def test_one_unknown_name_is_stored_as_typed(tmp_path, monkeypatch):
+    # Model ids pass through the LiteLLM proxy. The command does not keep a
+    # vendor catalog, so any non-empty id is accepted.
+    reply, conf_values = _run("#model nosuchmodel", tmp_path, monkeypatch)
 
-    assert reply.type is ReplyType.ERROR
-    assert "模型名称不存在" in reply.content
+    assert reply.type is ReplyType.INFO
+    assert "nosuchmodel" in reply.content
+    assert conf_values["model"] == "nosuchmodel"

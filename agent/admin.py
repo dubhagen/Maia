@@ -189,7 +189,7 @@ class AgentAdminService:
     def _instance_root(settings: Mapping) -> Path:
         return Path(
             AgentAdminService._normalise_workspace(
-                settings.get("agent_workspace") or "~/cow"
+                settings.get("agent_workspace") or "~/maia"
             )
         )
 
@@ -254,8 +254,9 @@ class AgentAdminService:
         created from the console was named in the form, and an Agent that cannot
         read its own name does not recognise being addressed by it.
 
-        Only the placeholder is replaced, so a cloned or hand-written persona
-        that already states a name is left alone.
+        The template labels that field ``**Name**``. Only that placeholder is
+        replaced, so a cloned or hand-written persona that already states a
+        name is left alone.
         """
         path = Path(workspace) / "AGENT.md"
         try:
@@ -263,7 +264,7 @@ class AgentAdminService:
         except OSError:
             return
         updated = re.sub(
-            r"^(- \*\*(?:名字|Name)\*\*:).*$",
+            r"^(- \*\*Name\*\*:).*$",
             lambda m: f"{m.group(1)} {name}",
             original,
             count=1,

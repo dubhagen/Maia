@@ -14,7 +14,7 @@ def test_uncreatable_data_directory_falls_back_to_console(tmp_path):
     parent.mkdir()
     parent.chmod(0o555)
     data = parent / "data"
-    env = {**os.environ, "COW_DATA_DIR": str(data), "HOME": str(tmp_path)}
+    env = {**os.environ, "MAIA_DATA_DIR": str(data), "HOME": str(tmp_path)}
     script = "from common.log import logger; logger.info('console-remains-usable')"
     try:
         result = subprocess.run(

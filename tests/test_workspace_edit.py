@@ -132,7 +132,7 @@ def test_write_text_leaves_lf_files_alone(tmp_path):
 
 def test_read_text_marks_non_utf8_file_uneditable(tmp_path):
     """A GBK document previews with replacement chars; saving would destroy it."""
-    (tmp_path / "gbk.txt").write_bytes("运动训练计划\n".encode("gbk"))
+    (tmp_path / "gbk.txt").write_bytes(bytes.fromhex("d4cbb6afd1b5c1b7bcc6bbae0a"))
 
     loaded = _service(tmp_path).read_text("gbk.txt")
 
@@ -141,7 +141,7 @@ def test_read_text_marks_non_utf8_file_uneditable(tmp_path):
 
 
 def test_write_text_refuses_to_overwrite_a_non_utf8_file(tmp_path):
-    original = "运动训练计划\n".encode("gbk")
+    original = bytes.fromhex("d4cbb6afd1b5c1b7bcc6bbae0a")
     (tmp_path / "gbk.txt").write_bytes(original)
 
     with pytest.raises(ValueError):
@@ -159,13 +159,13 @@ def test_write_text_refuses_a_file_too_large_to_have_been_read_whole(tmp_path):
 
 
 def test_read_text_reports_clean_utf8_as_lossless(tmp_path):
-    _write(tmp_path / "zh.md", "# 运动训练计划\n")
+    _write(tmp_path / "zh.md", "# caf\u00e9 plan\n")
 
     loaded = _service(tmp_path).read_text("zh.md")
 
     assert loaded["lossy"] is False
     assert loaded["editable"] is True
-    assert loaded["content"] == "# 运动训练计划\n"
+    assert loaded["content"] == "# caf\u00e9 plan\n"
 
 
 def test_read_text_marks_truncated_file_uneditable(tmp_path):
@@ -290,7 +290,7 @@ def test_write_handler_falls_back_to_state_root_for_system_assets(tmp_path):
     """Memory files stay in the state root even while a project is open."""
     from channel.web.api.workspace import WorkspaceWriteHandler
 
-    state_root = tmp_path / "cow"
+    state_root = tmp_path / "maia"
     (state_root / "memory").mkdir(parents=True)
     memory_file = _write(state_root / "memory" / "MEMORY.md", "old\n")
     project = tmp_path / "project"
@@ -462,13 +462,13 @@ def test_web_console_editor_contract():
     assert "data.code === 'conflict'" in js
 
     assert ".ws-editor" in css
-    # Every string the editor shows must exist in all three locales.
+    # Every string the editor shows must exist in the English catalog.
     for key in ("ws_edit", "ws_edit_save", "ws_edit_cancel", "ws_edit_saved",
                 "ws_edit_save_failed", "ws_edit_load_failed", "ws_edit_too_large",
                 "ws_edit_unsupported", "ws_edit_encoding", "ws_edit_conflict_title",
                 "ws_edit_conflict_msg", "ws_edit_overwrite", "ws_edit_discard_title",
                 "ws_edit_discard_msg", "ws_edit_discard_ok"):
-        assert console.count(f"{key}:") == 3, key
+        assert console.count(f"{key}:") == 1, key
 
     # An unchanged file must not be rewritten, and Ctrl+S must not be able to
     # race a second write against the first one's mtime.
@@ -551,13 +551,13 @@ def test_desktop_editor_contract():
     assert "?.value ?? ''" not in panel
     assert "saveEdit(ref.current?.value ?? '')" not in editor
 
-    # Every string the editor shows must exist in both locales.
+    # Every string the editor shows must exist in the English catalog.
     for key in ("ws_edit", "ws_edit_save", "ws_edit_cancel", "ws_edit_unsaved",
                 "ws_edit_load_failed", "ws_edit_unsupported", "ws_edit_too_large",
                 "ws_edit_encoding", "ws_edit_discard_title", "ws_edit_discard_msg",
                 "ws_edit_discard_ok", "ws_edit_overwrite",
                 "ws_edit_conflict_title", "ws_edit_conflict_msg"):
-        assert i18n.count(f"{key}:") == 2, key
+        assert i18n.count(f"{key}:") == 1, key
 
 
 def test_desktop_editor_avoids_native_confirm():

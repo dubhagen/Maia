@@ -14,7 +14,7 @@ def log_path(tmp_path, monkeypatch):
     monkeypatch.setattr(logs, "get_data_root", lambda: str(tmp_path))
     monkeypatch.setattr(logs.web, "header", lambda *args: None)
     path = tmp_path / "run.log"
-    path.write_text("先前 café\n", encoding="utf-8")
+    path.write_text("earlier caf\u00e9\n", encoding="utf-8")
     return path
 
 
@@ -25,7 +25,7 @@ def _event(chunk):
 def test_line_appended_after_init_reaches_the_live_tail(log_path):
     stream = logs.LogsHandler().GET()
     try:
-        assert _event(next(stream)) == {"type": "init", "content": "先前 café\n"}
+        assert _event(next(stream)) == {"type": "init", "content": "earlier caf\u00e9\n"}
         with log_path.open("a", encoding="utf-8") as f:
             f.write("arrived-after-init\n")
         assert _event(next(stream)) == {"type": "line", "content": "arrived-after-init\n"}

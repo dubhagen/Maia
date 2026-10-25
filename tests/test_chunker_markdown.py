@@ -54,18 +54,18 @@ class TestChunkMarkdownSmall(unittest.TestCase):
         self.assertEqual(self.c.chunk_markdown("   \n  \n"), [])
 
     def test_short_file_is_single_chunk(self):
-        md = "# 标题一\n\n正文只有几行而已。\n"
+        md = "# Title One\n\nJust a few lines of body.\n"
         chunks = self.c.chunk_markdown(md)
         self.assertEqual(len(chunks), 1)
         self.assertEqual(chunks[0].start_line, 1)
-        self.assertIn("标题一", chunks[0].text)
+        self.assertIn("Title One", chunks[0].text)
 
     def test_short_file_keeps_content(self):
-        md = "# 根\n\n段落内容。\n\n## 小节\n\n小节正文。\n"
+        md = "# Root\n\nParagraph body.\n\n## Section\n\nSection body.\n"
         chunks = self.c.chunk_markdown(md)
         self.assertEqual(len(chunks), 1)
-        self.assertIn("段落内容", chunks[0].text)
-        self.assertIn("小节正文", chunks[0].text)
+        self.assertIn("Paragraph body", chunks[0].text)
+        self.assertIn("Section body", chunks[0].text)
 
 
 class TestChunkMarkdownLarge(unittest.TestCase):
@@ -75,13 +75,13 @@ class TestChunkMarkdownLarge(unittest.TestCase):
         self.c = TextChunker()
 
     def test_large_file_contiguous_full_cover(self):
-        bigA = ["A正文内容句子。" for _ in range(120)]
-        bigB = ["B的正文详细内容描述。" for _ in range(140)]
+        bigA = ["A body sentence." for _ in range(120)]
+        bigB = ["B body detail sentence." for _ in range(140)]
         md = _md([
-            ("# 文档根", ["根引言。"]),
-            ("## 主题A", bigA),
-            ("## 主题B", bigB),
-            ("## 主题C", ["短的结尾内容。"]),
+            ("# Doc Root", ["Root intro."]),
+            ("## Topic A", bigA),
+            ("## Topic B", bigB),
+            ("## Topic C", ["Short ending."]),
         ])
         self.assertGreater(len(md), self.c.MD_CHUNK_TARGET)
         chunks = self.c.chunk_markdown(md)
@@ -109,44 +109,44 @@ class TestChunkMarkdownLarge(unittest.TestCase):
     def test_code_block_fake_heading_is_not_a_boundary(self):
         """# inside a fenced code block must not create a split boundary."""
         body = [
-            "正文段落。",
+            "Body paragraph.",
             "```python",
-            "# 这不是真标题",
+            "# Not a real title",
             "print('hi')",
             "```",
-            "后续段落。",
+            "Following paragraph.",
         ]
-        md = _md([("# 真标题", body)])
+        md = _md([("# Real Title", body)])
         # keep under target so the whole thing is one chunk; if any fake-heading
         # boundary had been introduced the file would have split — it must not.
         if len(md) <= self.c.MD_CHUNK_TARGET:
             chunks = self.c.chunk_markdown(md)
             self.assertEqual(len(chunks), 1)
-            self.assertIn("不是真标题", chunks[0].text)
+            self.assertIn("Not a real title", chunks[0].text)
 
     def test_tail_fragment_folds_into_prev_chunk(self):
         """A trailing heading whose whole body is <= fragment max must be folded
         into the previous chunk, so no orphaned tiny chunk is left at the end."""
         big = ["x" * 500 for _ in range(3)]      # ~1500+, one big heading body
         md = _md([
-            ("# 大块", big),
-            ("# 小尾", ["y" * 50]),               # 50-char tail
+            ("# Big Block", big),
+            ("# Small Tail", ["y" * 50]),               # 50-char tail
         ])
         chunks = self.c.chunk_markdown(md)
         # the tail heading must never survive as its own chunk
         last = chunks[-1]
-        self.assertIn("小尾", last.text)
+        self.assertIn("Small Tail", last.text)
 
     def test_all_headings_preserved_somewhere(self):
         md = _md([
-            ("# 一", ["正文A。" * 80]),
-            ("# 二", ["正文B。" * 80]),
-            ("# 三", ["正文C。" * 80]),
-            ("# 四", ["正文D。" * 80]),
+            ("# One", ["Body A." * 80]),
+            ("# Two", ["Body B." * 80]),
+            ("# Three", ["Body C." * 80]),
+            ("# Four", ["Body D." * 80]),
         ])
         chunks = self.c.chunk_markdown(md)
         joined = "".join(ch.text for ch in chunks)
-        for h in ("# 一", "# 二", "# 三", "# 四"):
+        for h in ("# One", "# Two", "# Three", "# Four"):
             self.assertIn(h, joined)
 
 
@@ -166,30 +166,30 @@ class TestChunkMarkdownCoverage(unittest.TestCase):
         """A preface (front text, a note, a TOC) before the first heading was
         in no segment at all, so it never reached the index."""
         md = "\n".join([
-            "前言：这段文字位于第一个标题之前。",
+            "Preface: this text sits before the first heading.",
             "",
-            "# 一",
-            "正文A。" * 200,
-            "# 二",
-            "正文B。" * 200,
+            "# One",
+            "Body A." * 200,
+            "# Two",
+            "Body B." * 200,
         ])
         self.assertGreater(len(md), self.c.MD_CHUNK_TARGET)
         chunks = self.c.chunk_markdown(md)
         self.assertEqual(chunks[0].start_line, 1)
-        self.assertIn("前言", chunks[0].text)
+        self.assertIn("Preface", chunks[0].text)
         self._assert_each_line_once(chunks, len(md.split("\n")))
 
     def test_skipped_heading_level_is_not_indexed_twice(self):
         """``#`` followed by ``###`` (no ``##``): the parent's own body ran on
         past the ``###`` heading, so that section was in two chunks."""
         md = _md([
-            ("# 父", ["父正文。" * 200]),
-            ("### 子", ["子正文。" * 200]),
-            ("# 后", ["后正文。" * 200]),
+            ("# Parent", ["Parent body." * 200]),
+            ("### Child", ["Child body." * 200]),
+            ("# After", ["After body." * 200]),
         ])
         chunks = self.c.chunk_markdown(md)
         joined = "\n".join(ch.text for ch in chunks)
-        self.assertEqual(joined.count("### 子"), 1)
+        self.assertEqual(joined.count("### Child"), 1)
         self._assert_each_line_once(chunks, len(md.split("\n")))
 
 

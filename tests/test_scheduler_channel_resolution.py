@@ -1,10 +1,8 @@
-"""Regression tests for scheduler channel resolution / readiness (issue #3120).
+"""Scheduler channel resolution.
 
-A weixin bot that runs as a channel_instance registers under its instance_id
-(e.g. ``weixin-c696...``). A scheduled task whose action never stored an
-instance_id must still resolve to that live instance instead of a bare,
-never-started ``create_channel`` singleton, otherwise its token map is empty and
-readiness defers the task forever.
+A task with no instance_id resolves to the one live instance of that type, or
+to the instance named by the recipient directory. It does not guess when
+several instances are running.
 """
 
 import sys
@@ -77,18 +75,25 @@ def test_ready_true_for_instance_run_weixin_without_instance_id(monkeypatch):
     assert integration._is_channel_ready("weixin", "user@im", instance_id="") is True
 
 
-def test_multiple_instances_prefers_the_one_holding_the_receiver(monkeypatch):
-    other = _FakeChannel("weixin", "weixin-aaaa", tokens={"someone-else": "t"})
-    mine = _FakeChannel("weixin", "weixin-bbbb", tokens={"user@im": "tok"})
+def test_multiple_instances_are_not_guessed_without_a_directory_hit(monkeypatch):
+    other = _FakeChannel("terminal", "terminal-aaaa")
+    mine = _FakeChannel("terminal", "terminal-bbbb")
     _install_manager(
         monkeypatch,
-        _FakeManager({"weixin-aaaa": other, "weixin-bbbb": mine}),
+        _FakeManager({"terminal-aaaa": other, "terminal-bbbb": mine}),
     )
-    _install_directory(monkeypatch, [])  # no directory hit -> fall to token match
+    _install_directory(monkeypatch, [])
 
-    resolved = integration._resolve_delivery_channel("weixin", "", "user@im")
+    bare = object()
+    fake_factory = types.ModuleType("channel.channel_factory")
+    fake_factory.create_channel = lambda *a, **k: bare
+    monkeypatch.setitem(sys.modules, "channel.channel_factory", fake_factory)
 
-    assert resolved is mine
+    resolved = integration._resolve_delivery_channel("terminal", "", "user@im")
+
+    assert resolved is not other
+    assert resolved is not mine
+    assert resolved is bare
 
 
 def test_feishu_recovers_correct_instance_from_recipient_directory(monkeypatch):
@@ -194,14 +199,13 @@ def test_bare_singleton_fallback_does_not_hard_block_readiness(monkeypatch):
     assert integration._is_channel_ready("weixin", "user@im", instance_id="") is True
 
 
-def test_live_instance_without_token_is_still_not_ready(monkeypatch):
-    """A real, running instance that has never seen the receiver is genuinely
-    not ready — we should defer, not blast into a login that can't route it."""
-    live = _FakeChannel("weixin", "weixin-c6961093a5", tokens={})
-    _install_manager(monkeypatch, _FakeManager({"weixin-c6961093a5": live}))
+def test_live_instance_is_ready_without_a_token_map(monkeypatch):
+    """Removed chat channels no longer gate delivery on a login token map."""
+    live = _FakeChannel("terminal", "terminal-1", tokens={})
+    _install_manager(monkeypatch, _FakeManager({"terminal-1": live}))
     _install_directory(monkeypatch, [])
 
-    assert integration._is_channel_ready("weixin", "user@im", instance_id="") is False
+    assert integration._is_channel_ready("terminal", "user@im", instance_id="") is True
 
 
 # ── Backward-compatibility: legacy tasks with no instance_id / no agent_id ──

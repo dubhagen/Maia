@@ -102,7 +102,7 @@ function renderWorkspaceSelectorMenu() {
     const parts = [];
     const isDefault = !_wsSelState.current;
     parts.push(`<div class="ws-sel-section-title">${escapeHtml(t('ws_sel_title'))}</div>`);
-    // Default workspace: hovering shows the full ~/cow absolute path.
+    // Default workspace: hovering shows the full ~/maia absolute path.
     parts.push(`
         <button class="ws-sel-item ${isDefault ? 'active' : ''}" onclick="selectWorkspaceProject(null)"
                 data-tip-float data-tooltip="${escapeHtml(_wsSelState.defaultWorkspace || '')}" data-tooltip-pos="bottom">

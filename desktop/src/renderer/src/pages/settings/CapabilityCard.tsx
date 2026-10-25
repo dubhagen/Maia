@@ -89,8 +89,8 @@ const CapabilityCard: React.FC<CapabilityCardProps> = ({
   const modelOptions: DropdownOption[] = useMemo(() => {
     const list = resolveModels(data, provider, state.provider_models).map((o) => ({
       value: o.value,
-      // An empty value is an explicit "use the default" option (e.g. LinkAI
-      // ASR). It has no model id to show, so fall back to its hint as the
+      // An empty value is an explicit "use the default" option. It has no
+      // model id to show, so fall back to its hint as the
       // label; otherwise the row and the selected trigger would render blank.
       label: o.value || o.hint || t('models_default_option'),
       hint: o.value ? o.hint : undefined,

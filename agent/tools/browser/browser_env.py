@@ -29,13 +29,13 @@ _PREFERRED_CHANNELS = ("chrome", "msedge", "chrome-beta", "msedge-beta")
 
 
 def get_data_root() -> str:
-    """Writable data root (~/.cow on desktop, else CWD-based).
+    """Writable data root (~/.maia on desktop, else CWD-based).
 
     Mirrors the logic in common/log.py without importing config, to avoid a
-    circular import. The desktop build sets COW_DATA_DIR; source deployments
+    circular import. The desktop build sets MAIA_DATA_DIR; source deployments
     fall back to the current working directory.
     """
-    data_dir = os.environ.get("COW_DATA_DIR")
+    data_dir = os.environ.get("MAIA_DATA_DIR")
     if data_dir:
         return os.path.expanduser(data_dir)
     return os.getcwd()
@@ -44,16 +44,16 @@ def get_data_root() -> str:
 def browsers_download_dir() -> str:
     """Directory Playwright downloads its Chromium into.
 
-    We pin it under the writable data root (~/.cow/ms-playwright) rather than
+    We pin it under the writable data root (~/.maia/ms-playwright) rather than
     Playwright's default (~/.cache/ms-playwright or %USERPROFILE%). This keeps
     the frozen desktop build self-contained and makes the download survive app
     updates. Set as PLAYWRIGHT_BROWSERS_PATH for both install and runtime.
 
-    An explicit PLAYWRIGHT_BROWSERS_PATH wins over the ~/.cow default. The
+    An explicit PLAYWRIGHT_BROWSERS_PATH wins over the ~/.maia default. The
     Docker image presets it to /app/ms-playwright, where the build bakes
     Chromium in; honouring it here keeps the installer, the capability probe
     below and Playwright's own launcher pointing at one directory. Ignoring it
-    made has_downloaded_chromium() look under ~/.cow/ms-playwright while the
+    made has_downloaded_chromium() look under ~/.maia/ms-playwright while the
     launcher used /app/ms-playwright, so the bundled Chromium was reported
     missing even though it launched fine.
     """
@@ -85,12 +85,12 @@ def is_frozen() -> bool:
 def is_desktop() -> bool:
     """True when running as the Electron desktop client (dev or packaged).
 
-    The desktop shell always sets COW_DESKTOP=1 (see python-manager.ts), both in
+    The desktop shell always sets MAIA_DESKTOP=1 (see python-manager.ts), both in
     `npm run dev` (runs app.py with the user's Python) and in the packaged build
-    (frozen exe). Desktop users have no `cow` CLI, so onboarding must point them
+    (frozen exe). Desktop users have no `maia` CLI, so onboarding must point them
     at the in-chat `/install-browser` command rather than a terminal command.
     """
-    return os.environ.get("COW_DESKTOP") == "1"
+    return os.environ.get("MAIA_DESKTOP") == "1"
 
 
 def has_playwright_package() -> bool:

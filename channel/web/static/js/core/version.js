@@ -3,7 +3,7 @@
    scope; see channel/web/README.md before changing the load order. */
 
 /* =====================================================================
-   CowAgent Console - Main Application Script
+   Maia Console - Main Application Script
    ===================================================================== */
 
 // =====================================================================
@@ -14,7 +14,7 @@ let APP_VERSION = '';
 // =====================================================================
 // One-click update — driven from the sidebar version menu
 // =====================================================================
-const GITHUB_RELEASES_URL = 'https://github.com/zhayujie/CowAgent/releases';
+const GITHUB_RELEASES_URL = 'https://github.com/dubhagen/Maia/releases';
 let UPDATE_META = { version: '', install_kind: 'unknown', update_supported: false, unsupported_reason: '' };
 let UPDATE_CHECK = null;
 let _updateChecking = false;
@@ -66,7 +66,6 @@ function openMenuEditorFromFooter() {
     if (typeof menuEditorOpen === 'function') menuEditorOpen();
 }
 
-// "版本说明": open the GitHub releases page (keeps the old click-through behaviour).
 function openReleaseNotes() {
     window.open(GITHUB_RELEASES_URL, '_blank', 'noopener,noreferrer');
     closeUpdateMenu();
@@ -75,12 +74,7 @@ function openReleaseNotes() {
 // Single update entry, mirroring the desktop NavRail: one row whose icon +
 // label + red dot are driven by the current update state. Keeping it a single
 // fixed-height line means the icon and label never fall out of alignment.
-//   idle        -> "检查更新"           (click = check)
-//   checking    -> "正在检查…" (spinner)
-//   up_to_date  -> "已是最新版本"
-//   available   -> "立即更新" + red dot (click = update)
 //   updating    -> current step label   (spinner, not clickable)
-//   failed      -> "更新失败" + retry
 let _updateUiState = 'idle';
 
 function _renderUpdateAction(state, label, opts) {
@@ -121,8 +115,6 @@ function onUpdateActionClick() {
     }
 }
 
-// "检查更新": the only action that contacts GitHub. Turns the row into
-// "立即更新" (+ red dot) when a newer version exists.
 function checkForConsoleUpdate() {
     if (_updateChecking || _updateRunning) return;
     _updateChecking = true;
@@ -152,7 +144,6 @@ function checkForConsoleUpdate() {
         .finally(() => { _updateChecking = false; });
 }
 
-// "立即更新": reuse the cow-update path (git pull + pip + restart) via the
 // detached worker, then poll progress and auto-reconnect when it comes back.
 function startConsoleUpdate() {
     if (_updateRunning) return;

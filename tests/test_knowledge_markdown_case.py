@@ -101,7 +101,7 @@ def test_admitted_extension_case_survives_knowledge_consumers(tmp_path, extensio
     (data / 'config.json').write_text(json.dumps({'agent_workspace': str(workspace.resolve())}), encoding='utf-8')
     env = {
         'PATH': os.environ.get('PATH', ''),
-        'HOME': str(home), 'USERPROFILE': str(home), 'COW_DATA_DIR': str(data),
+        'HOME': str(home), 'USERPROFILE': str(home), 'MAIA_DATA_DIR': str(data),
         'PYTHONPATH': os.pathsep.join([str(REPO), *sys.path]),
         'PYTHONDONTWRITEBYTECODE': '1',
     }

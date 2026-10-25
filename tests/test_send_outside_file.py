@@ -14,7 +14,7 @@ from agent.tools.send.send import Send
 @pytest.fixture
 def env(tmp_path, monkeypatch):
     home = tmp_path / "home"
-    workspace = home / "cow"
+    workspace = home / "maia"
     outside = tmp_path / "outside"
     for d in (workspace, outside):
         d.mkdir(parents=True)

@@ -6,12 +6,12 @@
 // emitted (see the workspace_ref branch in web_channel.post_message). History
 // only persists the prompt text, so this is the only way back to a chip.
 const ATTACHMENT_MARKER_TYPES = {
-    '工作空间文件': 'workspace_ref', '工作空间檔案': 'workspace_ref', 'Workspace file': 'workspace_ref',
-    '工作空间目录': 'workspace_dir', '工作空间目錄': 'workspace_dir', 'Workspace directory': 'workspace_dir',
-    '图片': 'image', '圖片': 'image', 'Image': 'image',
-    '视频': 'video', '影片': 'video', 'Video': 'video',
-    '目录': 'directory', '目錄': 'directory', 'Directory': 'directory',
-    '文件': 'file', '檔案': 'file', 'File': 'file',
+    'Workspace file': 'workspace_ref',
+    'Workspace directory': 'workspace_dir',
+    'Image': 'image',
+    'Video': 'video',
+    'Directory': 'directory',
+    'File': 'file',
 };
 
 /**
@@ -391,11 +391,7 @@ function replyStatusHtml(kind) {
 // Cosmetic translator for cancel markers persisted in history.
 // History keeps the English canonical form for the LLM; only display is localized.
 function localizeCancelMarker(text) {
-    if (!text) return text;
-    if (currentLang !== 'zh') return text;
-    return text
-        .replace(/_\(Cancelled by user\)_/g, '_(用户已中止)_')
-        .replace(/_\(Cancelled\)_/g, '_(已中止)_');
+    return text || '';
 }
 
 // Normalize an evolution bubble's text into a stable dedupe key. The live push
@@ -526,7 +522,7 @@ function createBotMessageEl(content, timestamp, requestId, msg, peer) {
             </div>
             <div class="bot-message-meta flex items-center gap-2 mt-1.5 flex-wrap">
                 <span class="text-xs text-slate-400 dark:text-slate-500">${formatTime(timestamp)}</span>
-                <button class="copy-msg-btn text-xs text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 transition-colors cursor-pointer" data-tip-float data-tooltip="${currentLang === 'zh' ? '复制' : 'Copy'}">
+                <button class="copy-msg-btn text-xs text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 transition-colors cursor-pointer" data-tip-float data-tooltip="${'Copy'}">
                     <i class="fas fa-copy"></i>
                 </button>
                 <button class="speak-msg-btn text-xs text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 transition-colors cursor-pointer" data-tip-float data-tooltip="${t('speak_msg')}" style="display:none;">

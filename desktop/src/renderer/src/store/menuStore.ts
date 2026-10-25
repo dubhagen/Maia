@@ -3,7 +3,7 @@ import apiClient from '../api/client'
 import { mergeMenu } from '../lib/menu'
 import type { MenuDoc, MenuItem } from '../types'
 
-const CACHE_KEY = 'cow_menu_cache'
+const CACHE_KEY = 'maia_menu_cache'
 
 function readCache(): MenuDoc | null {
   try {

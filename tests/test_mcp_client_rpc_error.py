@@ -52,7 +52,7 @@ class TestMcpRpcErrorIsSurfaced:
             def emit(self, record):
                 records.append(record.getMessage())
 
-        from common.log import logger as cow_logger
+        from common.log import logger as maia_logger
 
         records = []
 
@@ -63,14 +63,14 @@ class TestMcpRpcErrorIsSurfaced:
         # common.log sets propagate = False, so the handler has to go on the
         # project logger itself, not on the root logger.
         handler = _Grab()
-        cow_logger.addHandler(handler)
-        prev = cow_logger.level
-        cow_logger.setLevel(logging.WARNING)
+        maia_logger.addHandler(handler)
+        prev = maia_logger.level
+        maia_logger.setLevel(logging.WARNING)
         try:
             out = _client(RPC_ERROR).list_tools()
         finally:
-            cow_logger.removeHandler(handler)
-            cow_logger.setLevel(prev)
+            maia_logger.removeHandler(handler)
+            maia_logger.setLevel(prev)
         assert out == []
         assert any("Method not found" in m for m in records), records
 

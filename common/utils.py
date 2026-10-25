@@ -53,7 +53,7 @@ def split_string_by_utf8_length(string, max_length, max_split=0):
             result.append(encoded[start:].decode("utf-8"))
             break
         end = min(start + max_length, len(encoded))
-        # 如果当前字节不是 UTF-8 编码的开始字节，则向前查找直到找到开始字节为止
+        
         while end < len(encoded) and (encoded[end] & 0b11000000) == 0b10000000:
             end -= 1
         if end == start:
@@ -85,7 +85,7 @@ def convert_webp_to_png(webp_image):
 
 
 def remove_markdown_symbol(text: str):
-    # 移除markdown格式，目前先移除**
+    
     if not text:
         return text
     return re.sub(r'\*\*(.*?)\*\*', r'\1', text)
@@ -144,14 +144,7 @@ def constant_time_equals(left: str, right: str) -> bool:
 
 
 def is_cloud_deployment() -> bool:
-    if os.environ.get("CLOUD_DEPLOYMENT_ID"):
-        return True
-    try:
-        from config import conf
-        if conf().get("cloud_deployment_id"):
-            return True
-    except Exception:
-        pass
+    """Cloud deployment is not used. Always false."""
     return False
 
 
@@ -219,39 +212,23 @@ def memory_headroom_mb():
 
 
 def apply_cloud_user(headers: dict) -> dict:
-    """
-    Tag *headers* with the console user driving this request, when there is one.
-
-    Read through sys.modules so purely local runs, where the cloud client is
-    never imported, stay untouched.
-    """
-    module = sys.modules.get("common.cloud_client")
-    user_id = module.current_user_id() if module else None
-    if user_id:
-        headers["X-User-Id"] = user_id
+    """No cloud user tagging. Returns the headers unchanged."""
     return headers
 
 
 def _deployment_id() -> str:
-    """Server-side deployment id, or '' when unset."""
-    dep = os.environ.get("CLOUD_DEPLOYMENT_ID", "")
-    if dep:
-        return dep
-    try:
-        from config import conf
-        return conf().get("cloud_deployment_id", "") or ""
-    except Exception:
-        return ""
+    """Cloud deployment ids are not used."""
+    return ""
 
 
 def get_client_source() -> str:
     """Coarse runtime origin, for stats only. First match wins."""
     if _deployment_id():
         return "cloud"
-    explicit = (os.environ.get("COW_CLIENT_SOURCE") or "").strip()
+    explicit = (os.environ.get("MAIA_CLIENT_SOURCE") or "").strip()
     if explicit:
         return explicit
-    if os.environ.get("COW_DESKTOP") == "1":
+    if os.environ.get("MAIA_DESKTOP") == "1":
         return "desktop"
     return "open-source"
 
@@ -292,7 +269,7 @@ def clear_agent_run_id(token) -> None:
 
 def current_agent_run_id() -> Optional[str]:
     """Current run id: the ambient ``RuntimeIdentity`` first, else the value
-    passed to a child process via the COW_AGENT_RUN_ID env var.
+    passed to a child process via the MAIA_AGENT_RUN_ID env var.
 
     One source of truth: subagents and delegated work set the run id through
     ``RuntimeIdentity`` (via ``identity_scope``), and this reads the same field
@@ -303,7 +280,7 @@ def current_agent_run_id() -> Optional[str]:
 
     return (
         current_identity().run_id
-        or (os.environ.get("COW_AGENT_RUN_ID") or "").strip()
+        or (os.environ.get("MAIA_AGENT_RUN_ID") or "").strip()
         or None
     )
 
@@ -314,7 +291,7 @@ def apply_client_source(headers: dict) -> dict:
     os_family = _client_os()
     if os_family:
         headers["X-Client-OS"] = os_family
-    version = (os.environ.get("COW_CLIENT_VERSION") or "").strip()
+    version = (os.environ.get("MAIA_CLIENT_VERSION") or "").strip()
     if version:
         headers["X-Client-Version"] = version
     run_id = current_agent_run_id()
@@ -327,23 +304,13 @@ def apply_client_source(headers: dict) -> dict:
 
 
 def get_cloud_headers(api_key: str) -> dict:
-    """
-    Build standard headers for LinkAI API requests,
-    including client_id when available.
-    """
+    """Bearer headers plus the local client-source tags. No cloud client id."""
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}",
     }
-    try:
-        from linkai import LinkAIClient
-        client_id = LinkAIClient.fetch_client_id()
-        if client_id:
-            headers["X-Client-Id"] = client_id
-    except Exception:
-        pass
     apply_client_source(headers)
-    return apply_cloud_user(headers)
+    return headers
 
 
 _TAIL_CHUNK_BYTES = 8192

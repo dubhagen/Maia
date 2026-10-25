@@ -3,7 +3,7 @@ import os
 import re
 import pytest
 
-pytestmark = pytest.mark.skipif(os.environ.get('COW_BROWSER_NATIVE_TEST') != '1', reason='opt-in installed browser test')
+pytestmark = pytest.mark.skipif(os.environ.get('MAIA_BROWSER_NATIVE_TEST') != '1', reason='opt-in installed browser test')
 
 @pytest.fixture(scope='module')
 def owned_browser(tmp_path_factory):
@@ -12,7 +12,7 @@ def owned_browser(tmp_path_factory):
     pytest.importorskip('playwright.sync_api')
     if detect_system_chrome() is None:
         pytest.skip('no installed system Chrome/Edge')
-    tmp_path=tmp_path_factory.mktemp('cow-empty-option')
+    tmp_path=tmp_path_factory.mktemp('maia-empty-option')
     page=tmp_path/'options.html'
     page.write_text('<html><body><select id="choice" onchange="window.events=(window.events||0)+1"><option value="">No selection</option><option selected value="new">New</option></select></body></html>')
     previous=BrowserTool._shared_service;BrowserTool._shared_service=None

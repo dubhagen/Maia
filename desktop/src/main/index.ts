@@ -18,10 +18,10 @@ import {
 } from './app-icon'
 
 // Where the packaged backend keeps its writable data (config.json, run.log).
-// Kept in sync with COW_DATA_DIR in python-manager.ts so the desktop shell
+// Kept in sync with MAIA_DATA_DIR in python-manager.ts so the desktop shell
 // writes its own diagnostics into the SAME run.log the "open log folder" button
 // reveals and the in-app Logs page tails — one place to look for both layers.
-const COW_DATA_DIR = path.join(os.homedir(), '.cow')
+const MAIA_DATA_DIR = path.join(os.homedir(), '.maia')
 
 // Mirror the main process's console output and any uncaught crash to run.log.
 // Packaged builds have no terminal, so every console.log/error and every
@@ -32,10 +32,10 @@ const COW_DATA_DIR = path.join(os.homedir(), '.cow')
 function initDesktopLogging(): void {
   let stream: fs.WriteStream | null = null
   try {
-    fs.mkdirSync(COW_DATA_DIR, { recursive: true })
+    fs.mkdirSync(MAIA_DATA_DIR, { recursive: true })
     // Append so we never clobber the backend's own run.log history; both sides
     // are line-based, so interleaving is fine.
-    stream = fs.createWriteStream(path.join(COW_DATA_DIR, 'run.log'), { flags: 'a' })
+    stream = fs.createWriteStream(path.join(MAIA_DATA_DIR, 'run.log'), { flags: 'a' })
     stream.on('error', () => { stream = null })
   } catch {
     stream = null
@@ -106,8 +106,8 @@ initDesktopLogging()
 
 // Force the product name so the Dock/menu shows the app name even in dev mode,
 // where the default Electron binary would otherwise report "Electron". The name
-// can be overridden by the bundled app-config (appName); defaults to CowAgent.
-app.setName(loadAppConfig()?.appName || 'CowAgent')
+// can be overridden by the bundled app-config (appName); defaults to Maia.
+app.setName(loadAppConfig()?.appName || 'Maia')
   // The web layer may have overridden the name at runtime. Re-apply it here,
   // before app.getPath('userData') is read anywhere, since setName moves it.
 applyCachedAppName()
@@ -116,7 +116,7 @@ applyCachedAppName()
 // they are silently dropped. Harmless on macOS/Linux.
 if (process.platform === 'win32') {
   // Must match the installer's appId, which stamps it on the shortcuts.
-  app.setAppUserModelId(loadAppConfig()?.appUserModelId || 'com.cowagent.desktop')
+  app.setAppUserModelId(loadAppConfig()?.appUserModelId || 'com.maia.desktop')
 }
 
 let mainWindow: BrowserWindow | null = null
@@ -222,14 +222,6 @@ function saveWindowState() {
   }
 }
 
-function isZhLocale(): boolean {
-  try {
-    return /^zh/i.test(app.getLocale() || '')
-  } catch {
-    return false
-  }
-}
-
 // Read an image's bytes regardless of scheme: http(s) backend URLs go through
 // Electron's `net` (honours the app session, so the auth token in the query is
 // enough), while data: URLs are decoded inline.
@@ -304,10 +296,7 @@ async function saveImageFromUrl(srcURL: string): Promise<void> {
     fs.writeFileSync(result.filePath, buf)
   } catch (err) {
     console.error('[Electron] Save image failed:', err)
-    dialog.showErrorBox(
-      isZhLocale() ? '保存失败' : 'Save failed',
-      isZhLocale() ? '无法保存该图片。' : 'Could not save the image.'
-    )
+    dialog.showErrorBox('Save failed', 'Could not save the image.')
   }
 }
 
@@ -424,14 +413,13 @@ function createWindow() {
   // the lightbox) downloadable on desktop, matching the browser console.
   mainWindow.webContents.on('context-menu', (_e, params) => {
     if (params.mediaType !== 'image' || !params.srcURL) return
-    const zh = isZhLocale()
     const menu = Menu.buildFromTemplate([
       {
-        label: zh ? '图片另存为…' : 'Save Image As…',
+        label: 'Save Image As…',
         click: () => void saveImageFromUrl(params.srcURL),
       },
       {
-        label: zh ? '复制图片' : 'Copy Image',
+        label: 'Copy Image',
         click: () => void copyImageFromUrl(params.srcURL),
       },
     ])
@@ -487,7 +475,7 @@ async function startBackend() {
   const backendPath = getBackendPath()
   // isDev distinguishes a source checkout from an installed app. The backend
   // manager needs to know: an installed app must never fall back to looking
-  // for a Python interpreter, and its writable data always lives in ~/.cow.
+  // for a Python interpreter, and its writable data always lives in ~/.maia.
   pythonBackend = new PythonBackend(backendPath, !isDev)
 
   pythonBackend.on('ready', (port: number) => {
@@ -561,7 +549,7 @@ function setupIPC() {
   })
 
   // Secret shared with the spawned backend; lets the renderer prove a request
-  // comes from this desktop shell (see COW_DESKTOP_TOKEN in python-manager).
+  // comes from this desktop shell (see MAIA_DESKTOP_TOKEN in python-manager).
   ipcMain.handle('get-desktop-token', () => {
     return pythonBackend?.getDesktopToken() ?? ''
   })
@@ -681,8 +669,7 @@ function setupIPC() {
     isQuitting = true
     // Kill the backend SYNCHRONOUSLY before handing off to the installer. On
     // Windows the NSIS silent updater deletes the old install right away, and a
-    // still-running cowagent-backend.exe locks those files, aborting the update
-    // with "卸载旧应用程序文件失败:2". before-quit's async stop() sends SIGTERM
+    // still-running maia-backend.exe locks those files, aborting the update
     // and returns immediately (a no-op for a native Windows exe), so it loses
     // the race. stopSync() blocks until the process tree is gone. Best-effort:
     // never let a teardown hiccup block the update.
@@ -819,16 +806,9 @@ app.whenReady().then(async () => {
   }
   await startBackend()
 
-  // Wire auto-update: a first silent check a few seconds after launch (so it
-  // doesn't compete with backend startup), then poll every 4 hours so a
-  // long-running window still surfaces new releases. Both are automatic checks
-  // (userInitiated=false): the panel auto-opens once per new version, and once
-  // the user dismisses it these polls only keep the footer/menu dot lit rather
-  // than re-popping the panel. autoDownload is off, so any update is opt-in.
+  // No update feed and no startup or interval poll. A manual check from the
+  // renderer still hits the IPC handler, which reports that nothing is available.
   initUpdater(() => mainWindow)
-  setTimeout(() => checkForUpdates(), 5000)
-  const UPDATE_POLL_MS = 4 * 60 * 60 * 1000
-  setInterval(() => checkForUpdates(), UPDATE_POLL_MS)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

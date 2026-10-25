@@ -29,12 +29,12 @@ def _layout(tmp_path):
 
 def test_reads_shared_knowledge_when_the_agent_has_no_copy(tmp_path, monkeypatch):
     workspace, shared = _layout(tmp_path)
-    (shared / "knowledge" / "entities" / "linkai.md").write_text(
-        "# LinkAI\nVELVETCOMPASS8815\n", encoding="utf-8"
+    (shared / "knowledge" / "entities" / "notes.md").write_text(
+        "# Notes\nVELVETCOMPASS8815\n", encoding="utf-8"
     )
     monkeypatch.setattr("common.state_dir.shared_root", lambda: shared)
 
-    result = _tool(workspace).execute({"path": "knowledge/entities/linkai.md"})
+    result = _tool(workspace).execute({"path": "knowledge/entities/notes.md"})
 
     assert result.status == "success"
     assert "VELVETCOMPASS8815" in result.result
@@ -42,14 +42,14 @@ def test_reads_shared_knowledge_when_the_agent_has_no_copy(tmp_path, monkeypatch
 
 def test_a_private_copy_still_wins_over_the_shared_one(tmp_path, monkeypatch):
     workspace, shared = _layout(tmp_path)
-    (shared / "knowledge" / "entities" / "linkai.md").write_text("shared\n", encoding="utf-8")
+    (shared / "knowledge" / "entities" / "notes.md").write_text("shared\n", encoding="utf-8")
     (workspace / "knowledge" / "entities").mkdir(parents=True)
-    (workspace / "knowledge" / "entities" / "linkai.md").write_text(
-        "# LinkAI\nOWNCOPY2290\n", encoding="utf-8"
+    (workspace / "knowledge" / "entities" / "notes.md").write_text(
+        "# Notes\nOWNCOPY2290\n", encoding="utf-8"
     )
     monkeypatch.setattr("common.state_dir.shared_root", lambda: shared)
 
-    result = _tool(workspace).execute({"path": "knowledge/entities/linkai.md"})
+    result = _tool(workspace).execute({"path": "knowledge/entities/notes.md"})
 
     assert result.status == "success"
     assert "OWNCOPY2290" in result.result

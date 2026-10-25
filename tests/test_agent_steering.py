@@ -272,7 +272,7 @@ def test_chat_steer_command_bypasses_the_normal_queue(monkeypatch):
     assert channel.sessions == {}
     bridge.steer_session.assert_called_once_with("session", "focus on tests", "default")
     reply_text = channel._send_reply.call_args.args[1].content
-    assert "redirect" in reply_text.lower() or "已引导" in reply_text
+    assert "redirect" in reply_text.lower()
 
 
 def test_ordinary_chat_message_keeps_using_the_session_queue(monkeypatch):

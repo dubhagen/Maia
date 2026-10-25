@@ -2,7 +2,7 @@
 """The dir the capability probe reads is the dir Playwright launches from.
 
 The Docker image presets PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright and bakes
-Chromium in there, while the code pins ~/.cow/ms-playwright when the env var is
+Chromium in there, while the code pins ~/.maia/ms-playwright when the env var is
 absent. When an explicit env var is set it has to win everywhere, otherwise
 has_downloaded_chromium() reports the bundled Chromium missing even though the
 launcher -- which honours the env var -- finds it and would run fine.
@@ -18,14 +18,14 @@ from agent.tools.browser import browser_env
 
 def test_explicit_env_var_wins(monkeypatch, tmp_path):
     monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(tmp_path))
-    monkeypatch.setenv("COW_DATA_DIR", str(tmp_path / "data"))
+    monkeypatch.setenv("MAIA_DATA_DIR", str(tmp_path / "data"))
 
     assert browser_env.browsers_download_dir() == str(tmp_path)
 
 
 def test_default_pins_under_data_root(monkeypatch, tmp_path):
     monkeypatch.delenv("PLAYWRIGHT_BROWSERS_PATH", raising=False)
-    monkeypatch.setenv("COW_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("MAIA_DATA_DIR", str(tmp_path))
 
     assert browser_env.browsers_download_dir() == os.path.join(str(tmp_path), "ms-playwright")
 
@@ -34,7 +34,7 @@ def test_has_downloaded_chromium_follows_env_var(monkeypatch, tmp_path):
     browsers = tmp_path / "browsers"
     (browsers / "chromium-1169").mkdir(parents=True)
     monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(browsers))
-    # Point the ~/.cow default somewhere empty: the probe must not look there.
-    monkeypatch.setenv("COW_DATA_DIR", str(tmp_path / "empty-data"))
+    # Point the ~/.maia default somewhere empty: the probe must not look there.
+    monkeypatch.setenv("MAIA_DATA_DIR", str(tmp_path / "empty-data"))
 
     assert browser_env.has_downloaded_chromium() is True

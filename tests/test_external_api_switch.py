@@ -32,7 +32,7 @@ def test_off_keeps_the_key_and_on_reuses_it(console):
 
     first = post("enable")
     assert first["enabled"] is True
-    assert first["api_key"].startswith("sk-cow-")
+    assert first["api_key"].startswith("sk-maia-")
     assert saved == {"external_api_enabled": True, "external_api_token": first["api_key"]}
 
     off = post("disable")

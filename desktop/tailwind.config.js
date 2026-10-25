@@ -1,9 +1,9 @@
 const path = require('path')
 
-// When '@product' points outside this project (COW_PRODUCT_DIR), scan that
+// When '@product' points outside this project (MAIA_PRODUCT_DIR), scan that
 // directory too so classes used only there still get generated.
-const productContent = process.env.COW_PRODUCT_DIR
-  ? [path.join(process.env.COW_PRODUCT_DIR, '**/*.{tsx,ts}')]
+const productContent = process.env.MAIA_PRODUCT_DIR
+  ? [path.join(process.env.MAIA_PRODUCT_DIR, '**/*.{tsx,ts}')]
   : []
 
 /** @type {import('tailwindcss').Config} */
@@ -22,16 +22,16 @@ module.exports = {
         'danger-border': 'var(--danger-border)',
         // Brand accent (kept for backward compat + explicit accent usage)
         primary: {
-          50: '#EDFDF3',
-          100: '#D4FAE2',
-          200: '#ABF4C7',
-          300: '#74E9A4',
-          400: '#4ABE6E',
-          500: '#35A85B',
-          600: '#228547',
-          700: '#1C6B3B',
-          800: '#1A5532',
-          900: '#16462A',
+          50: '#F2F5FE',
+          100: '#E0E8FC',
+          200: '#C5D4FA',
+          300: '#9BB6F6',
+          400: '#6B8EF0',
+          500: '#4169E1',
+          600: '#2F52C4',
+          700: '#243F9A',
+          800: '#1C3278',
+          900: '#16285F',
         },
         // Semantic tokens — driven by CSS variables, theme-aware
         accent: {

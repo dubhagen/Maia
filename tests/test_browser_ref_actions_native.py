@@ -1,6 +1,6 @@
 """Opt-in real browser proof that snapshot refs use normal input actions.
 
-Run with COW_BROWSER_NATIVE_TEST=1 and an installed system Chrome/Edge plus
+Run with MAIA_BROWSER_NATIVE_TEST=1 and an installed system Chrome/Edge plus
 Playwright. This never installs a browser or opens the user's existing profile.
 """
 
@@ -9,7 +9,7 @@ import re
 
 import pytest
 
-pytestmark = pytest.mark.skipif(os.environ.get("COW_BROWSER_NATIVE_TEST") != "1", reason="opt-in installed browser test")
+pytestmark = pytest.mark.skipif(os.environ.get("MAIA_BROWSER_NATIVE_TEST") != "1", reason="opt-in installed browser test")
 
 
 @pytest.mark.parametrize("action,kind,disabled", [

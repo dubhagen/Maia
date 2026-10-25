@@ -91,7 +91,7 @@ jobs:
           pip install -r desktop/build/requirements-desktop.txt
           pip install pyinstaller
           # Run from repo root so the spec's relative datas resolve correctly.
-          pyinstaller desktop/build/cowagent-backend.spec \
+          pyinstaller desktop/build/maia-backend.spec \
             --noconfirm \
             --distpath desktop/build/dist \
             --workpath desktop/build/build-work
@@ -106,7 +106,7 @@ jobs:
         run: |
           want=arm64
           [ "${{ matrix.arch }}" = "arm64" ] || want=x86_64
-          got="$(lipo -archs desktop/build/dist/cowagent-backend/cowagent-backend)"
+          got="$(lipo -archs desktop/build/dist/maia-backend/maia-backend)"
           echo "backend arch: $got (want $want)"
           if [ "$got" != "$want" ]; then
             echo "::error::backend is $got but this job targets $want"
@@ -120,7 +120,7 @@ jobs:
         if: matrix.platform == 'mac'
         shell: bash
         run: |
-          internal=desktop/build/dist/cowagent-backend/_internal
+          internal=desktop/build/dist/maia-backend/_internal
           bad=""
           while IFS= read -r -d '' so; do
             case "$so" in */python3.*/lib-dynload/*) continue ;; esac
@@ -208,12 +208,12 @@ jobs:
           MAC_CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
           # Windows code signing via the signing CLI. Credentials are
           # secrets; SIGNTOOL_PATH was exported by the download step above.
-          # COW_SIGN_DRY_RUN (repo variable) lets us validate the whole pipeline
+          # MAIA_SIGN_DRY_RUN (repo variable) lets us validate the whole pipeline
           # with a self-signed cert before buying a real one — no quota used.
           SIGNTOOL_ACCESS_KEY: ${{ secrets.SIGNTOOL_ACCESS_KEY }}
           SIGNTOOL_ACCESS_SECRET: ${{ secrets.SIGNTOOL_ACCESS_SECRET }}
           SIGNTOOL_CERT_CODE: ${{ secrets.SIGNTOOL_CERT_CODE }}
-          COW_SIGN_DRY_RUN: ${{ vars.COW_SIGN_DRY_RUN }}
+          MAIA_SIGN_DRY_RUN: ${{ vars.MAIA_SIGN_DRY_RUN }}
         run: |
           # Pick the signing cert for THIS platform only. The mac and win secrets
           # are both present in the job env, but a mac cert must never leak into a
@@ -273,7 +273,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           # One bundle per platform/arch so the publish job can collect them all.
-          name: cowagent-${{ matrix.platform }}-${{ matrix.arch }}
+          name: maia-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
             desktop/release/*.dmg
             desktop/release/*.zip
@@ -284,7 +284,7 @@ jobs:
           retention-days: 7
 
   # Mirror the release installers to R2 (CDN-backed) and register them in D1 so
-  # cowagent.ai/download/{platform}/latest can resolve and count downloads.
+  # This fork does not publish to a hosted download domain.
   # Runs only on tag pushes, and is a no-op (skips) until the Cloudflare secrets
   # are configured, so it never blocks unsigned/dry builds.
   publish-r2:
@@ -368,8 +368,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           VER: ${{ steps.ver.outputs.version }}
         run: |
-          # Reuse the existing cow-skills bucket under a desktop/ prefix; this
-          # is served by the cdn.cowagent.ai custom domain.
+          # Bucket name is maia-skills so a publish cannot write the upstream bucket.
           #
           # R2's API sporadically returns 504 / 7009 (Upstream service
           # unavailable) mid-upload, especially on the larger dmg/zip objects.
@@ -378,9 +377,9 @@ jobs:
           for f in dist/*; do
             base="$(basename "$f")"
             key="desktop/v${VER}/${base}"
-            echo "==> Uploading $base -> r2://cow-skills/$key"
+            echo "==> Uploading $base -> r2://maia-skills/$key"
             for attempt in 1 2 3 4 5; do
-              if npx --yes wrangler@latest r2 object put "cow-skills/$key" \
+              if npx --yes wrangler@latest r2 object put "maia-skills/$key" \
                    --file "$f" --remote; then
                 break
               fi
@@ -414,4 +413,4 @@ jobs:
           # here: rows stay unpublished until the publish workflow promotes them.
           node .github/scripts/register-releases.mjs --dir dist --version "$VER" --sql d1.sql
           echo "==> D1 statements:"; cat d1.sql
-          npx --yes wrangler@latest d1 execute cow-desktop --remote --file d1.sql
+          npx --yes wrangler@latest d1 execute maia-desktop --remote --file d1.sql

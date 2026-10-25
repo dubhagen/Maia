@@ -343,7 +343,7 @@ function startSSE(requestId, loadingEl, timestamp, replayItems, resume) {
                 </div>
                 <div class="bot-message-meta flex items-center gap-2 mt-1.5 flex-wrap">
                     <span class="text-xs text-slate-400 dark:text-slate-500">${formatTime(timestamp)}</span>
-                    <button class="copy-msg-btn text-xs text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 transition-colors cursor-pointer" data-tip-float data-tooltip="${currentLang === 'zh' ? '复制' : 'Copy'}" style="display:none">
+                    <button class="copy-msg-btn text-xs text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 transition-colors cursor-pointer" data-tip-float data-tooltip="${'Copy'}" style="display:none">
                         <i class="fas fa-copy"></i>
                     </button>
                     <button class="speak-msg-btn text-xs text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 transition-colors cursor-pointer" data-tip-float data-tooltip="${t('speak_msg')}" style="display:none;">
@@ -753,7 +753,7 @@ function startSSE(requestId, loadingEl, timestamp, replayItems, resume) {
                 scrollChatToBottom();
 
             } else if (item.type === 'phase') {
-                // Coarse progress (e.g. cow install-browser); must not close SSE (unlike "done")
+                // Coarse progress (e.g. maia install-browser); must not close SSE (unlike "done")
                 ensureBotEl();
                 const wrap = document.createElement('div');
                 wrap.className = 'text-xs sm:text-sm text-slate-600 dark:text-slate-400 border-l-2 border-primary-400 pl-2 py-1 my-0.5';
@@ -1098,7 +1098,7 @@ function startPolling() {
                     // only notify for an ordinary missed reply.
                     if (!isSchedulerRequest(rid)) {
                     showTaskNotification(
-                        sessionTitleOf(sessionId) || 'CowAgent',
+                        sessionTitleOf(sessionId) || 'Maia',
                         firstLineSnippet(data.content),
                             sessionId,
                             activeAgentId

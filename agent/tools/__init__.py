@@ -129,7 +129,7 @@ BrowserTool = _import_browser_tool()
 
 # MCP Tools (no extra dependencies, loaded on demand)
 def _import_mcp_tools():
-    """导入 MCP 工具模块（无额外依赖，按需加载）"""
+    """Import the MCP tool module. It has no extra dependencies and loads on demand."""
     from common.log import logger
     try:
         from agent.tools.mcp.mcp_tool import McpTool

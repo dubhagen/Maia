@@ -40,7 +40,7 @@ export function resolveModels(
   return normEntries(findProvider(data, providerId)?.models)
 }
 
-// Voices for a tts provider may be a flat list or, for linkai, keyed by model.
+// Voices for a TTS provider may be a flat list or a map keyed by model.
 export function resolveVoices(
   provider: string,
   model: string,
@@ -49,7 +49,7 @@ export function resolveVoices(
   const raw = voicesMap?.[provider]
   if (!raw) return []
   if (Array.isArray(raw)) return normEntries(raw)
-  // keyed by model (linkai)
+  // keyed by model
   const byModel = raw as Record<string, ModelEntry[]>
   return normEntries(byModel[model] || [])
 }

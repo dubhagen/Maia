@@ -55,7 +55,7 @@ def test_missing_conversation_and_recipient_directory_report_failure(tool):
 
 
 def test_successful_lifecycle_and_error_like_user_text_remain_successful(tool):
-    result = tool.execute(create(name="Error: 错误: ordinary reminder",
+    result = tool.execute(create(name="Error: ordinary reminder",
                                  message="Error: is the text to remember"))
     assert result.status == "success", result.result
     tasks = tool.task_store.load_tasks()

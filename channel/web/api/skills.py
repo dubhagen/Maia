@@ -92,16 +92,6 @@ def _market_spec(source: str, value: str) -> str:
         if not _SKILL_NAME_RE.match(value):
             raise ValueError(f"invalid skill name: {value}")
         return value
-    if source == "clawhub":
-        from cli.commands.skill import SkillInstallError, parse_clawhub_ref
-
-        if value.startswith("clawhub:"):
-            value = value[len("clawhub:"):]
-        try:
-            owner, slug = parse_clawhub_ref(value)
-        except SkillInstallError:
-            raise ValueError(f"invalid ClawHub skill: {value}")
-        return f"clawhub:{owner}/{slug}" if owner else f"clawhub:{slug}"
     if source == "github":
         if value.startswith(("https://", "http://")) or _GITHUB_SHORTHAND_RE.match(value):
             return value
@@ -113,7 +103,7 @@ class _SkillStaging:
     """Skills fetched for preview, held until confirmed, discarded, or stale."""
 
     TTL_SECONDS = 30 * 60
-    DIR_PREFIX = "cow-skill-preview-"
+    DIR_PREFIX = "maia-skill-preview-"
 
     def __init__(self):
         self._lock = threading.Lock()

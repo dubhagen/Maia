@@ -78,16 +78,16 @@ def _desktop_token_matches() -> bool:
     """Whether the request carries the secret the desktop shell handed us.
 
     The shell generates a random token per launch and passes it in via
-    COW_DESKTOP_TOKEN when it spawns the backend, then sends it back on its own
+    MAIA_DESKTOP_TOKEN when it spawns the backend, then sends it back on its own
     requests. A browser tab talking to the same port never sees the env of the
     process, so it can't forge this; a source run without the shell has no
     token, and the check simply fails closed.
     """
-    expected = os.environ.get("COW_DESKTOP_TOKEN", "")
+    expected = os.environ.get("MAIA_DESKTOP_TOKEN", "")
     if not expected:
         return False
     env = getattr(web.ctx, "env", {}) or {}
-    provided = env.get("HTTP_X_COW_DESKTOP_TOKEN", "")
+    provided = env.get("HTTP_X_MAIA_DESKTOP_TOKEN", "")
     return bool(provided) and constant_time_equals(provided, expected)
 
 
@@ -246,18 +246,18 @@ def _log_bind_failure(host: str, port: int, err: OSError):
     winerror, err_no = _bind_error_codes(err)
     if winerror == 10013:
         logger.error(
-            f"[WebChannel] 端口 {port} 被系统保留，无法绑定（WinError 10013）。"
-            f"通常是 Hyper-V/WSL2/Docker 占用了该端口段，可执行 "
-            f"`netsh interface ipv4 show excludedportrange protocol=tcp` 查看，"
-            f"或在 config.json 中把 web_port 改成区间外的端口"
+            f"[WebChannel] Port {port} is reserved by the OS and cannot be bound (WinError 10013). "
+            f"Hyper-V/WSL2/Docker often reserves that range. Run "
+            f"`netsh interface ipv4 show excludedportrange protocol=tcp` to see it, "
+            f"or set web_port in config.json to a port outside the range."
         )
     elif winerror == 10048 or err_no in (48, 98):  # WSAEADDRINUSE / macOS / Linux
         logger.error(
-            f"[WebChannel] 端口 {port} 已被占用，可执行 `cow restart` 清理残留进程，"
-            f"或在 config.json 中修改 web_port"
+            f"[WebChannel] Port {port} is already in use. Run `maia restart` to clear a leftover process, "
+            f"or change web_port in config.json."
         )
     else:
-        logger.error(f"[WebChannel] 无法在 {host}:{port} 上启动服务: {err}")
+        logger.error(f"[WebChannel] Could not start on {host}:{port}: {err}")
 
 
 def _session_expire_seconds():
@@ -323,7 +323,7 @@ def _check_auth():
     """Return True if request is authenticated or password not enabled."""
     if not _is_password_enabled():
         return True
-    if _verify_auth_token(web.cookies().get("cow_auth_token", "")):
+    if _verify_auth_token(web.cookies().get("maia_auth_token", "")):
         return True
     if _verify_auth_token(_get_bearer_token()):
         return True
@@ -337,7 +337,7 @@ def _require_auth():
         # request is otherwise invisible in run.log, which makes client bugs —
         # e.g. an endpoint that forgets the Authorization header — undiagnosable.
         offered = []
-        if web.cookies().get("cow_auth_token", ""):
+        if web.cookies().get("maia_auth_token", ""):
             offered.append("cookie")
         if _get_bearer_token():
             offered.append("bearer")
@@ -354,43 +354,26 @@ def _require_auth():
                             json.dumps({"status": "error", "message": "Unauthorized"}))
 
 
-# Localized text for /cancel system replies. Web is the only channel that
-# honors a per-request `lang`; other channels reply in Chinese by default.
-def _cancel_reply_text(cancelled: int, lang: str) -> str:
-    en = lang.startswith("en")
+def _cancel_reply_text(cancelled: int, lang: str = "") -> str:
+    del lang
     if cancelled > 0:
-        return "🛑 Cancelled" if en else "🛑 已中止"
-    return "Nothing to cancel." if en else "当前没有可中止的任务。"
+        return "🛑 Cancelled"
+    return "Nothing to cancel."
 
 
-def _steer_reply_text(status, lang: str) -> str:
+def _steer_reply_text(status, lang: str = "") -> str:
+    del lang
     from agent.protocol import SteerStatus
 
-    en = (lang or "").lower().startswith("en")
     messages = {
-        SteerStatus.ACCEPTED: (
-            "↪️ Active task redirected.", "↪️ 已引导当前任务。"
-        ),
-        SteerStatus.INACTIVE: (
-            "No active task to steer.", "当前没有可引导的任务。"
-        ),
-        SteerStatus.CLOSING: (
-            "The active task is already finishing.", "当前任务已结束，无法再引导。"
-        ),
-        SteerStatus.AMBIGUOUS: (
-            "Multiple tasks are active in this session; the steering target is ambiguous.",
-            "当前会话有多个任务在运行，无法确定引导目标。",
-        ),
-        SteerStatus.FULL: (
-            "Too many steering updates are pending; try again after the agent processes them.",
-            "引导指令过多，请等待当前任务处理后再试。",
-        ),
-        SteerStatus.INVALID: (
-            "Usage: /steer <instruction>", "用法：/steer <引导指令>"
-        ),
+        SteerStatus.ACCEPTED: "↪️ Active task redirected.",
+        SteerStatus.INACTIVE: "No active task to steer.",
+        SteerStatus.CLOSING: "The active task is already finishing.",
+        SteerStatus.AMBIGUOUS: "Multiple tasks are active in this session; the steering target is ambiguous.",
+        SteerStatus.FULL: "Too many steering updates are pending; try again after the agent processes them.",
+        SteerStatus.INVALID: "Usage: /steer <instruction>",
     }
-    english, chinese = messages[status]
-    return english if en else chinese
+    return messages[status]
 
 
 def _get_upload_dir(agent_id: str = None) -> str:
@@ -407,7 +390,7 @@ def _get_workspace_root(session_id: str = None, agent_id: str = None) -> str:
 
     When a session has opened a project directory, that project is the working
     directory the file panel / preview / ``@`` picker operate in. Otherwise it
-    is the Agent's workspace (``state_root``, e.g. ``~/cow``). Memory and skills
+    is the Agent's workspace (``state_root``, e.g. ``~/maia``). Memory and skills
     always stay in ``state_root`` regardless; only the working root moves.
     """
     if session_id:

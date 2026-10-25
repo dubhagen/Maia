@@ -673,10 +673,10 @@ def test_memory_and_skill_editor_wiring():
     assert ("if (!memoryEditor.isDirty() && !skillEditor.isDirty() "
             "&& !knowledgeEditor.isDirty()) return;") in console
 
-    # Every string these views show must exist in all three locales.
+    # Every string these views show must exist in the English catalog.
     for key in ("skill_back", "skill_open_hint", "skill_load_failed",
                 "skill_builtin_readonly", "skill_files_title", "skill_file_not_text"):
-        assert console.count(f"{key}:") == 3, key
+        assert console.count(f"{key}:") == 1, key
 
 
 # ----------------------------------------------------------------------
@@ -756,7 +756,7 @@ def test_desktop_skill_editing_is_addressed_by_name():
     assert "formatSkillFileSize(file.size)" in page
     # The whole list folds away, remembered under the key the web console uses.
     assert "localStorage.setItem(SKILL_FILES_PANEL_KEY" in page
-    assert "const SKILL_FILES_PANEL_KEY = 'cow_skill_files_panel'" in page
+    assert "const SKILL_FILES_PANEL_KEY = 'maia_skill_files_panel'" in page
 
     # The reason shown for a read-only skill comes from the server's flag: the
     # workspace copy of a builtin reads back as `custom`, so keying off `source`
@@ -839,9 +839,9 @@ def test_desktop_doc_editor_seeds_declaratively():
     assert "if (el) void save(el.value)" in editor
     assert "save(ref.current?.value ?? '')" not in editor
 
-    # Every string these pages show must exist in both locales.
+    # Every string these pages show must exist in the English catalog.
     i18n = _desktop("i18n.ts")
     for key in ("doc_edit", "doc_edit_save", "skill_back", "skill_open_hint",
                 "skill_builtin_readonly", "knowledge_doc_readonly",
                 "skill_files_title", "skill_file_not_text"):
-        assert i18n.count(f"{key}:") == 2, key
+        assert i18n.count(f"{key}:") == 1, key

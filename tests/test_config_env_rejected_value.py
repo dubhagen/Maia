@@ -13,10 +13,10 @@ import config as config_module
 
 
 def _load_with_env(**env):
-    data_dir = tempfile.mkdtemp(prefix="cow-env-override-")
+    data_dir = tempfile.mkdtemp(prefix="maia-env-override-")
     previous = config_module.config
     try:
-        with patch.dict(os.environ, {"COW_DATA_DIR": data_dir, **env}, clear=False):
+        with patch.dict(os.environ, {"MAIA_DATA_DIR": data_dir, **env}, clear=False):
             config_module.load_config()
             return config_module.conf()
     finally:

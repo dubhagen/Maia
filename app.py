@@ -24,18 +24,18 @@ import threading
 from common.channel_registry import get_channel_manager, set_channel_manager  # noqa: F401 - re-exported for `from app import get_channel_manager`
 
 # Desktop mode: a lighter runtime for the packaged Electron client. Plugins are
-# loaded in a background thread (so command plugins like cow_cli/godcmd work
+# loaded in a background thread (so command plugins like maia_cli/godcmd work
 # without slowing startup), while MCP warmup is still skipped to keep it fast.
-DESKTOP_MODE = os.environ.get("COW_DESKTOP") == "1"
+DESKTOP_MODE = os.environ.get("MAIA_DESKTOP") == "1"
 
 
 def _parse_channel_type(raw) -> list:
     """
     Parse channel_type config value into a list of channel names.
     Supports:
-      - single string: "feishu"
-      - comma-separated string: "feishu, dingtalk"
-      - list: ["feishu", "dingtalk"]
+      - single string: "web"
+      - comma-separated string: "web, terminal"
+      - list: ["web", "terminal"]
     """
     if isinstance(raw, list):
         return [ch.strip() for ch in raw if ch.strip()]
@@ -57,73 +57,22 @@ def _has_web_entry(channel_names: list) -> bool:
 
 
 def _resolve_startup_channels(raw_channel):
-    """Startup channel list = config.json's channels plus team.json's instances,
-    de-duplicated by channel *type* for multi-instance-ready types.
+    """Start only the web console and the local terminal.
 
-    config.json stays the source of truth for anything it configures: its
-    ``channel_type`` list (dingtalk, wecom, ...) always starts, exactly as a
-    legacy install expects. team.json's ``channel_instances`` carries the
-    explicit multi-instance bots (feishu today), each with its own credentials
-    and Agent binding.
-
-    The subtlety is feishu: config.json's flat ``feishu`` entry and a
-    ``channel_instances`` feishu record are the *same kind of connection*. Once
-    team.json manages feishu (at least one feishu instance exists), feishu's
-    single source of truth is ``channel_instances`` — the flat config entry is
-    dropped so the same bot is not started twice on one websocket. This holds no
-    matter which Agent the instances are bound to: rebinding every feishu
-    instance away from the default Agent must NOT resurrect config.json's feishu
-    as a stray default-bound bot. Non-multi-instance types are never managed by
-    instances, so config keeps starting them untouched.
-
-    A legacy single-Agent install has no team.json / no channel_instances and
-    this returns exactly ``_parse_channel_type(raw_channel)`` as before.
+    Messaging channels are removed. A leftover ``channel_type`` value is logged
+    and skipped. ``channel_instances`` is not consulted. An empty list still
+    starts the web console so the LiteLLM base can be configured.
     """
-    from channel.channel_instances import MULTI_INSTANCE_READY, _normalize_type
-
-    names = _parse_channel_type(raw_channel)
-
-    instances = []
-    try:
-        from agent import team
-        from channel.channel_instances import resolve_channel_instances
-
-        settings = team.resolve(conf())
-        raw_instances = settings.get("channel_instances")
-        if isinstance(raw_instances, list) and raw_instances:
-            instances = resolve_channel_instances(settings)
-    except Exception as e:
-        logger.warning(
-            f"[App] Failed to resolve channel_instances, using config.json "
-            f"channel_type only: {e}"
-        )
-        instances = []
-
-    # Types now owned by channel_instances (feishu, ...). Drop config.json's
-    # flat entry for these so the instance records are the only source.
-    managed_types = {
-        inst.channel_type
-        for inst in instances
-        if inst.channel_type in MULTI_INSTANCE_READY
-    }
-
+    allowed = {"web", "terminal"}
     entries = []
-    for name in names:
-        if _normalize_type(name) in managed_types:
+    for name in _parse_channel_type(raw_channel):
+        if name in allowed:
+            entries.append(name)
+        else:
             logger.info(
-                f"[App] channel_type '{name}' is managed by channel_instances; "
-                f"skipping the flat config.json entry to avoid a duplicate bot"
+                "[App] channel_type '%s' is not available; only web and terminal start",
+                name,
             )
-            continue
-        entries.append(name)
-
-    if instances:
-        logger.info(
-            f"[App] Starting channel_instances: "
-            f"{[(i.instance_id, i.channel_type, i.agent_id) for i in instances]}"
-        )
-        entries.extend(instances)
-
     if not entries:
         entries = ["web"]
     return entries
@@ -154,7 +103,7 @@ class ChannelManager:
     def find_channels_by_type(self, channel_type: str) -> list:
         """Every running channel whose type matches, keyed by registry name.
 
-        Instances register under their ``instance_id`` (e.g. ``weixin-c696...``),
+        Instances register under their ``instance_id`` (e.g. ``web`` or ``terminal``),
         so a caller that only knows the bare ``channel_type`` (an old scheduled
         task whose action never stored an instance_id) can't hit ``get_channel``
         directly. This lets it recover the live instance(s) of that type instead
@@ -201,7 +150,7 @@ class ChannelManager:
     def start(self, channel_names: list, first_start: bool = False):
         """
         Create and start one or more channels in sub-threads.
-        If first_start is True, plugins and linkai client will also be initialized.
+        If first_start is True, plugins are also initialized.
 
         Each entry may be a legacy channel-type string or a ChannelInstance.
         """
@@ -220,12 +169,11 @@ class ChannelManager:
         with self._lock:
             channels = []
             for name, channel_type, factory_kwargs in entries:
-                # One misconfigured channel (e.g. wechatcom_app without its
-                # corp_id/token/aes_key) must not take the whole process down:
-                # instantiating it can raise while parsing config. The web
-                # console in particular has to come up so the desktop shell can
-                # surface the error and let the user fix the config. Skip the
-                # broken channel and keep the rest.
+                # One misconfigured channel (e.g. terminal) must not take the
+                # whole process down: instantiating it can raise while parsing
+                # config. The web console in particular has to come up so the
+                # desktop shell can surface the error and let the user fix the
+                # config. Skip the broken channel and keep the rest.
                 try:
                     ch = channel_factory.create_channel(channel_type, **factory_kwargs)
                 except Exception as e:
@@ -244,30 +192,13 @@ class ChannelManager:
             if first_start:
                 if DESKTOP_MODE:
                     # Load plugins in the background so command plugins
-                    # (cow_cli / godcmd, e.g. /status, #help) work in the
+                    # (maia_cli / godcmd, e.g. /status, #help) work in the
                     # desktop client, without blocking web-service readiness.
                     threading.Thread(
                         target=PluginManager().load_plugins, daemon=True
                     ).start()
                 else:
                     PluginManager().load_plugins()
-
-                # Cloud client is optional. It is only started when
-                # use_linkai=True AND cloud_deployment_id is set.
-                # By default neither is configured, so the app runs
-                # entirely locally without any remote connection.
-                if conf().get("use_linkai") and (
-                    os.environ.get("CLOUD_DEPLOYMENT_ID") or conf().get("cloud_deployment_id")
-                ):
-                    try:
-                        from common import cloud_client
-                        threading.Thread(
-                            target=cloud_client.start,
-                            args=(self._primary_channel, self),
-                            daemon=True,
-                        ).start()
-                    except Exception:
-                        pass
 
             # Start web console first so its logs print cleanly,
             # then start remaining channels after a brief pause.
@@ -446,19 +377,7 @@ def _clear_singleton_cache(channel_name: str):
     """
     cls_map = {
         "web": "channel.web.web_channel.WebChannel",
-        "wechatmp": "channel.wechatmp.wechatmp_channel.WechatMPChannel",
-        "wechatmp_service": "channel.wechatmp.wechatmp_channel.WechatMPChannel",
-        "wechatcom_app": "channel.wechatcom.wechatcomapp_channel.WechatComAppChannel",
-        const.WECHAT_KF: "channel.wechat_kf.wechat_kf_channel.WechatKfChannel",
-        const.FEISHU: "channel.feishu.feishu_channel.FeiShuChanel",
-        const.DINGTALK: "channel.dingtalk.dingtalk_channel.DingTalkChanel",
-        const.WECOM_BOT: "channel.wecom_bot.wecom_bot_channel.WecomBotChannel",
-        const.QQ: "channel.qq.qq_channel.QQChannel",
-        const.TELEGRAM: "channel.telegram.telegram_channel.TelegramChannel",
-        const.SLACK: "channel.slack.slack_channel.SlackChannel",
-        const.DISCORD: "channel.discord.discord_channel.DiscordChannel",
-        const.WEIXIN: "channel.weixin.weixin_channel.WeixinChannel",
-        "wx": "channel.weixin.weixin_channel.WeixinChannel",
+        "terminal": "channel.terminal.terminal_channel.TerminalChannel",
     }
     module_path = cls_map.get(channel_name)
     if not module_path:
@@ -497,10 +416,10 @@ def sigterm_handler_wrap(_signo):
 
 
 def _register_pid_file():
-    """Record this process in the pid file the ``cow`` CLI reads.
+    """Record this process in the pid file the ``maia`` CLI reads.
 
     An instance started directly (``python app.py``, e.g. as a container entry
-    point) otherwise looks stopped to ``cow start`` / ``restart`` /
+    point) otherwise looks stopped to ``maia start`` / ``restart`` /
     ``self-restart``, which then launch a second instance beside it instead of
     replacing it. Only an absent or stale file is claimed, so a pid written by
     the CLI or by another live instance is left alone, and on exit the file is
@@ -671,7 +590,7 @@ def _migrate_conversations():
 
 def _warn_if_legacy_workspace_data_exists():
     """
-    Warn if the hardcoded ~/cow default holds data that agent_workspace
+    Warn if the hardcoded ~/maia default holds data that agent_workspace
     doesn't - e.g. after changing agent_workspace without moving the old
     directory's contents over. The new workspace would otherwise look
     empty even though old data still exists, with no indication why.
@@ -680,7 +599,7 @@ def _warn_if_legacy_workspace_data_exists():
         from common.state_dir import state_root_str
         from common.utils import expand_path
         workspace_root = state_root_str()
-        legacy_root = expand_path("~/cow")
+        legacy_root = expand_path("~/maia")
         # samefile checks filesystem identity, so case-insensitive filesystems
         # (default on Windows and macOS) are handled correctly - normcase
         # alone isn't enough, since it only folds case on Windows. Falls back

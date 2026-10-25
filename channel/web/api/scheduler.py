@@ -468,10 +468,7 @@ class SchedulerInstancesHandler:
         web.header('Content-Type', 'application/json; charset=utf-8')
         try:
             from agent.tools.scheduler.integration import get_recipient_store
-            from channel.channel_instances import (
-                resolve_channel_instances,
-                _CHANNEL_TYPE_LABELS,
-            )
+            from channel.channel_instances import resolve_channel_instances
             from agent import team
 
             # Count recipients per instance so the picker can flag empty ones.
@@ -489,24 +486,12 @@ class SchedulerInstancesHandler:
                 if inst.instance_id in seen:
                     continue
                 seen.add(inst.instance_id)
-                creds = inst.credentials or {}
-                # Prefer the user label; then a credential-carried bot name; then
-                # the type's friendly label (so a legacy install without a name
-                # reads "微信" not "weixin"); finally the raw id.
-                friendly = (
-                    inst.name
-                    or creds.get("feishu_bot_name")
-                    or creds.get("wecom_bot_id")
-                    or _CHANNEL_TYPE_LABELS.get(inst.channel_type)
-                    or inst.instance_id
-                )
+                friendly = inst.name or inst.channel_type or inst.instance_id
                 instances.append({
                     "instance_id": inst.instance_id,
                     "channel_type": inst.channel_type,
                     "name": friendly,
-                    # Friendly channel-type label (e.g. "微信"), shown on the
-                    # right of the picker since the left is the instance name.
-                    "channel_label": _CHANNEL_TYPE_LABELS.get(inst.channel_type, inst.channel_type),
+                    "channel_label": inst.channel_type,
                     "agent_id": inst.agent_id or "",
                     "recipient_count": counts.get(inst.instance_id, 0),
                 })
@@ -519,10 +504,9 @@ class SchedulerInstancesHandler:
 class SchedulerRecipientsHandler:
     """List the trusted cross-channel recipients learned from inbound messages.
 
-    These are people/groups who have already contacted the Agent on an IM
-    channel (feishu / wecom_bot / dingtalk / weixin / ...). The Web console uses
-    this directory to let a user hand-create a scheduled task that delivers to
-    someone on another channel, instead of guessing raw receiver ids.
+    These are people or groups the Agent has already talked to. The web
+    console uses this directory so a scheduled task can deliver to one of
+    them instead of guessing a raw receiver id.
 
     Web sessions are intentionally excluded from the directory (they are
     ephemeral and not stable identities), so this endpoint only ever returns
@@ -564,13 +548,7 @@ class SchedulerRecipientsHandler:
             for inst in resolve_channel_instances(resolved):
                 # Prefer the user-set label; then a bot name the channel carries;
                 # else the instance id, which at least names the type.
-                creds = inst.credentials or {}
-                friendly = (
-                    inst.name
-                    or creds.get("feishu_bot_name")
-                    or creds.get("wecom_bot_id")
-                    or inst.instance_id
-                )
+                friendly = inst.name or inst.instance_id
                 meta[inst.instance_id] = {"name": friendly}
         except Exception as e:
             logger.debug(f"[WebChannel] Instance meta unavailable: {e}")

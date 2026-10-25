@@ -237,9 +237,9 @@ def test_external_task_handle_is_free_form_text():
     with tempfile.TemporaryDirectory() as tmp:
         store = _store(tmp)
         store.create_run(
-            "r1", session_id="s1", task_id="T-260826-001", task_source="linkai"
+            "r1", session_id="s1", task_id="T-260826-001", task_source="acme"
         )
-        found = store.list_runs(task_source="linkai", task_id="T-260826-001")
+        found = store.list_runs(task_source="acme", task_id="T-260826-001")
         assert [r["run_id"] for r in found] == ["r1"]
 
 

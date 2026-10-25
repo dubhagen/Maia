@@ -1,18 +1,18 @@
-## 插件说明
+# Godcmd
 
-指令插件
+Admin commands for the running process. Enabled by default.
 
-## 插件使用
+## Setup
 
-将`config.json.template`复制为`config.json`，并修改其中`password`的值为口令。
+Copy `config.json.template` to `config.json` and set `password`. If `password` is empty, the process logs a one-time password at startup. Do not share that line.
 
-如果没有设置命令，在命令行日志中会打印出本次的临时口令，请注意观察，打印格式如下。
+In a direct chat:
 
+```text
+#auth <password>
+#help
 ```
-[INFO][2023-04-06 23:53:47][godcmd.py:165] - [Godcmd] 因未设置口令，本次的临时口令为0971。
-```
 
-在私聊中可使用`#auth`指令，输入口令进行管理员认证。更多详细指令请输入`#help`查看帮助文档：
+`#auth` is refused in a group. `#help` lists the commands available to the current user.
 
-`#auth <口令>` - 管理员认证，仅可在私聊时认证。
-`#help` - 输出帮助文档，**是否是管理员**和是否是在群聊中会影响帮助文档的输出内容。
+`admin_users` in `config.json` is the list of user ids that stay authenticated.

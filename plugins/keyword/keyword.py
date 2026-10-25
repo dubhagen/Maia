@@ -18,7 +18,7 @@ from plugins import *
     name="Keyword",
     desire_priority=900,
     hidden=True,
-    desc="关键词匹配过滤",
+    desc="Reply when a message matches a keyword",
     version="0.1",
     author="fengyege.top",
 )
@@ -38,14 +38,14 @@ class Keyword(Plugin):
                 logger.debug(f"[keyword] loading config file: {config_path}")
                 with open(config_path, "r", encoding="utf-8-sig") as f:
                     conf = json.load(f)
-            # 加载关键词
+            
             self.keyword = conf["keyword"]
 
             logger.debug("[keyword] {}".format(self.keyword))
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
             logger.debug("[keyword] inited.")
         except Exception as e:
-            logger.warn("[keyword] init failed, ignore or see https://github.com/zhayujie/chatgpt-on-wechat/tree/master/plugins/keyword .")
+            logger.warn("[keyword] init failed. See plugins/keyword.")
             raise e
 
     def on_handle_context(self, e_context: EventContext):
@@ -55,25 +55,25 @@ class Keyword(Plugin):
         content = e_context["context"].content.strip()
         logger.debug("[keyword] on_handle_context. content: %s" % content)
         if content in self.keyword:
-            logger.info(f"[keyword] 匹配到关键字【{content}】")
+            logger.info(f"[keyword] matched keyword [{content}]")
             reply_text = self.keyword[content]
             parsed_url = urlparse(reply_text)
             is_http_url = parsed_url.scheme in ("http", "https") and bool(parsed_url.netloc)
             url_path = parsed_url.path.lower()
 
-            # 判断匹配内容的类型
+            
             if is_http_url and url_path.endswith((".jpg", ".webp", ".jpeg", ".png", ".gif", ".img")):
-            # 如果是以 http:// 或 https:// 开头，且".jpg", ".jpeg", ".png", ".gif", ".img"结尾，则认为是图片 URL。
+            
                 reply = Reply()
                 reply.type = ReplyType.IMAGE_URL
                 reply.content = reply_text
                 
             elif is_http_url and url_path.endswith((".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip", ".rar")):
-            # 如果是以 http:// 或 https:// 开头，且".pdf", ".doc", ".docx", ".xls", "xlsx",".zip", ".rar"结尾，则下载文件到tmp目录并发送给用户
+            
                 file_name = os.path.basename(parsed_url.path)
-                # 下载到 Agent 受管的 tmp 目录。不要自己拼 "tmp"：那是相对进程 CWD
-                # 解析的，打包后的桌面端控制不了 CWD，甚至可能没有写权限——
-                # 原来那句 makedirs 会直接抛错，被外层 except 吞掉后关键词静默不回复。
+                
+                
+                
                 tmp_dir = state_dir.tmp_dir()
                 # Bound the request. The reply is built on the thread handling
                 # this message, and requests with no timeout waits forever, so a
@@ -102,7 +102,7 @@ class Keyword(Plugin):
                     logger.info(f"[keyword] Failed to download {reply_text}: {failure}")
                     reply = Reply()
                     reply.type = ReplyType.ERROR
-                    reply.content = f"下载失败：{failure}"
+                    reply.content = f"Download failed: {failure}"
                 else:
                     # Replies may wait in the send queue. A fresh directory
                     # keeps earlier bytes intact without changing the display name.
@@ -114,20 +114,20 @@ class Keyword(Plugin):
                     reply.content = str(file_path)
             
             elif is_http_url and url_path.endswith(".mp4"):
-            # 如果是以 http:// 或 https:// 开头，且".mp4"结尾，则下载视频到tmp目录并发送给用户
+            
                 reply = Reply()
                 reply.type = ReplyType.VIDEO_URL
                 reply.content = reply_text
                 
             else:
-            # 否则认为是普通文本
+            
                 reply = Reply()
                 reply.type = ReplyType.TEXT
                 reply.content = reply_text
             
             e_context["reply"] = reply
-            e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
+            e_context.action = EventAction.BREAK_PASS  
             
     def get_help_text(self, **kwargs):
-        help_text = "关键词过滤"
+        help_text = "Keyword replies"
         return help_text

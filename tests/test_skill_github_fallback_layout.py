@@ -79,7 +79,7 @@ def test_contents_fallback_keeps_paths_and_equal_basenames(tmp_path, scripts):
     (data / "config.json").write_text(json.dumps({"agent_workspace": str(workspace)}), encoding="utf-8")
     try:
         with patch.dict(os.environ, {"HOME": str(home), "USERPROFILE": str(home),
-                                     "COW_DATA_DIR": str(data)}, clear=True), \
+                                     "MAIA_DATA_DIR": str(data)}, clear=True), \
                 patch.object(requests, "get", routed_get):
             target = Path(get_skills_dir()).resolve() / "demo"
             assert os.path.commonpath([str(target), str(tmp_path.resolve())]) == str(tmp_path.resolve())

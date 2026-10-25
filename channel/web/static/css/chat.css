@@ -53,8 +53,8 @@
 }
 .composer-card:focus-within {
     background: #fff;
-    border-color: #4ABE6E;
-    box-shadow: 0 0 0 3px rgba(74, 190, 110, 0.12);
+    border-color: #6B8EF0;
+    box-shadow: 0 0 0 3px rgba(107, 142, 240, 0.12);
 }
 .dark .composer-card {
     border-color: rgba(255, 255, 255, 0.12);
@@ -62,11 +62,11 @@
 }
 .dark .composer-card:focus-within {
     background: rgba(255, 255, 255, 0.06);
-    border-color: #4ABE6E;
-    box-shadow: 0 0 0 3px rgba(74, 190, 110, 0.14);
+    border-color: #6B8EF0;
+    box-shadow: 0 0 0 3px rgba(107, 142, 240, 0.14);
 }
 /* Drag-over highlight reuses the focus treatment. */
-.composer-card.drag-over { border-color: #4ABE6E; background: #fff; }
+.composer-card.drag-over { border-color: #6B8EF0; background: #fff; }
 
 .composer-textarea {
     width: 100%;
@@ -118,9 +118,9 @@
     cursor: pointer;
     transition: background 0.12s ease, color 0.12s ease;
 }
-.composer-icon-btn:hover { background: #EDFDF3; color: #228547; }
+.composer-icon-btn:hover { background: #F2F5FE; color: #2F52C4; }
 .composer-icon-btn-warn:hover { background: #FEF3C7; color: #B45309; }
-.dark .composer-icon-btn:hover { background: rgba(74, 190, 110, 0.14); color: #6EE7A0; }
+.dark .composer-icon-btn:hover { background: rgba(107, 142, 240, 0.14); color: #6EE7A0; }
 .dark .composer-icon-btn-warn:hover { background: rgba(245, 158, 11, 0.16); color: #FCD34D; }
 
 .composer-divider {
@@ -148,8 +148,8 @@
     cursor: pointer;
     transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
-.composer-chip:hover { background: #EDFDF3; color: #228547; }
-.composer-chip.open { background: #EDFDF3; color: #228547; border-color: #BBF0CD; }
+.composer-chip:hover { background: #F2F5FE; color: #2F52C4; }
+.composer-chip.open { background: #F2F5FE; color: #2F52C4; border-color: #C5D4FA; }
 .composer-chip > i { font-size: 11px; flex-shrink: 0; }
 .composer-chip-label {
     overflow: hidden;
@@ -163,7 +163,7 @@
 .composer-chip-icon-only .composer-chip-caret { display: none; }
 .dark .composer-chip { color: #94a3b8; }
 .dark .composer-chip:hover,
-.dark .composer-chip.open { background: rgba(74, 190, 110, 0.14); color: #6EE7A0; border-color: transparent; }
+.dark .composer-chip.open { background: rgba(107, 142, 240, 0.14); color: #6EE7A0; border-color: transparent; }
 
 /* Permission chip stays neutral like the other composer chips: the icon alone
    distinguishes the mode, so an unrestricted session no longer shouts in a warm
@@ -196,14 +196,14 @@
     padding: 4px 12px;
     border: none;
     border-radius: 8px;
-    background: #35A85B;
+    background: #4169E1;
     color: #fff;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: background 0.12s ease;
 }
-.perm-denied-btn:hover { background: #228547; }
+.perm-denied-btn:hover { background: #2F52C4; }
 .dark .perm-denied-hint {
     border-color: rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.04);
@@ -220,7 +220,7 @@
     flex-shrink: 0;
     border: none;
     border-radius: 9px;
-    background: #4ABE6E;
+    background: #6B8EF0;
     color: #fff;
     cursor: pointer;
     transition: background 0.12s ease, opacity 0.12s ease;
@@ -230,13 +230,13 @@
 .dark .composer-send-btn:disabled { background: #475569; }
 .composer-steer-btn {
     background: transparent;
-    border: 1px solid #BBF0CD;
+    border: 1px solid #C5D4FA;
     color: #35A55A;
 }
-.composer-steer-btn:hover:not(:disabled) { background: #EDFDF3; }
+.composer-steer-btn:hover:not(:disabled) { background: #F2F5FE; }
 .composer-steer-btn:disabled { background: transparent; border-color: #e2e8f0; color: #cbd5e1; }
-.dark .composer-steer-btn { border-color: rgba(74, 190, 110, 0.4); color: #6EE7A0; }
-.dark .composer-steer-btn:hover:not(:disabled) { background: rgba(74, 190, 110, 0.14); }
+.dark .composer-steer-btn { border-color: rgba(107, 142, 240, 0.4); color: #6EE7A0; }
+.dark .composer-steer-btn:hover:not(:disabled) { background: rgba(107, 142, 240, 0.14); }
 .dark .composer-steer-btn:disabled { border-color: rgba(255,255,255,0.12); color: #475569; }
 
 /* Compact attachment chips/thumbnails so adding one barely grows the card. */
@@ -314,8 +314,8 @@
     transition: background 0.12s ease, color 0.12s ease;
     text-align: left;
 }
-.composer-menu-item:hover { background: #EDFDF3; color: #228547; }
-.composer-menu-item.active { background: #EDFDF3; }
+.composer-menu-item:hover { background: #F2F5FE; color: #2F52C4; }
+.composer-menu-item.active { background: #F2F5FE; }
 /* Single-line Agent rows (avatar + name + trailing icon) center vertically;
    only the multi-line permission rows need top alignment. */
 .composer-menu-item.agent-row { align-items: center; }
@@ -331,7 +331,7 @@
     color: #94a3b8; font-size: 11px;
 }
 .composer-menu-item.composer-menu-create:hover .composer-menu-create-icon {
-    border-color: #4ABE6E; color: #228547;
+    border-color: #6B8EF0; color: #2F52C4;
 }
 .dark .composer-menu-create-icon { border-color: #475569; color: #94a3b8; }
 .composer-menu-item > i:first-child {
@@ -357,10 +357,10 @@
     color: #94a3b8;
     white-space: normal;
 }
-.composer-menu-check { color: #228547; flex-shrink: 0; margin-top: 2px; }
+.composer-menu-check { color: #2F52C4; flex-shrink: 0; margin-top: 2px; }
 .dark .composer-menu-item { color: #cbd5e1; }
 .dark .composer-menu-item:hover,
-.dark .composer-menu-item.active { background: rgba(74, 190, 110, 0.14); color: #6EE7A0; }
+.dark .composer-menu-item.active { background: rgba(107, 142, 240, 0.14); color: #6EE7A0; }
 .dark .composer-menu-desc { color: #64748b; }
 .dark .composer-menu-check { color: #6EE7A0; }
 /* A footnote at the bottom of the permission menu, for the one caveat that
@@ -402,8 +402,8 @@
     text-align: left;
 }
 .attach-menu-item:hover {
-    background: #EDFDF3;
-    color: #228547;
+    background: #F2F5FE;
+    color: #2F52C4;
 }
 .attach-menu-item i {
     width: 14px;
@@ -468,8 +468,8 @@
 
 /* Drag-over highlight */
 .drag-over {
-    background: rgba(74, 190, 110, 0.08) !important;
-    border-color: #4ABE6E !important;
+    background: rgba(107, 142, 240, 0.08) !important;
+    border-color: #6B8EF0 !important;
 }
 
 /* User message attachments */
@@ -556,7 +556,7 @@
 }
 .slash-menu-item:hover,
 .slash-menu-item.active {
-    background: #EDFDF3;
+    background: #F2F5FE;
 }
 .slash-menu-item .cmd {
     font-size: 13px;
@@ -565,7 +565,7 @@
     font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
 }
 .slash-menu-item.active .cmd {
-    color: #228547;
+    color: #2F52C4;
 }
 .slash-menu-item .desc {
     font-size: 12px;
@@ -585,13 +585,13 @@
 }
 .dark .slash-menu-item:hover,
 .dark .slash-menu-item.active {
-    background: rgba(74, 190, 110, 0.1);
+    background: rgba(107, 142, 240, 0.1);
 }
 .dark .slash-menu-item .cmd {
     color: #e2e8f0;
 }
 .dark .slash-menu-item.active .cmd {
-    color: #4ABE6E;
+    color: #6B8EF0;
 }
 .dark .slash-menu-item .desc {
     color: #64748b;
@@ -609,8 +609,8 @@
     color: #94a3b8;
 }
 .dark .attach-menu-item:hover {
-    background: rgba(74, 190, 110, 0.1);
-    color: #4ABE6E;
+    background: rgba(107, 142, 240, 0.1);
+    color: #6B8EF0;
 }
 
 /* Context-usage popover on the clear-context button. A body-level fixed card
@@ -1059,8 +1059,8 @@
    one being read is highlighted, and picking one glides the view to it.
    ========================================================================== */
 #timeline-toggle-btn.timeline-empty { display: none; }
-#timeline-toggle-btn.is-active { background: rgba(74, 190, 110, 0.12); }
-#timeline-toggle-btn.is-active i { color: #35a85b; }
+#timeline-toggle-btn.is-active { background: rgba(107, 142, 240, 0.12); }
+#timeline-toggle-btn.is-active i { color: #4169E1; }
 
 .chat-timeline-panel {
     position: fixed;
@@ -1109,7 +1109,7 @@
     transition: background 120ms ease, color 120ms ease;
 }
 .chat-timeline-row:hover { background: #f1f5f9; color: #1e293b; }
-.chat-timeline-row.is-active { color: #35a85b; font-weight: 500; }
+.chat-timeline-row.is-active { color: #4169E1; font-weight: 500; }
 .dark .chat-timeline-row { color: #94a3b8; }
 .dark .chat-timeline-row:hover { background: rgba(255, 255, 255, 0.06); color: #f1f5f9; }
 .dark .chat-timeline-row.is-active { color: #6EE7A0; }
@@ -1130,17 +1130,17 @@
     transition: width 150ms ease, background 150ms ease;
 }
 .chat-timeline-row:hover .chat-timeline-row-dash { background: #94a3b8; }
-.chat-timeline-row.is-active .chat-timeline-row-dash { width: 14px; background: #4ABE6E; }
+.chat-timeline-row.is-active .chat-timeline-row-dash { width: 14px; background: #6B8EF0; }
 .dark .chat-timeline-row-dash { background: rgba(255, 255, 255, 0.18); }
-.dark .chat-timeline-row.is-active .chat-timeline-row-dash { background: #4ABE6E; }
+.dark .chat-timeline-row.is-active .chat-timeline-row-dash { background: #6B8EF0; }
 
 /* Brief ring on the bubble a jump lands on. */
 .timeline-flash {
     animation: timeline-flash-kf 1.6s ease;
 }
 @keyframes timeline-flash-kf {
-    0%, 40% { box-shadow: 0 0 0 3px rgba(74, 190, 110, 0.35); }
-    100% { box-shadow: 0 0 0 3px rgba(74, 190, 110, 0); }
+    0%, 40% { box-shadow: 0 0 0 3px rgba(107, 142, 240, 0.35); }
+    100% { box-shadow: 0 0 0 3px rgba(107, 142, 240, 0); }
 }
 
 /* Keep the browser's scroll anchor on the message list while content grows. */
@@ -1190,7 +1190,7 @@
     transform: scale(1.05);
 }
 .chat-scroll-to-bottom:focus-visible {
-    outline: 2px solid #35a85b;
+    outline: 2px solid #4169E1;
     outline-offset: 2px;
 }
 .dark .chat-scroll-to-bottom {

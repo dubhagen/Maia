@@ -5,8 +5,8 @@
 // =====================================================================
 // Task completion notification (client-side preference)
 // =====================================================================
-const TASK_NOTIFY_KEY = 'cow_task_notify';
-const TASK_NOTIFY_SOUND_KEY = 'cow_task_notify_sound';
+const TASK_NOTIFY_KEY = 'maia_task_notify';
+const TASK_NOTIFY_SOUND_KEY = 'maia_task_notify_sound';
 let taskNotifyEnabled = localStorage.getItem(TASK_NOTIFY_KEY) !== '0';
 let taskNotifySound = localStorage.getItem(TASK_NOTIFY_SOUND_KEY) !== '0';
 let notifyAudioCtx = null;
@@ -126,7 +126,7 @@ function notifyTaskFinished(sid, kind, text, agentId) {
 // set is persisted in localStorage (shared by all same-origin tabs) and the
 // claiming tab broadcasts the id so peers drop it immediately (localStorage
 // alone races when two ticks fire ~simultaneously in different tabs).
-const _NOTIFIED_RUNS_KEY = 'cow_notified_run_ids';
+const _NOTIFIED_RUNS_KEY = 'maia_notified_run_ids';
 const _NOTIFIED_RUNS_MAX = 500;
 const _notifiedRunIds = new Set();   // in-memory mirror of the shared set
 
@@ -138,7 +138,7 @@ const _notifiedRunIds = new Set();   // in-memory mirror of the shared set
 let _notifyBus = null;
 try {
     if (typeof BroadcastChannel !== 'undefined') {
-        _notifyBus = new BroadcastChannel('cow_scheduler_notify');
+        _notifyBus = new BroadcastChannel('maia_scheduler_notify');
         _notifyBus.onmessage = (e) => {
             const data = e && e.data;
             if (!data) return;
@@ -170,7 +170,7 @@ function broadcastOpenSession(sid, agentId) {
 // marker (_MANUAL_ORIGIN_KEY) lets OTHER tabs know *some* tab owns it so they
 // stay silent, without them mistakenly thinking they own it.
 const _manualRunOrigin = {};          // task_id -> ts (this tab's own claims)
-const _MANUAL_ORIGIN_KEY = 'cow_manual_run_origin';
+const _MANUAL_ORIGIN_KEY = 'maia_manual_run_origin';
 const _MANUAL_ORIGIN_TTL = 120000;    // 2 min: long enough for the run to surface
 
 function _claimManualRunOrigin(taskId) {

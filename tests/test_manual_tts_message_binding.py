@@ -39,7 +39,7 @@ def test_manual_tts_targets_requested_persisted_message(
     configuration = conf()
     monkeypatch.setitem(configuration, "agent_workspace", str(root))
     monkeypatch.setitem(configuration, "web_password", "")
-    monkeypatch.setitem(configuration, "text_to_voice", "mimo")
+    monkeypatch.setitem(configuration, "tts_model", "tts-1")
     registry = AgentRegistry(
         [
             AgentProfile("default", "Default", str(root)),

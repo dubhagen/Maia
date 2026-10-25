@@ -19,7 +19,7 @@ def time_checker(f):
                 time_regex.match(chat_start_time)
                 and (time_regex.match(chat_stop_time) or chat_stop_time == "24:00")
             ):
-                logger.warning("时间格式不正确，请在config.json中修改CHAT_START_TIME/CHAT_STOP_TIME。")
+                logger.warning("Invalid time format. Set chat_start_time and chat_stop_time in config.json as HH:MM.")
                 return None
 
             def _to_minutes(value):
@@ -31,21 +31,21 @@ def time_checker(f):
             chat_stop_time = (
                 24 * 60 if chat_stop_time == "24:00" else _to_minutes(chat_stop_time)
             )
-            # 结束时间小于开始时间，跨天了
+            
             if chat_stop_time < chat_start_time and (chat_start_time <= now_time or now_time <= chat_stop_time):
                 f(self, *args, **kwargs)
-            # 结束大于开始时间代表，没有跨天
+            
             elif chat_start_time < chat_stop_time and chat_start_time <= now_time <= chat_stop_time:
                 f(self, *args, **kwargs)
             else:
                 # Config reload commands still work off hours
-                pattern = re.compile(r"^.*#(?:reconf|重载配置|更新配置)$")
+                pattern = re.compile(r"^.*#reconf$")
                 if args and pattern.match(args[0].content):
                     f(self, *args, **kwargs)
                 else:
-                    logger.info("非服务时间内，不接受访问")
+                    logger.info("Outside service hours; message ignored")
                     return None
         else:
-            f(self, *args, **kwargs)  # 未开启时间模块则直接回答
+            f(self, *args, **kwargs)  
 
     return _time_checker

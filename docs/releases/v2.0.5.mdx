@@ -1,36 +1,36 @@
 ---
 title: v2.0.5
-description: "CowAgent 2.0.5: the Cow CLI for managing the service from a terminal or chat, the open-source Cow Skill Hub with one-command installs, a new browser tool, and QR-code creation of WeCom smart bots."
+description: "Maia 2.0.5: the Maia CLI for managing the service from a terminal or chat, the upstream Cow Skill Hub, a new browser tool, and QR-code creation of WeCom smart bots."
 ---
 
-## 🖥️ Cow CLI
+## 🖥️ Maia CLI
 
-New CLI command system for managing CowAgent from terminal and chat:
+New CLI command system for managing Maia from terminal and chat:
 
-- **Terminal commands**: Run `cow <command>` for `start`, `stop`, `restart`, `update`, `status`, `logs`, etc.
+- **Terminal commands**: Run `maia <command>` for `start`, `stop`, `restart`, `update`, `status`, `logs`, etc.
 - **Chat commands**: Type `/<command>` in conversation for `/help`, `/status`, `/config`, `/skill`, `/context`, `/logs`, `/version`, etc.
 - **Web console**: Type `/` in the input box to open a slash command menu, with arrow-key input history
-- **Windows support**: New PowerShell script `scripts/run.ps1` with `cow` command support
+- **Windows support**: New PowerShell script `scripts/run.ps1` with `maia` command support
 
-Docs: [Command Overview](https://docs.cowagent.ai/en/cli)
+Docs: [Command Overview](../cli/index.mdx)
 
-<img src="https://cdn.link-ai.tech/doc/20260401114549.png" width="750" />
+<img src="/images/screenshots/chat.png" width="750" />
 
 ## 🧩 Cow Skill Hub Open Source
 
-[Cow Skill Hub](https://skills.cowagent.ai) is now open source and live — browse, search, install, and publish AI Agent skills:
+Cow Skill Hub was published by the upstream project. This fork does not run that site. The notes below describe what that release added:
 
-- **One-command install**: `/skill install <name>` in chat or `cow skill install <name>` in terminal
+- **One-command install**: `/skill install <name>` in chat or `maia skill install <name>` in terminal
 - **Multi-source**: Install from Skill Hub, GitHub, ClawHub, LinkAI, and more
 - **Search**: `/skill search` and `/skill list --remote` to browse the hub
-- **Publish**: Submit your own skills at [skills.cowagent.ai/submit](https://skills.cowagent.ai/submit)
+- **Publish**: The upstream notes described a hosted skill site. This fork does not run that site.
 - **Mirror**: Mirror acceleration for faster downloads in China
 
 Open source repo: [cow-skill-hub](https://github.com/zhayujie/cow-skill-hub)
 
-Docs: [Skill Hub](https://docs.cowagent.ai/en/skills/hub), [Install Skills](https://docs.cowagent.ai/en/skills/install)
+Docs: [Skill Hub](../skills/hub.mdx), [Install Skills](../skills/install.mdx)
 
-<img src="https://cdn.link-ai.tech/doc/20260401110103.png" width="750" />
+<img src="/images/screenshots/skills.png" width="750" />
 
 ## 🌐 Browser Tool
 
@@ -40,12 +40,12 @@ New Browser tool — Agent can control a Chromium browser to visit and interact 
 - **Page snapshot**: Compact DOM snapshot for efficient page understanding, auto-snapshot after navigation
 - **Screenshot**: Save page screenshots to workspace
 - **JavaScript execution**: Run custom scripts on pages
-- **CLI install**: `cow install-browser` for one-command setup
+- **CLI install**: `maia install-browser` for one-command setup
 - **Docker support**: Browser install built into Docker image
 
-Docs: [Browser Tool](https://docs.cowagent.ai/en/tools/browser)
+Docs: [Browser Tool](../tools/browser.mdx)
 
-<img src="https://cdn.link-ai.tech/doc/20260401115728.png" width="750" />
+<img src="/images/screenshots/chat.png" width="750" />
 
 ## 🤖 WeCom Bot QR Code Setup
 
@@ -55,7 +55,7 @@ WeCom Bot channel now supports QR code scan for one-click bot creation:
 - **Manual mode**: Still supports manual Bot ID and Secret input
 - **Stream push optimization**: Throttled push to avoid WebSocket congestion
 
-Docs: [WeCom Bot](https://docs.cowagent.ai/en/channels/wecom-bot)
+Docs: WeCom Bot
 
 PR: [#2735](https://github.com/zhayujie/CowAgent/pull/2735). Thanks [@WecomTeam](https://github.com/WecomTeam)
 
@@ -72,6 +72,6 @@ PR: [#2735](https://github.com/zhayujie/CowAgent/pull/2735). Thanks [@WecomTeam]
 
 ## 📦 Upgrade
 
-Run `cow update` or `./run.sh update` to upgrade, or pull the latest code and restart. See [Upgrade Guide](https://docs.cowagent.ai/en/guide/upgrade).
+Run `maia update` or `./run.sh update` to upgrade, or pull the latest code and restart. See [Upgrade Guide](../guide/upgrade.mdx).
 
 **Release Date**: 2026.04.01 | [Full Changelog](https://github.com/zhayujie/CowAgent/compare/2.0.4...master)

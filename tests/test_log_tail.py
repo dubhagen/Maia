@@ -1,13 +1,13 @@
 """The log views must not read a whole log file to show its last few lines.
 
-``run.log`` is appended to for as long as CowAgent runs and is never rotated, so
+``run.log`` is appended to for as long as Maia runs and is never rotated, so
 it only grows. Three places replayed a tail with ``readlines()`` and then sliced
 the result:
 
 * the web logs view (last 200 lines),
-* the chat ``cow logs`` command (up to 50) -- and this one runs inside the bot
+* the chat ``maia logs`` command (up to 50) -- and this one runs inside the bot
   process, so a long-lived instance gets OOM-killed by its own help command,
-* ``cow logs`` on the CLI (50).
+* ``maia logs`` on the CLI (50).
 
 Every line ever written was loaded into memory to display a handful of them.
 They now all share ``common.utils.tail_lines``, which walks the file backwards
@@ -27,11 +27,11 @@ from common.utils import tail_lines
 
 
 _old_plugin_path = plugins.instance.current_plugin_path
-plugins.instance.current_plugin_path = os.path.join(os.getcwd(), "plugins", "cow_cli")
+plugins.instance.current_plugin_path = os.path.join(os.getcwd(), "plugins", "maia_cli")
 try:
-    from plugins.cow_cli import cow_cli  # noqa: F401 - loads the plugin module
+    from plugins.maia_cli import maia_cli  # noqa: F401 - loads the plugin module
 
-    CowCliPlugin = plugins.instance.plugins["COW_CLI"]
+    MaiaCliPlugin = plugins.instance.plugins["MAIA_CLI"]
 finally:
     plugins.instance.current_plugin_path = _old_plugin_path
 
@@ -172,8 +172,8 @@ def test_the_web_logs_view_replays_the_tail_without_readlines(tmp_path, monkeypa
 def test_the_chat_logs_command_reads_only_the_tail(tmp_path, monkeypatch):
     path = _write_log(tmp_path / "run.log", 20000)
     record = _spy_on_reads(monkeypatch)
-    monkeypatch.setattr(CowCliPlugin, "_find_log_file", lambda self: str(path))
-    plugin = CowCliPlugin.__new__(CowCliPlugin)
+    monkeypatch.setattr(MaiaCliPlugin, "_find_log_file", lambda self: str(path))
+    plugin = MaiaCliPlugin.__new__(MaiaCliPlugin)
 
     out = plugin._cmd_logs("20", None)
 

@@ -124,11 +124,6 @@ def test_stage_skill_redirects_every_write_to_the_staging_dir(tmp_path, live_dir
 
 @pytest.mark.parametrize("source,value,expected", [
     ("hub", "pptx", "pptx"),
-    ("clawhub", "weather", "clawhub:weather"),
-    ("clawhub", "clawhub:weather", "clawhub:weather"),
-    ("clawhub", "steipete/gog", "clawhub:steipete/gog"),
-    ("clawhub", "@steipete/gog", "clawhub:steipete/gog"),
-    ("clawhub", "https://clawhub.ai/steipete/skills/gog", "clawhub:steipete/gog"),
     ("github", "larksuite/cli", "larksuite/cli"),
     ("github", "https://github.com/larksuite/cli/tree/main/skills/lark-im",
      "https://github.com/larksuite/cli/tree/main/skills/lark-im"),
@@ -142,9 +137,9 @@ def test_market_spec_maps_each_source(source, value, expected):
     ("hub", "/etc"),
     ("github", "~/secrets"),
     ("github", "not a repo"),
-    ("clawhub", "../x"),
-    ("clawhub", "steipete/../gog"),
-    ("clawhub", "bad owner/gog"),
+    ("clawhub", "weather"),
+    ("clawhub", "https://clawhub.ai/steipete/skills/gog"),
+    ("linkai", "weekly"),
     ("other", "pptx"),
     ("hub", ""),
 ])

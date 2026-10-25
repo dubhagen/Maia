@@ -101,17 +101,17 @@ def test_reinstall_without_package_fields_drops_stale_ones(tmp_path, monkeypatch
 def test_display_description_is_shown_but_the_agent_reads_skill_md(tmp_path, monkeypatch):
     svc, custom = _service(tmp_path)
     archive = _zip("weekly-report", _skill_md("weekly-report", "Draft weekly reports"))
-    _install(svc, monkeypatch, {"name": "weekly-report", "display_description": "整理  本周工作"}, archive)
+    _install(svc, monkeypatch, {"name": "weekly-report", "display_description": "Organize  this week's work"}, archive)
 
     entry = _config(custom)["weekly-report"]
-    assert entry["display_description"] == "整理 本周工作"
+    assert entry["display_description"] == "Organize this week's work"
     assert entry["description"] == "Draft weekly reports"
     assert svc.manager.get_skill("weekly-report").skill.description == "Draft weekly reports"
 
     # Like the title, it outlives a rescan and a reinstall that does not carry it
     _install(svc, monkeypatch, {"name": "weekly-report"}, archive)
     SkillManager(builtin_dir=str(tmp_path / "builtin"), custom_dir=str(custom)).refresh_skills()
-    assert _config(custom)["weekly-report"]["display_description"] == "整理 本周工作"
+    assert _config(custom)["weekly-report"]["display_description"] == "Organize this week's work"
 
 
 def test_unusable_fields_are_ignored(tmp_path, monkeypatch):

@@ -2,7 +2,7 @@
 set -e
 
 # ============================
-# CowAgent Management Script
+# Maia Management Script
 # ============================
 
 # ANSI colors
@@ -15,7 +15,7 @@ NC='\033[0m'
 
 # Emojis
 EMOJI_ROCKET="🚀"
-EMOJI_COW="🐄"
+EMOJI_MAIA="✦"
 EMOJI_CHECK="✅"
 EMOJI_CROSS="❌"
 EMOJI_WARN="⚠️"
@@ -31,9 +31,8 @@ fi
 # ============================
 # i18n: install-flow language
 # ============================
-# UI_LANG controls the language of install prompts/menus. Detected on first run
-# (or chosen by the user), defaults to auto-detection. "zh" or "en".
-UI_LANG=""
+# Install and management prompts are English.
+UI_LANG="en"
 
 # A terminal we can read from. When the script runs via `curl | bash`, stdin is
 # the script pipe (EOF on read), so interactive prompts must read from the tty.
@@ -43,27 +42,10 @@ if [ -r /dev/tty ] && [ -w /dev/tty ]; then
     HAS_TTY=true
 fi
 
-# Detect default UI language from environment (best-effort, mirrors common/i18n).
-detect_ui_lang() {
-    local loc=""
-    # macOS: prefer AppleLocale, which reflects the real UI language
-    if [ "$(uname)" = "Darwin" ] && command -v defaults &> /dev/null; then
-        loc=$(defaults read -g AppleLocale 2>/dev/null || true)
-    fi
-    [ -z "$loc" ] && loc="${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}"
-    case "$loc" in
-        zh* | *zh_* | *_CN* | *_TW* | *_HK* | *Hans* | *Hant*) echo "zh" ;;
-        *) echo "en" ;;
-    esac
-}
-
-# Translation helper: t <zh_text> <en_text>
+# t <unused> <english>. The first argument is kept so existing call sites
+# stay valid. Prompts always print the English text.
 t() {
-    if [ "$UI_LANG" = "en" ]; then
-        printf '%s' "$2"
-    else
-        printf '%s' "$1"
-    fi
+    printf '%s' "$2"
 }
 
 # Read a line from the controlling terminal (works under `curl | bash`).
@@ -116,12 +98,12 @@ select_menu() {
         done
         local choice=""
         while true; do
-            tty_read choice "$(t "请输入序号" "Enter number") [1-${count}, $(t "默认" "default") ${def}]: "
+            tty_read choice "Enter number [1-${count}, default ${def}]: "
             choice=${choice:-$def}
             if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= count )); then
                 break
             fi
-            echo -e "${RED}$(t "无效选择，请输入" "Invalid choice, enter") 1-${count}${NC}"
+            echo -e "${RED}Invalid choice, enter 1-${count}${NC}"
         done
         printf -v "$__out" '%s' "$choice"
         return
@@ -158,7 +140,7 @@ select_menu() {
     stty -echo -icanon min 1 time 0 <&3 2>/dev/null || true
 
     printf '%b\n' "${CYAN}${BOLD}${title}${NC}"
-    printf '%b\n' "${CYAN}$(t "↑/↓ 选择，Enter 确认" "Use ↑/↓ to move, Enter to select")${NC}"
+    printf '%b\n' "${CYAN}Use ↑/↓ to move, Enter to select${NC}"
 
     local first_draw=true
     while true; do
@@ -192,7 +174,7 @@ select_menu() {
             [ "${_own_fd3:-}" = true ] && exec 3<&- 2>/dev/null
             local choice=""
             while true; do
-                tty_read choice "$(t "请输入序号" "Enter number") [1-${count}]: "
+                tty_read choice "Enter number [1-${count}]: "
                 choice=${choice:-$((cur + 1))}
                 if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= count )); then
                     break
@@ -233,7 +215,7 @@ select_menu() {
                 # Ctrl-C: restore and abort.
                 eval "$_restore"; trap - EXIT INT TERM
                 [ "${_own_fd3:-}" = true ] && exec 3<&- 2>/dev/null
-                printf '\n%b\n' "${RED}$(t "已取消安装" "Installation cancelled")${NC}"
+                printf '\n%b\n' "${RED}Installation cancelled${NC}"
                 exit 130
                 ;;
         esac
@@ -256,31 +238,10 @@ menu_session_end() {
     exec 3<&- 2>/dev/null || true
 }
 
-# Ask the user to choose the install/UI language (first step of install).
+# Install prompts are English. maia_lang in a new config is "en".
 select_language() {
-    # Order is fixed (English first, Chinese second). The default highlight
-    # follows detection, but conservatively: only a confident "zh" signal
-    # (macOS AppleLocale / Linux zh_* locale) preselects Chinese; everything
-    # else (English, empty/C/POSIX locale, server images) defaults to English.
-    local detected
-    detected=$(detect_ui_lang)
-    if [ "$detected" = "zh" ]; then
-        MENU_DEFAULT=2
-        UI_LANG="zh"
-    else
-        MENU_DEFAULT=1
-        UI_LANG="en"
-    fi
-
-    local lang_choice
-    select_menu lang_choice "Select Language / 选择语言" "English" "中文 (Chinese)"
-    case "$lang_choice" in
-        1) UI_LANG="en" ;;
-        2) UI_LANG="zh" ;;
-        *) UI_LANG="en" ;;
-    esac
-    # Remember for the rest of the flow (config write happens later)
-    INSTALL_LANG="$UI_LANG"
+    UI_LANG="en"
+    INSTALL_LANG="en"
 }
 
 # Cross-platform timeout: prefer GNU timeout/gtimeout, fallback to a pure-bash implementation
@@ -404,25 +365,25 @@ check_python_version() {
 
 # Clone project
 clone_project() {
-    echo -e "${GREEN}🔍 Cloning CowAgent project...${NC}"
+    echo -e "${GREEN}🔍 Cloning Maia project...${NC}"
 
-    if [ -d "CowAgent" ]; then
+    if [ -d "Maia" ]; then
         # An existing directory is automatically backed up (no prompt) so the
         # installer stays one-shot / hands-off.
-        local backup_dir="CowAgent_backup_$(date +%s)"
-        echo -e "${YELLOW}⚠️  $(t "目录 'CowAgent' 已存在，自动备份到" "Directory 'CowAgent' exists, backing up to") '$backup_dir'...${NC}"
-        mv CowAgent "$backup_dir"
+        local backup_dir="Maia_backup_$(date +%s)"
+        echo -e "${YELLOW}⚠️  Directory 'Maia' exists, backing up to '$backup_dir'...${NC}"
+        mv Maia "$backup_dir"
     fi
 
     check_and_install_tool git
 
     if ! command -v git &> /dev/null; then
         echo -e "${YELLOW}⚠️  Git not available. Trying wget/curl...${NC}"
-        local zip_url="https://gitee.com/zhayujie/CowAgent/repository/archive/master.zip"
+        local zip_url="https://github.com/dubhagen/Maia/archive/refs/heads/master.zip"
         if command -v wget &> /dev/null; then
-            wget "$zip_url" -O CowAgent.zip
+            wget "$zip_url" -O Maia.zip
         elif command -v curl &> /dev/null; then
-            curl -L "$zip_url" -o CowAgent.zip
+            curl -L "$zip_url" -o Maia.zip
         else
             echo -e "${RED}❌ Cannot download project. Please install Git, wget, or curl.${NC}"
             exit 1
@@ -430,22 +391,22 @@ clone_project() {
         # Unzip: prefer `unzip`, otherwise fall back to Python's zipfile (no
         # extra dependency) so minimal environments without unzip still work.
         if command -v unzip &> /dev/null; then
-            unzip CowAgent.zip
+            unzip Maia.zip
         elif command -v python3 &> /dev/null; then
-            python3 -m zipfile -e CowAgent.zip .
+            python3 -m zipfile -e Maia.zip .
         elif command -v python &> /dev/null; then
-            python -m zipfile -e CowAgent.zip .
+            python -m zipfile -e Maia.zip .
         else
             echo -e "${RED}❌ Cannot extract archive. Please install 'unzip' or Python.${NC}"
             exit 1
         fi
-        # Archive top-level dir name may vary (CowAgent-master, etc.); detect it.
-        local _extracted="CowAgent-master"
+        # Archive top-level dir name may vary (Maia-master, etc.); detect it.
+        local _extracted="Maia-master"
         if [ ! -d "$_extracted" ]; then
-            _extracted=$(ls -d CowAgent-*/ 2>/dev/null | head -1 | sed 's:/*$::')
+            _extracted=$(ls -d Maia-*/ 2>/dev/null | head -1 | sed 's:/*$::')
         fi
-        [ -n "$_extracted" ] && [ -d "$_extracted" ] && mv "$_extracted" CowAgent
-        rm -f CowAgent.zip
+        [ -n "$_extracted" ] && [ -d "$_extracted" ] && mv "$_extracted" Maia
+        rm -f Maia.zip
     else
         local clone_ok=false
         # Detect and temporarily disable invalid git proxy settings
@@ -461,11 +422,7 @@ clone_project() {
         # Test GitHub connectivity before attempting clone
         if curl -sI --connect-timeout 5 --max-time 10 https://github.com > /dev/null 2>&1; then
             echo -e "${YELLOW}🌐 GitHub is reachable, cloning from GitHub...${NC}"
-            _timeout 60 git clone --depth 10 --progress https://github.com/zhayujie/CowAgent.git && clone_ok=true
-        fi
-        if [ "$clone_ok" = false ]; then
-            echo -e "${YELLOW}⚠️  GitHub clone failed or timed out, switching to Gitee mirror...${NC}"
-            _timeout 30 git clone --depth 10 --progress https://gitee.com/zhayujie/CowAgent.git && clone_ok=true
+            _timeout 60 git clone --depth 10 --progress https://github.com/dubhagen/Maia.git && clone_ok=true
         fi
         if [ "$clone_ok" = false ]; then
             echo -e "${RED}❌ Project clone failed. Please check network connection.${NC}"
@@ -479,7 +436,7 @@ clone_project() {
         fi
     fi
 
-    cd CowAgent || { echo -e "${RED}❌ Failed to enter project directory.${NC}"; exit 1; }
+    cd Maia || { echo -e "${RED}❌ Failed to enter project directory.${NC}"; exit 1; }
     export BASE_DIR=$(pwd)
     echo -e "${GREEN}✅ Project cloned successfully: $BASE_DIR${NC}"
     
@@ -568,361 +525,134 @@ install_dependencies() {
 
     rm -f /tmp/pip_install.log
 
-    # Register `cow` CLI command via editable install
-    echo -e "${YELLOW}Registering cow CLI...${NC}"
+    # Register `maia` CLI command via editable install
+    echo -e "${YELLOW}Registering maia CLI...${NC}"
     set +e
     $PYTHON_CMD -m pip install -e . $PIP_EXTRA_ARGS $PIP_MIRROR > /dev/null 2>&1
-    if command -v cow &> /dev/null; then
-        echo -e "${GREEN}✅ cow CLI registered.${NC}"
+    if command -v maia &> /dev/null; then
+        echo -e "${GREEN}✅ maia CLI registered.${NC}"
     else
-        echo -e "${YELLOW}⚠️  cow CLI not in PATH, you can still use: $PYTHON_CMD -m cli.cli${NC}"
+        echo -e "${YELLOW}⚠️  maia CLI not in PATH, you can still use: $PYTHON_CMD -m cli.cli${NC}"
     fi
     set -e
 }
 
-# Select model
+# Select model. Every model id is sent to one LiteLLM proxy.
 select_model() {
     echo ""
     local title sel
-    title="$(t "选择 AI 模型" "Select AI Model")"
-    # The 12th option is "skip" -> configure later in the web console.
+    title="Configure LiteLLM"
     select_menu sel "$title" \
-        "DeepSeek (deepseek-flash, deepseek-v4-pro, etc.)" \
-        "Claude (claude-opus-5-5, claude-sonnet-5, etc.)" \
-        "OpenAI (gpt-6.1-sol, gpt-6-luna, etc.)" \
-        "Gemini (gemini-3.8-flash, gemini-3.7-flash, etc.)" \
-        "MiniMax (MiniMax-M3, etc.)" \
-        "GLM (glm-5.3-flash, glm-5.3, etc.)" \
-        "Qwen (qwen3.8-flash, qwen3.8-max, etc.)" \
-        "Kimi (kimi-k3, etc.)" \
-        "Doubao (doubao-seed-2.1, etc.)" \
-        "MiMo (mimo-v2.6-pro, etc.)" \
-        "LinkAI ($(t "一个 Key 接入所有模型" "access all models via one API"))" \
-        "$(t "⏭  跳过（稍后在 Web 控制台配置）" "⏭  Skip (configure later in the web console)")"
+        "Enter the LiteLLM base URL and a model id" \
+        "⏭  Skip (configure later in the web console)"
     model_choice="$sel"
 }
 
-# Read model config: provider, default_model, key_variable_name
-read_model_config() {
-    local provider=$1 default_model=$2 key_var=$3
-    echo -e "${GREEN}$(t "正在配置" "Configuring") ${provider}...${NC}"
-    # Only ask for the API key here; the model name and API base default to
-    # sensible values and can be changed later in the web console.
-    local _api_key
-    tty_read _api_key "$(t "请输入" "Enter") ${provider} API Key ($(t "回车跳过，稍后在 Web 控制台填写" "press Enter to skip, set later in web console")): "
-    MODEL_NAME="$default_model"
-    # printf -v (not eval) so keys containing quotes/backticks/$() are safe.
-    printf -v "${key_var}" '%s' "$_api_key"
-}
-
-# Configure model. The "skip" choice leaves the model empty so the user can
+# Configure model. The skip choice leaves the endpoint empty so the user can
 # finish configuration in the web console after first start.
 configure_model() {
+    LITELLM_API_BASE=""
+    LITELLM_API_KEY=""
+    MODEL_NAME=""
     case "$model_choice" in
-        1) read_model_config "DeepSeek" "deepseek-flash" "DEEPSEEK_KEY" ;;
-        2) read_model_config "Claude" "claude-opus-5-5" "CLAUDE_KEY" ;;
-        3) read_model_config "OpenAI" "gpt-6.1-sol" "OPENAI_KEY" ;;
-        4) read_model_config "Gemini" "gemini-3.8-flash" "GEMINI_KEY" ;;
-        5) read_model_config "MiniMax" "MiniMax-M3" "MINIMAX_KEY" ;;
-        6) read_model_config "GLM" "glm-5.3-flash" "ZHIPU_KEY" ;;
-        7) read_model_config "Qwen (DashScope)" "qwen3.8-flash" "DASHSCOPE_KEY" ;;
-        8) read_model_config "Kimi (Moonshot)" "kimi-k3" "MOONSHOT_KEY" ;;
-        9) read_model_config "Doubao (Volcengine Ark)" "doubao-seed-2-1-pro-260628" "ARK_KEY" ;;
-        10) read_model_config "MiMo" "mimo-v2.6-pro" "MIMO_KEY" ;;
-        11)
-            # Show where to obtain a LinkAI key (zh users -> console page).
-            echo -e "${CYAN}$(t "获取 LinkAI Key" "Get your LinkAI Key"): https://link-ai.tech/console/interface${NC}"
-            read_model_config "LinkAI" "deepseek-flash" "LINKAI_KEY"
-            USE_LINKAI="true"
+        1)
+            echo -e "${GREEN}Configuring LiteLLM...${NC}"
+            local _base _key _model
+            tty_read _base "LiteLLM API base (must end with /v1) [http://127.0.0.1:4000/v1]: "
+            _base="${_base:-http://127.0.0.1:4000/v1}"
+            tty_read _key "LiteLLM API key (optional): "
+            tty_read _model "Model id (as listed by the proxy, optional): "
+            LITELLM_API_BASE="$_base"
+            LITELLM_API_KEY="$_key"
+            MODEL_NAME="$_model"
+            if [ -z "$MODEL_NAME" ]; then
+                MODEL_SKIPPED="true"
+            fi
             ;;
-        12)
-            # Skip: leave model unset, will be configured in web console
+        2)
             MODEL_SKIPPED="true"
-            MODEL_NAME=""
-            echo -e "${YELLOW}$(t "已跳过模型配置，稍后可在 Web 控制台填写" "Model configuration skipped, you can set it later in the web console")${NC}"
+            echo -e "${YELLOW}Model configuration skipped, you can set it later in the web console${NC}"
             ;;
     esac
 }
 
-# Channel label by stable key (independent of menu order).
-channel_label() {
-    case "$1" in
-        web)           t "Web 网页控制台（推荐，开箱即用）" "Web Console (recommended, ready to use)" ;;
-        weixin)        t "微信" "Wechat" ;;
-        feishu)        t "飞书" "Feishu" ;;
-        dingtalk)      t "钉钉" "DingTalk" ;;
-        wecom_bot)     t "企微智能机器人" "WeCom Bot" ;;
-        qq)            printf '%s' "QQ" ;;
-        wechatcom_app) t "企微自建应用" "WeCom App" ;;
-        telegram)      printf '%s' "Telegram" ;;
-        slack)         printf '%s' "Slack" ;;
-        discord)       printf '%s' "Discord" ;;
-        skip)          t "⏭  跳过（稍后在 Web 控制台配置）" "⏭  Skip (configure later in the web console)" ;;
-    esac
-}
-
-# Select channel. The display order depends on the install language:
-#   - English: Web first, then the global IM channels (Telegram/Discord/Slack),
-#     then the China-focused channels.
-#   - Chinese: Web first, then China-focused channels, then global ones.
-# A stable key list (CHANNEL_KEYS) decouples the menu order from the config
-# logic, so reordering the menu never breaks configure_channel().
+# The only chat surface the installer configures is the web console.
+# The local terminal channel stays available as channel_type "terminal".
 select_channel() {
-    echo ""
-    local title sel
-    title="$(t "选择接入渠道" "Select Communication Channel")"
-    if [ "$UI_LANG" = "en" ]; then
-        CHANNEL_KEYS=(web telegram discord slack weixin feishu dingtalk wecom_bot qq wechatcom_app skip)
-    else
-        CHANNEL_KEYS=(web weixin feishu dingtalk wecom_bot qq wechatcom_app telegram slack discord skip)
-    fi
-    local labels=() k
-    for k in "${CHANNEL_KEYS[@]}"; do
-        labels+=("$(channel_label "$k")")
-    done
-    select_menu sel "$title" "${labels[@]}"
-    # Map the 1-based menu position back to the stable channel key.
-    channel_choice="${CHANNEL_KEYS[$((sel - 1))]}"
+    channel_choice="web"
 }
 
-# Configure channel, dispatched by stable channel key (not menu position).
 configure_channel() {
-    case "$channel_choice" in
-        web|skip)
-            # Web (also the default when skipped). Use the default port with
-            # no prompt; it can be changed later in the web console / config.
-            CHANNEL_TYPE="web"
-            WEB_PORT="9899"
-            ACCESS_INFO="$(t "Web 控制台地址" "Web console") : http://localhost:9899/"
-            ;;
-        weixin)
-            # Weixin
-            CHANNEL_TYPE="weixin"
-            ACCESS_INFO="$(t "微信渠道已配置，请在终端或 Web 控制台扫码登录" "Weixin channel configured. Scan QR code in terminal or web console to login.")"
-            ;;
-        feishu)
-            # Feishu (WebSocket mode)
-            CHANNEL_TYPE="feishu"
-            echo -e "${GREEN}$(t "配置飞书（WebSocket 模式）" "Configure Feishu (WebSocket mode)")...${NC}"
-            local fs_app_id fs_app_secret
-            tty_read fs_app_id "$(t "请输入飞书 App ID" "Enter Feishu App ID"): "
-            tty_read fs_app_secret "$(t "请输入飞书 App Secret" "Enter Feishu App Secret"): "
-            FEISHU_APP_ID="$fs_app_id"
-            FEISHU_APP_SECRET="$fs_app_secret"
-            FEISHU_EVENT_MODE="websocket"
-            ACCESS_INFO="$(t "飞书渠道已配置（WebSocket 模式）" "Feishu channel configured (WebSocket mode)")"
-            ;;
-        dingtalk)
-            # DingTalk
-            CHANNEL_TYPE="dingtalk"
-            echo -e "${GREEN}$(t "配置钉钉" "Configure DingTalk")...${NC}"
-            local dt_client_id dt_client_secret
-            tty_read dt_client_id "$(t "请输入钉钉 Client ID" "Enter DingTalk Client ID"): "
-            tty_read dt_client_secret "$(t "请输入钉钉 Client Secret" "Enter DingTalk Client Secret"): "
-            DT_CLIENT_ID="$dt_client_id"
-            DT_CLIENT_SECRET="$dt_client_secret"
-            ACCESS_INFO="$(t "钉钉渠道已配置" "DingTalk channel configured")"
-            ;;
-        wecom_bot)
-            # WeCom Bot
-            CHANNEL_TYPE="wecom_bot"
-            echo -e "${GREEN}$(t "配置企微智能机器人" "Configure WeCom Bot")...${NC}"
-            local wecom_bot_id wecom_bot_secret
-            tty_read wecom_bot_id "$(t "请输入 WeCom Bot ID" "Enter WeCom Bot ID"): "
-            tty_read wecom_bot_secret "$(t "请输入 WeCom Bot Secret" "Enter WeCom Bot Secret"): "
-            WECOM_BOT_ID="$wecom_bot_id"
-            WECOM_BOT_SECRET="$wecom_bot_secret"
-            ACCESS_INFO="$(t "企微智能机器人渠道已配置" "WeCom Bot channel configured")"
-            ;;
-        qq)
-            # QQ
-            CHANNEL_TYPE="qq"
-            echo -e "${GREEN}$(t "配置 QQ 机器人" "Configure QQ Bot")...${NC}"
-            local qq_app_id qq_app_secret
-            tty_read qq_app_id "$(t "请输入 QQ App ID" "Enter QQ App ID"): "
-            tty_read qq_app_secret "$(t "请输入 QQ App Secret" "Enter QQ App Secret"): "
-            QQ_APP_ID="$qq_app_id"
-            QQ_APP_SECRET="$qq_app_secret"
-            ACCESS_INFO="$(t "QQ 机器人渠道已配置" "QQ Bot channel configured")"
-            ;;
-        wechatcom_app)
-            # WeCom App
-            CHANNEL_TYPE="wechatcom_app"
-            echo -e "${GREEN}$(t "配置企微自建应用" "Configure WeCom App")...${NC}"
-            local corp_id com_token com_secret com_agent_id com_aes_key com_port
-            tty_read corp_id "$(t "请输入企业 Corp ID" "Enter WeChat Corp ID"): "
-            tty_read com_token "$(t "请输入应用 Token" "Enter WeChat Com App Token"): "
-            tty_read com_secret "$(t "请输入应用 Secret" "Enter WeChat Com App Secret"): "
-            tty_read com_agent_id "$(t "请输入应用 Agent ID" "Enter WeChat Com App Agent ID"): "
-            tty_read com_aes_key "$(t "请输入应用 AES Key" "Enter WeChat Com App AES Key"): "
-            tty_read com_port "$(t "请输入应用端口" "Enter WeChat Com App Port") [$(t "默认" "default"): 9898]: "
-            com_port=${com_port:-9898}
-            WECHATCOM_CORP_ID="$corp_id"
-            WECHATCOM_TOKEN="$com_token"
-            WECHATCOM_SECRET="$com_secret"
-            WECHATCOM_AGENT_ID="$com_agent_id"
-            WECHATCOM_AES_KEY="$com_aes_key"
-            WECHATCOM_PORT="$com_port"
-            ACCESS_INFO="$(t "企微自建应用渠道已配置，端口" "WeCom App channel configured on port") ${com_port}"
-            ;;
-        telegram)
-            # Telegram
-            CHANNEL_TYPE="telegram"
-            echo -e "${GREEN}$(t "配置 Telegram" "Configure Telegram")...${NC}"
-            local tg_token
-            tty_read tg_token "$(t "请输入 Telegram Bot Token" "Enter Telegram Bot Token"): "
-            TELEGRAM_TOKEN="$tg_token"
-            ACCESS_INFO="$(t "Telegram 渠道已配置" "Telegram channel configured")"
-            ;;
-        slack)
-            # Slack
-            CHANNEL_TYPE="slack"
-            echo -e "${GREEN}$(t "配置 Slack" "Configure Slack")...${NC}"
-            local slack_bot slack_app
-            tty_read slack_bot "$(t "请输入 Slack Bot Token" "Enter Slack Bot Token") (xoxb-...): "
-            tty_read slack_app "$(t "请输入 Slack App Token" "Enter Slack App Token") (xapp-...): "
-            SLACK_BOT_TOKEN="$slack_bot"
-            SLACK_APP_TOKEN="$slack_app"
-            ACCESS_INFO="$(t "Slack 渠道已配置" "Slack channel configured")"
-            ;;
-        discord)
-            # Discord
-            CHANNEL_TYPE="discord"
-            echo -e "${GREEN}$(t "配置 Discord" "Configure Discord")...${NC}"
-            local discord_token
-            tty_read discord_token "$(t "请输入 Discord Bot Token" "Enter Discord Bot Token"): "
-            DISCORD_TOKEN="$discord_token"
-            ACCESS_INFO="$(t "Discord 渠道已配置" "Discord channel configured")"
-            ;;
-    esac
+    CHANNEL_TYPE="web"
+    WEB_PORT="9899"
+    ACCESS_INFO="Web console : http://localhost:9899/"
 }
 
 # Generate config file
 create_config_file() {
-    echo -e "${GREEN}📝 $(t "正在生成 config.json" "Generating config.json")...${NC}"
+    echo -e "${GREEN}📝 Generating config.json...${NC}"
 
-    CHANNEL_TYPE="$CHANNEL_TYPE" \
-    MODEL_NAME="$MODEL_NAME" \
-    OPENAI_KEY="${OPENAI_KEY:-}" \
-    OPENAI_BASE="${OPENAI_BASE:-https://api.openai.com/v1}" \
-    CLAUDE_KEY="${CLAUDE_KEY:-}" \
-    CLAUDE_BASE="${CLAUDE_BASE:-https://api.anthropic.com/v1}" \
-    GEMINI_KEY="${GEMINI_KEY:-}" \
-    GEMINI_BASE="${GEMINI_BASE:-https://generativelanguage.googleapis.com}" \
-    ZHIPU_KEY="${ZHIPU_KEY:-}" \
-    MOONSHOT_KEY="${MOONSHOT_KEY:-}" \
-    ARK_KEY="${ARK_KEY:-}" \
-    DASHSCOPE_KEY="${DASHSCOPE_KEY:-}" \
-    MINIMAX_KEY="${MINIMAX_KEY:-}" \
-    MIMO_KEY="${MIMO_KEY:-}" \
-    DEEPSEEK_KEY="${DEEPSEEK_KEY:-}" \
-    DEEPSEEK_BASE="${DEEPSEEK_BASE:-https://api.deepseek.com/v1}" \
-    USE_LINKAI="${USE_LINKAI:-false}" \
-    LINKAI_KEY="${LINKAI_KEY:-}" \
-    FEISHU_APP_ID="${FEISHU_APP_ID:-}" \
-    FEISHU_APP_SECRET="${FEISHU_APP_SECRET:-}" \
-    WEB_PORT="${WEB_PORT:-}" \
-    DT_CLIENT_ID="${DT_CLIENT_ID:-}" \
-    DT_CLIENT_SECRET="${DT_CLIENT_SECRET:-}" \
-    WECOM_BOT_ID="${WECOM_BOT_ID:-}" \
-    WECOM_BOT_SECRET="${WECOM_BOT_SECRET:-}" \
-    QQ_APP_ID="${QQ_APP_ID:-}" \
-    QQ_APP_SECRET="${QQ_APP_SECRET:-}" \
-    WECHATCOM_CORP_ID="${WECHATCOM_CORP_ID:-}" \
-    WECHATCOM_TOKEN="${WECHATCOM_TOKEN:-}" \
-    WECHATCOM_SECRET="${WECHATCOM_SECRET:-}" \
-    WECHATCOM_AGENT_ID="${WECHATCOM_AGENT_ID:-}" \
-    WECHATCOM_AES_KEY="${WECHATCOM_AES_KEY:-}" \
-    WECHATCOM_PORT="${WECHATCOM_PORT:-}" \
-    TELEGRAM_TOKEN="${TELEGRAM_TOKEN:-}" \
-    SLACK_BOT_TOKEN="${SLACK_BOT_TOKEN:-}" \
-    SLACK_APP_TOKEN="${SLACK_APP_TOKEN:-}" \
-    DISCORD_TOKEN="${DISCORD_TOKEN:-}" \
-    COW_LANG="${INSTALL_LANG:-auto}" \
+    CHANNEL_TYPE="web" \
+    MODEL_NAME="${MODEL_NAME:-}" \
+    LITELLM_API_BASE="${LITELLM_API_BASE:-}" \
+    LITELLM_API_KEY="${LITELLM_API_KEY:-}" \
+    WEB_PORT="${WEB_PORT:-9899}" \
+    MAIA_LANG="${INSTALL_LANG:-en}" \
     $PYTHON_CMD -c "
 import json, os
 e = os.environ.get
-base = {
-    'channel_type': e('CHANNEL_TYPE') or 'web',
-    'model': e('MODEL_NAME') or '',
-    'cow_lang': e('COW_LANG', 'auto'),
-    'open_ai_api_key': e('OPENAI_KEY', ''),
-    'open_ai_api_base': e('OPENAI_BASE'),
-    'claude_api_key': e('CLAUDE_KEY', ''),
-    'claude_api_base': e('CLAUDE_BASE'),
-    'gemini_api_key': e('GEMINI_KEY', ''),
-    'gemini_api_base': e('GEMINI_BASE'),
-    'zhipu_ai_api_key': e('ZHIPU_KEY', ''),
-    'moonshot_api_key': e('MOONSHOT_KEY', ''),
-    'ark_api_key': e('ARK_KEY', ''),
-    'dashscope_api_key': e('DASHSCOPE_KEY', ''),
-    'minimax_api_key': e('MINIMAX_KEY', ''),
-    'mimo_api_key': e('MIMO_KEY', ''),
-    'deepseek_api_key': e('DEEPSEEK_KEY', ''),
-    'deepseek_api_base': e('DEEPSEEK_BASE'),
-    # Leave ASR/TTS provider empty so the web console auto-suggests the vendor
-    # whose API key is actually configured (e.g. LinkAI), not always OpenAI.
-    'voice_to_text': '',
-    'text_to_voice': '',
-    'voice_reply_voice': False,
-    'speech_recognition': True,
-    'group_speech_recognition': False,
-    'use_linkai': e('USE_LINKAI') == 'true',
-    'linkai_api_key': e('LINKAI_KEY', ''),
-    'linkai_app_code': '',
-    'agent': True,
-    'agent_max_context_tokens': 200000,
-    'agent_max_context_turns': 30,
-    'agent_max_steps': 100,
-    # New installs opt into self-evolution; existing users (no key) keep the
-    # code default (off) so an upgrade never silently changes their behavior.
-    'self_evolution_enabled': True,
-}
-channel_map = {
-    'feishu': {'feishu_app_id': 'FEISHU_APP_ID', 'feishu_app_secret': 'FEISHU_APP_SECRET'},
-    'web': {'web_port': ('WEB_PORT', int)},
-    'dingtalk': {'dingtalk_client_id': 'DT_CLIENT_ID', 'dingtalk_client_secret': 'DT_CLIENT_SECRET'},
-    'wecom_bot': {'wecom_bot_id': 'WECOM_BOT_ID', 'wecom_bot_secret': 'WECOM_BOT_SECRET'},
-    'qq': {'qq_app_id': 'QQ_APP_ID', 'qq_app_secret': 'QQ_APP_SECRET'},
-    'wechatcom_app': {'wechatcom_corp_id': 'WECHATCOM_CORP_ID', 'wechatcomapp_token': 'WECHATCOM_TOKEN', 'wechatcomapp_secret': 'WECHATCOM_SECRET', 'wechatcomapp_agent_id': 'WECHATCOM_AGENT_ID', 'wechatcomapp_aes_key': 'WECHATCOM_AES_KEY', 'wechatcomapp_port': ('WECHATCOM_PORT', int)},
-    'telegram': {'telegram_token': 'TELEGRAM_TOKEN'},
-    'slack': {'slack_bot_token': 'SLACK_BOT_TOKEN', 'slack_app_token': 'SLACK_APP_TOKEN'},
-    'discord': {'discord_token': 'DISCORD_TOKEN'},
-}
 def _to_int(val, default):
     try:
         return int(val)
     except (TypeError, ValueError):
         return default
-ch = e('CHANNEL_TYPE') or 'web'
-for key, spec in channel_map.get(ch, {}).items():
-    if isinstance(spec, tuple):
-        env_name, conv = spec
-        # Guard int() against non-numeric input; fall back to a sane port.
-        base[key] = _to_int(e(env_name), 9899 if key == 'web_port' else 9898) if conv is int else conv(e(env_name))
-    else:
-        base[key] = e(spec, '')
+base = {
+    'channel_type': 'web',
+    'bot_type': 'litellm',
+    'model': e('MODEL_NAME') or '',
+    'maia_lang': e('MAIA_LANG', 'en'),
+    'litellm_api_base': e('LITELLM_API_BASE') or '',
+    'litellm_api_key': e('LITELLM_API_KEY') or '',
+    'embedding_model': '',
+    'vision_model': '',
+    'image_model': '',
+    'asr_model': '',
+    'tts_model': '',
+    'tts_voice': 'alloy',
+    'agent_fallback_models': [],
+    'voice_to_text': 'litellm',
+    'text_to_voice': 'litellm',
+    'voice_reply_voice': False,
+    'speech_recognition': True,
+    'group_speech_recognition': False,
+    'web_port': _to_int(e('WEB_PORT'), 9899),
+    'agent': True,
+    'agent_max_context_tokens': 200000,
+    'agent_max_context_turns': 30,
+    'agent_max_steps': 100,
+    'self_evolution_enabled': True,
+}
 with open('config.json', 'w') as f:
     json.dump(base, f, indent=2, ensure_ascii=False)
 "
 
-    echo -e "${GREEN}✅ $(t "配置文件创建成功" "Configuration file created successfully").${NC}"
+    echo -e "${GREEN}✅ Configuration file created successfully.${NC}"
 }
 
 # Start project
 start_project() {
     echo ""
-    echo -e "${GREEN}${EMOJI_ROCKET} Starting CowAgent...${NC}"
+    echo -e "${GREEN}${EMOJI_ROCKET} Starting Maia...${NC}"
     sleep 1
 
     local USE_COW=false
-    if command -v cow &> /dev/null; then
+    if command -v maia &> /dev/null; then
         USE_COW=true
     fi
 
     if $USE_COW; then
         cd "${BASE_DIR}"
-        cow start --no-logs
+        maia start --no-logs
     else
         if [ ! -f "${BASE_DIR}/nohup.out" ]; then
             touch "${BASE_DIR}/nohup.out"
@@ -932,10 +662,10 @@ start_project() {
 
         if [[ "$OS_TYPE" == "Linux" ]]; then
             nohup setsid $PYTHON_CMD "${BASE_DIR}/app.py" > "${BASE_DIR}/nohup.out" 2>&1 &
-            echo -e "${GREEN}${EMOJI_COW} CowAgent started on Linux (using $PYTHON_CMD)${NC}"
+            echo -e "${GREEN}${EMOJI_MAIA} Maia started on Linux (using $PYTHON_CMD)${NC}"
         elif [[ "$OS_TYPE" == "Darwin" ]]; then
             nohup $PYTHON_CMD "${BASE_DIR}/app.py" > "${BASE_DIR}/nohup.out" 2>&1 &
-            echo -e "${GREEN}${EMOJI_COW} CowAgent started on macOS (using $PYTHON_CMD)${NC}"
+            echo -e "${GREEN}${EMOJI_MAIA} Maia started on macOS (using $PYTHON_CMD)${NC}"
         else
             echo -e "${RED}❌ Unsupported OS: ${OS_TYPE}${NC}"
             exit 1
@@ -945,40 +675,40 @@ start_project() {
     sleep 2
     echo ""
     echo -e "${CYAN}${BOLD}=========================================${NC}"
-    echo -e "${GREEN}${EMOJI_CHECK} $(t "CowAgent 已在后台运行" "CowAgent is now running in background")!${NC}"
-    echo -e "${GREEN}${EMOJI_CHECK} $(t "关闭终端后进程仍会继续运行" "Process will continue after closing terminal").${NC}"
+    echo -e "${GREEN}${EMOJI_CHECK} Maia is now running in background!${NC}"
+    echo -e "${GREEN}${EMOJI_CHECK} Process will continue after closing terminal.${NC}"
     echo -e "${CYAN}$ACCESS_INFO${NC}"
 
     # If the model was skipped, guide the user to finish setup in the web console.
     if [ "${MODEL_SKIPPED:-}" = "true" ]; then
         local _port="${WEB_PORT:-9899}"
         echo ""
-        echo -e "${YELLOW}${EMOJI_WARN} $(t "尚未配置模型，请在 Web 控制台完成配置" "Model not configured yet, please finish setup in the web console"):${NC}"
+        echo -e "${YELLOW}${EMOJI_WARN} Model not configured yet, please finish setup in the web console:${NC}"
         echo -e "${CYAN}   http://localhost:${_port}/${NC}"
     fi
     echo ""
-    echo -e "${CYAN}${BOLD}$(t "管理命令" "Management Commands"):${NC}"
+    echo -e "${CYAN}${BOLD}Management Commands:${NC}"
     if $USE_COW; then
-        echo -e "  ${GREEN}cow stop${NC}       $(t "停止服务" "Stop the service")"
-        echo -e "  ${GREEN}cow restart${NC}    $(t "重启服务" "Restart the service")"
-        echo -e "  ${GREEN}cow status${NC}     $(t "查看状态" "Check status")"
-        echo -e "  ${GREEN}cow logs${NC}       $(t "查看日志" "View logs")"
-        echo -e "  ${GREEN}cow update${NC}     $(t "更新并重启" "Update and restart")"
-        echo -e "  ${GREEN}cow install-browser${NC}  $(t "安装浏览器工具" "Install browser tool")"
+        echo -e "  ${GREEN}maia stop${NC}       Stop the service"
+        echo -e "  ${GREEN}maia restart${NC}    Restart the service"
+        echo -e "  ${GREEN}maia status${NC}     Check status"
+        echo -e "  ${GREEN}maia logs${NC}       View logs"
+        echo -e "  ${GREEN}maia update${NC}     Update and restart"
+        echo -e "  ${GREEN}maia install-browser${NC}  Install browser tool"
     else
-        echo -e "  ${GREEN}./run.sh stop${NC}       $(t "停止服务" "Stop the service")"
-        echo -e "  ${GREEN}./run.sh restart${NC}    $(t "重启服务" "Restart the service")"
-        echo -e "  ${GREEN}./run.sh status${NC}     $(t "查看状态" "Check status")"
-        echo -e "  ${GREEN}./run.sh logs${NC}       $(t "查看日志" "View logs")"
-        echo -e "  ${GREEN}./run.sh update${NC}     $(t "更新并重启" "Update and restart")"
-        echo -e "  ${GREEN}cow install-browser${NC}  $(t "安装浏览器工具" "Install browser tool")"
+        echo -e "  ${GREEN}./run.sh stop${NC}       Stop the service"
+        echo -e "  ${GREEN}./run.sh restart${NC}    Restart the service"
+        echo -e "  ${GREEN}./run.sh status${NC}     Check status"
+        echo -e "  ${GREEN}./run.sh logs${NC}       View logs"
+        echo -e "  ${GREEN}./run.sh update${NC}     Update and restart"
+        echo -e "  ${GREEN}maia install-browser${NC}  Install browser tool"
     fi
     echo ""
-    echo -e "${YELLOW}$(t "提示：需要让 Agent 浏览网页时，运行 cow install-browser 安装浏览器工具" "Tip: to let the Agent browse the web, run 'cow install-browser' to install the browser tool")${NC}"
+    echo -e "${YELLOW}Tip: to let the Agent browse the web, run 'maia install-browser' to install the browser tool${NC}"
     echo -e "${CYAN}${BOLD}=========================================${NC}"
     echo ""
 
-    echo -e "${YELLOW}$(t "显示最近日志（Ctrl+C 退出，Agent 继续运行）" "Showing recent logs (Ctrl+C to exit, agent keeps running)"):${NC}"
+    echo -e "${YELLOW}Showing recent logs (Ctrl+C to exit, agent keeps running):${NC}"
     sleep 2
     tail -n 30 -f "${BASE_DIR}/nohup.out"
 }
@@ -986,23 +716,23 @@ start_project() {
 # Show usage
 show_usage() {
     echo -e "${CYAN}${BOLD}=========================================${NC}"
-    echo -e "${CYAN}${BOLD}   ${EMOJI_COW} CowAgent Management Script${NC}"
+    echo -e "${CYAN}${BOLD}   ${EMOJI_MAIA} Maia Management Script${NC}"
     echo -e "${CYAN}${BOLD}=========================================${NC}"
     echo ""
-    echo -e "${YELLOW}$(t "用法" "Usage"):${NC}"
-    echo -e "  ${GREEN}./run.sh${NC}               ${CYAN}# $(t "安装/配置项目" "Install/Configure project")${NC}"
-    echo -e "  ${GREEN}./run.sh <command>${NC}     ${CYAN}# $(t "执行管理命令" "Execute management command")${NC}"
+    echo -e "${YELLOW}Usage:${NC}"
+    echo -e "  ${GREEN}./run.sh${NC}               ${CYAN}# Install/Configure project${NC}"
+    echo -e "  ${GREEN}./run.sh <command>${NC}     ${CYAN}# Execute management command${NC}"
     echo ""
-    echo -e "${YELLOW}$(t "命令" "Commands"):${NC}"
-    echo -e "  ${GREEN}start${NC}      $(t "启动服务" "Start the service")"
-    echo -e "  ${GREEN}stop${NC}       $(t "停止服务" "Stop the service")"
-    echo -e "  ${GREEN}restart${NC}    $(t "重启服务" "Restart the service")"
-    echo -e "  ${GREEN}status${NC}     $(t "查看服务状态" "Check service status")"
-    echo -e "  ${GREEN}logs${NC}       $(t "查看日志 (tail -f)" "View logs (tail -f)")"
-    echo -e "  ${GREEN}config${NC}     $(t "重新配置项目" "Reconfigure project")"
-    echo -e "  ${GREEN}update${NC}     $(t "更新并重启" "Update and restart")"
+    echo -e "${YELLOW}Commands:${NC}"
+    echo -e "  ${GREEN}start${NC}      Start the service"
+    echo -e "  ${GREEN}stop${NC}       Stop the service"
+    echo -e "  ${GREEN}restart${NC}    Restart the service"
+    echo -e "  ${GREEN}status${NC}     Check service status"
+    echo -e "  ${GREEN}logs${NC}       View logs (tail -f)"
+    echo -e "  ${GREEN}config${NC}     Reconfigure project"
+    echo -e "  ${GREEN}update${NC}     Update and restart"
     echo ""
-    echo -e "${YELLOW}$(t "示例" "Examples"):${NC}"
+    echo -e "${YELLOW}Examples:${NC}"
     echo -e "  ${GREEN}./run.sh start${NC}"
     echo -e "  ${GREEN}./run.sh logs${NC}"
     echo -e "  ${GREEN}./run.sh status${NC}"
@@ -1027,26 +757,26 @@ is_running() {
     [ -n "$(get_pid)" ]
 }
 
-# Check if cow CLI is available
-has_cow() {
-    command -v cow &> /dev/null
+# Check if maia CLI is available
+has_maia() {
+    command -v maia &> /dev/null
 }
 
 # Start service
 cmd_start() {
     if [ ! -f "${BASE_DIR}/config.json" ]; then
-        echo -e "${RED}${EMOJI_CROSS} $(t "未找到 config.json" "config.json not found")${NC}"
-        echo -e "${YELLOW}$(t "请先运行 './run.sh' 进行配置" "Please run './run.sh' to configure first")${NC}"
+        echo -e "${RED}${EMOJI_CROSS} config.json not found${NC}"
+        echo -e "${YELLOW}Please run './run.sh' to configure first${NC}"
         exit 1
     fi
 
-    if has_cow; then
+    if has_maia; then
         cd "${BASE_DIR}"
-        cow start
+        maia start
     else
         if is_running; then
-            echo -e "${YELLOW}${EMOJI_WARN} $(t "CowAgent 已在运行中" "CowAgent is already running") (PID: $(get_pid))${NC}"
-            echo -e "${YELLOW}$(t "使用 './run.sh restart' 重启" "Use './run.sh restart' to restart")${NC}"
+            echo -e "${YELLOW}${EMOJI_WARN} Maia is already running (PID: $(get_pid))${NC}"
+            echo -e "${YELLOW}Use './run.sh restart' to restart${NC}"
             return
         fi
         check_python_version
@@ -1059,42 +789,42 @@ cmd_stop() {
     # Don't let kill/return non-zero (e.g. process already gone) abort the
     # caller (cmd_restart) under `set -e`.
     set +e
-    if has_cow; then
+    if has_maia; then
         cd "${BASE_DIR}"
-        cow stop
+        maia stop
     else
-        echo -e "${GREEN}${EMOJI_STOP} $(t "正在停止 CowAgent" "Stopping CowAgent")...${NC}"
+        echo -e "${GREEN}${EMOJI_STOP} Stopping Maia...${NC}"
 
         if ! is_running; then
-            echo -e "${YELLOW}${EMOJI_WARN} $(t "CowAgent 未在运行" "CowAgent is not running")${NC}"
+            echo -e "${YELLOW}${EMOJI_WARN} Maia is not running${NC}"
             return 0
         fi
 
         pid=$(get_pid)
         if [ -z "$pid" ] || ! echo "$pid" | grep -qE '^[0-9]+$'; then
-            echo -e "${RED}❌ $(t "获取有效 PID 失败" "Failed to get valid PID") (${pid})${NC}"
+            echo -e "${RED}❌ Failed to get valid PID (${pid})${NC}"
             return 0
         fi
 
-        echo -e "${GREEN}$(t "找到运行中的进程" "Found running process") (PID: ${pid})${NC}"
+        echo -e "${GREEN}Found running process (PID: ${pid})${NC}"
 
         kill ${pid} 2>/dev/null || true
         sleep 3
 
         if ps -p ${pid} > /dev/null 2>&1; then
-            echo -e "${YELLOW}⚠️  $(t "进程未停止，强制终止" "Process not stopped, forcing termination")...${NC}"
+            echo -e "${YELLOW}⚠️  Process not stopped, forcing termination...${NC}"
             kill -9 ${pid} 2>/dev/null || true
         fi
 
-        echo -e "${GREEN}${EMOJI_CHECK} $(t "CowAgent 已停止" "CowAgent stopped")${NC}"
+        echo -e "${GREEN}${EMOJI_CHECK} Maia stopped${NC}"
     fi
 }
 
 # Restart service
 cmd_restart() {
-    if has_cow; then
+    if has_maia; then
         cd "${BASE_DIR}"
-        cow restart
+        maia restart
     else
         cmd_stop
         sleep 1
@@ -1104,31 +834,31 @@ cmd_restart() {
 
 # Check status
 cmd_status() {
-    if has_cow; then
+    if has_maia; then
         cd "${BASE_DIR}"
-        cow status
+        maia status
     else
         echo -e "${CYAN}${BOLD}=========================================${NC}"
-        echo -e "${CYAN}${BOLD}   ${EMOJI_COW} CowAgent Status${NC}"
+        echo -e "${CYAN}${BOLD}   ${EMOJI_MAIA} Maia Status${NC}"
         echo -e "${CYAN}${BOLD}=========================================${NC}"
 
         if is_running; then
             pid=$(get_pid)
-            echo -e "${GREEN}$(t "状态" "Status"):${NC} ✅ $(t "运行中" "Running")"
+            echo -e "${GREEN}Status:${NC} ✅ Running"
             echo -e "${GREEN}PID:${NC}    ${pid}"
             if [ -f "${BASE_DIR}/nohup.out" ]; then
-                echo -e "${GREEN}$(t "日志" "Logs"):${NC}   ${BASE_DIR}/nohup.out"
+                echo -e "${GREEN}Logs:${NC}   ${BASE_DIR}/nohup.out"
             fi
         else
-            echo -e "${YELLOW}$(t "状态" "Status"):${NC} ⭐ $(t "已停止" "Stopped")"
+            echo -e "${YELLOW}Status:${NC} ⭐ Stopped"
         fi
 
         if [ -f "${BASE_DIR}/config.json" ]; then
             # `|| true`: grep returns 1 when the key is absent (set -e safe).
             model=$(grep -o '"model"[[:space:]]*:[[:space:]]*"[^"]*"' "${BASE_DIR}/config.json" 2>/dev/null | cut -d'"' -f4 || true)
             channel=$(grep -o '"channel_type"[[:space:]]*:[[:space:]]*"[^"]*"' "${BASE_DIR}/config.json" 2>/dev/null | cut -d'"' -f4 || true)
-            echo -e "${GREEN}$(t "模型" "Model"):${NC}  ${model:-$(t "（未配置）" "(not set)")}"
-            echo -e "${GREEN}$(t "渠道" "Channel"):${NC} ${channel:-$(t "（未配置）" "(not set)")}"
+            echo -e "${GREEN}Model:${NC}  ${model:-(not set)}"
+            echo -e "${GREEN}Channel:${NC} ${channel:-(not set)}"
         fi
 
         echo -e "${CYAN}${BOLD}=========================================${NC}"
@@ -1137,15 +867,15 @@ cmd_status() {
 
 # View logs
 cmd_logs() {
-    if has_cow; then
+    if has_maia; then
         cd "${BASE_DIR}"
-        cow logs -f
+        maia logs -f
     else
         if [ -f "${BASE_DIR}/nohup.out" ]; then
-            echo -e "${YELLOW}$(t "查看日志（Ctrl+C 退出）" "Viewing logs (Ctrl+C to exit)"):${NC}"
+            echo -e "${YELLOW}Viewing logs (Ctrl+C to exit):${NC}"
             tail -f "${BASE_DIR}/nohup.out"
         else
-            echo -e "${RED}❌ $(t "日志文件未找到" "Log file not found"): ${BASE_DIR}/nohup.out${NC}"
+            echo -e "${RED}❌ Log file not found: ${BASE_DIR}/nohup.out${NC}"
         fi
     fi
 }
@@ -1157,15 +887,14 @@ cmd_config() {
     # One shared terminal handle for all menus in this session.
     menu_session_begin
 
-    # Choose language first so the rest of the flow is localized.
     select_language
     echo ""
-    echo -e "${YELLOW}${EMOJI_WRENCH} $(t "正在重新配置 CowAgent" "Reconfiguring CowAgent")...${NC}"
+    echo -e "${YELLOW}${EMOJI_WRENCH} Reconfiguring Maia...${NC}"
     
     if [ -f "${BASE_DIR}/config.json" ]; then
         backup_file="${BASE_DIR}/config.json.backup.$(date +%s)"
         cp "${BASE_DIR}/config.json" "${backup_file}"
-        echo -e "${GREEN}✅ $(t "已备份配置到" "Backed up config to"): ${backup_file}${NC}"
+        echo -e "${GREEN}✅ Backed up config to: ${backup_file}${NC}"
     fi
     
     check_python_version
@@ -1179,7 +908,7 @@ cmd_config() {
     
     echo ""
     local restart_now
-    tty_read restart_now "$(t "现在重启服务" "Restart service now")? [Y/n]: "
+    tty_read restart_now "Restart service now? [Y/n]: "
     if [[ ! $restart_now == [Nn]* ]]; then
         cmd_restart
     fi
@@ -1187,27 +916,21 @@ cmd_config() {
 
 # Update project
 cmd_update() {
-    echo -e "${GREEN}${EMOJI_WRENCH} $(t "正在更新 CowAgent" "Updating CowAgent")...${NC}"
+    echo -e "${GREEN}${EMOJI_WRENCH} Updating Maia...${NC}"
     cd "${BASE_DIR}"
     
     # Pull latest code first (service still running)
     local pull_ok=false
     if [ -d .git ]; then
-        echo -e "${GREEN}🔄 $(t "正在拉取最新代码" "Pulling latest code")...${NC}"
+        echo -e "${GREEN}🔄 Pulling latest code...${NC}"
         if git pull; then
             pull_ok=true
         else
-            echo -e "${YELLOW}⚠️  $(t "git pull 失败，尝试 Gitee 镜像" "git pull failed, trying Gitee mirror")...${NC}"
-            git remote set-url origin https://gitee.com/zhayujie/CowAgent.git
-            if git pull; then
-                pull_ok=true
-            else
-                echo -e "${RED}❌ $(t "拉取代码失败，更新已中止" "Failed to pull code. Update aborted").${NC}"
-                exit 1
-            fi
+            echo -e "${RED}❌ Failed to pull code. Update aborted. origin was left unchanged..${NC}"
+            exit 1
         fi
     else
-        echo -e "${YELLOW}⚠️  $(t "非 git 仓库，跳过代码更新" "Not a git repository, skipping code update")${NC}"
+        echo -e "${YELLOW}⚠️  Not a git repository, skipping code update${NC}"
     fi
     
     # Re-exec with the updated run.sh to pick up new logic
@@ -1239,7 +962,7 @@ install_mode() {
     set +e
     clear
     echo -e "${CYAN}${BOLD}=========================================${NC}"
-    echo -e "${CYAN}${BOLD}   ${EMOJI_COW} CowAgent Installation${NC}"
+    echo -e "${CYAN}${BOLD}   ${EMOJI_MAIA} Maia Installation${NC}"
     echo -e "${CYAN}${BOLD}=========================================${NC}"
     echo ""
 
@@ -1248,23 +971,22 @@ install_mode() {
     # bash 3.2. Closed on early return and before config generation.
     menu_session_begin
 
-    # Step 0: choose the install/UI language. Everything after this is localized.
     select_language
     echo ""
     sleep 1
 
     if [ "$IS_PROJECT_DIR" = true ]; then
-        echo -e "${GREEN}✅ $(t "检测到已有项目目录" "Detected existing project directory").${NC}"
+        echo -e "${GREEN}✅ Detected existing project directory.${NC}"
         
         if [ -f "${BASE_DIR}/config.json" ]; then
             menu_session_end
-            echo -e "${GREEN}✅ $(t "项目已配置" "Project already configured")${NC}"
+            echo -e "${GREEN}✅ Project already configured${NC}"
             echo ""
             show_usage
             return
         fi
         
-        echo -e "${YELLOW}📝 $(t "未找到 config.json，开始配置项目" "No config.json found. Let's configure your project")!${NC}"
+        echo -e "${YELLOW}📝 No config.json found. Let's configure your project!${NC}"
         echo ""
         
         # Project directory already exists, skip clone
@@ -1292,27 +1014,14 @@ install_mode() {
 # Require running inside the project directory
 require_project_dir() {
     if [ "$IS_PROJECT_DIR" = false ]; then
-        echo -e "${RED}${EMOJI_CROSS} $(t "必须在项目目录下运行" "Must run in project directory")${NC}"
+        echo -e "${RED}${EMOJI_CROSS} Must run in project directory${NC}"
         exit 1
     fi
 }
 
-# Initialize UI_LANG for management commands: prefer cow_lang from an existing
-# config.json, otherwise fall back to environment detection. The install flow
-# overrides this later via select_language().
+# Management commands use the same English prompts as install.
 init_ui_lang() {
-    [ -n "$UI_LANG" ] && return
-    local cfg_lang=""
-    if [ -f "${BASE_DIR}/config.json" ]; then
-        # `|| true`: grep returns 1 when cow_lang is absent, which would abort
-        # the whole script under `set -e` at the very first management command.
-        cfg_lang=$(grep -o '"cow_lang"[[:space:]]*:[[:space:]]*"[^"]*"' "${BASE_DIR}/config.json" 2>/dev/null | cut -d'"' -f4 || true)
-    fi
-    case "$cfg_lang" in
-        zh) UI_LANG="zh" ;;
-        en) UI_LANG="en" ;;
-        *) UI_LANG=$(detect_ui_lang) ;;
-    esac
+    UI_LANG="en"
 }
 
 # Main function
@@ -1341,7 +1050,7 @@ main() {
             install_mode
             ;;
         *)
-            echo -e "${RED}${EMOJI_CROSS} $(t "未知命令" "Unknown command"): $1${NC}"
+            echo -e "${RED}${EMOJI_CROSS} Unknown command: $1${NC}"
             echo ""
             show_usage
             exit 1

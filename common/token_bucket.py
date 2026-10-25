@@ -4,11 +4,11 @@ import time
 
 class TokenBucket:
     def __init__(self, tpm, timeout=None):
-        self.capacity = int(tpm)  # 令牌桶容量
-        self.tokens = 0  # 初始令牌数为0
-        self.rate = int(tpm) / 60  # 令牌每秒生成速率
-        self.timeout = timeout  # 等待令牌超时时间
-        self.cond = threading.Condition()  # 条件变量
+        self.capacity = int(tpm)  
+        self.tokens = 0  
+        self.rate = int(tpm) / 60  
+        self.timeout = timeout  
+        self.cond = threading.Condition()  
         self.is_running = True
         # Start the token generator thread. It must be a daemon: a rate limiter
         # has no reason to keep the process from exiting, and both production
@@ -17,7 +17,7 @@ class TokenBucket:
         self._thread.start()
 
     def _generate_tokens(self):
-        """生成令牌"""
+        """Add tokens up to the bucket capacity."""
         if self.rate <= 0:
             # A sub-1 tokens-per-minute config rounds to a rate of zero, so
             # there is nothing to generate. Stop here instead of dividing by 0
@@ -30,11 +30,11 @@ class TokenBucket:
             with self.cond:
                 if self.tokens < self.capacity:
                     self.tokens += 1
-                self.cond.notify()  # 通知获取令牌的线程
+                self.cond.notify()  
             time.sleep(1 / self.rate)
 
     def get_token(self):
-        """获取令牌"""
+        """Take one token, waiting until the timeout."""
         with self.cond:
             deadline = time.monotonic() + self.timeout if self.timeout is not None else None
             while self.tokens <= 0:
@@ -44,7 +44,7 @@ class TokenBucket:
                 if remaining is not None and remaining <= 0:
                     return False
                 flag = self.cond.wait(remaining)
-                if not flag:  # 超时
+                if not flag:  
                     return False
             if not self.is_running:
                 return False
@@ -61,9 +61,9 @@ class TokenBucket:
 
 
 if __name__ == "__main__":
-    token_bucket = TokenBucket(20, None)  # 创建一个每分钟生产20个tokens的令牌桶
+    token_bucket = TokenBucket(20, None)  
     # token_bucket = TokenBucket(20, 0.1)
     for i in range(3):
         if token_bucket.get_token():
-            print(f"第{i+1}次请求成功")
+            print(f"request {i + 1} ok")
     token_bucket.close()

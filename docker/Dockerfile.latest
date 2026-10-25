@@ -1,9 +1,7 @@
 FROM python:3.10-slim-bullseye
 
-LABEL maintainer="foo@bar.com"
-ARG TZ='Asia/Shanghai'
-
-ARG CHATGPT_ON_WECHAT_VER
+LABEL maintainer="https://github.com/dubhagen"
+ARG TZ='UTC'
 # Set to "false" to skip Playwright/Chromium and produce a smaller image
 ARG INSTALL_BROWSER=true
 # Set to "true" to use China mirrors for apt / pip / playwright (faster in CN)
@@ -54,7 +52,7 @@ RUN apt-get update \
         fi; \
     fi \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /home/agent/cow \
+    && mkdir -p /home/agent/maia \
     && groupadd -r agent \
     && useradd -r -g agent -s /bin/bash -d /home/agent agent \
     && chown -R agent:agent /home/agent ${BUILD_PREFIX} /usr/local/lib

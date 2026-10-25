@@ -470,7 +470,7 @@ def test_index_summaries_survive_rebuild(tmp_path):
     (tmp_path / "knowledge/notes/a.md").write_text("# A\n", encoding="utf-8")
     index = tmp_path / "knowledge/index.md"
     index.write_text(
-        "# 知识库目录\n\n## notes\n"
+        "# Knowledge\n\n## notes\n"
         "- [A](./notes/a.md) — what A is about\n",
         encoding="utf-8",
     )
@@ -487,17 +487,17 @@ def test_index_summaries_survive_rebuild(tmp_path):
 def test_encoded_paths_keep_their_summary_across_rebuild(tmp_path):
     svc, _ = service(tmp_path)
     (tmp_path / "knowledge/notes").mkdir()
-    (tmp_path / "knowledge/notes/训练记录 07.md").write_text("# 训练记录 07\n", encoding="utf-8")
+    (tmp_path / "knowledge/notes/café log.md").write_text("# café log\n", encoding="utf-8")
     index = tmp_path / "knowledge/index.md"
     index.write_text(
-        "# 知识库目录\n\n## notes\n"
-        "- [训练记录 07](./notes/%E8%AE%AD%E7%BB%83%E8%AE%B0%E5%BD%95%2007.md) — 每周训练记录\n",
+        "# Knowledge\n\n## notes\n"
+        "- [café log](./notes/caf%C3%A9%20log.md) — weekly café notes\n",
         encoding="utf-8",
     )
 
     svc.rebuild_index_md()
 
-    assert "— 每周训练记录" in index.read_text(encoding="utf-8")
+    assert "— weekly café notes" in index.read_text(encoding="utf-8")
 
 
 def test_rename_and_move_rebuild_index(tmp_path):
@@ -588,7 +588,7 @@ def test_summaries_follow_moved_and_renamed_documents(tmp_path):
     (tmp_path / "knowledge/old/b.md").write_text("# B\n", encoding="utf-8")
     index = tmp_path / "knowledge/index.md"
     index.write_text(
-        "# 知识库目录\n\n## old\n"
+        "# Knowledge\n\n## old\n"
         "- [A](old/a.md) — about A\n"
         "- [B](old/b.md) — about B\n",
         encoding="utf-8",
@@ -606,7 +606,7 @@ def test_double_hyphen_summary_separator(tmp_path):
     svc, _ = service(tmp_path)
     (tmp_path / "knowledge/a.md").write_text("# A\n", encoding="utf-8")
     index = tmp_path / "knowledge/index.md"
-    index.write_text("# 知识库目录\n\n- [A](./a.md) -- about A\n", encoding="utf-8")
+    index.write_text("# Knowledge\n\n- [A](./a.md) -- about A\n", encoding="utf-8")
 
     svc.rebuild_index_md()
 
@@ -618,18 +618,18 @@ def test_build_graph_resolves_encoded_and_anchored_links(tmp_path):
     root = tmp_path / "knowledge"
     (root / "concepts").mkdir()
     (root / "sources").mkdir()
-    (root / "sources/训练记录 07.md").write_text("# 训练记录", encoding="utf-8")
+    (root / "sources/café log.md").write_text("# café log", encoding="utf-8")
     (root / "concepts/rag.md").write_text("# RAG", encoding="utf-8")
     (root / "concepts/health.md").write_text(
         "# Health\n"
-        "- [记录](../sources/%E8%AE%AD%E7%BB%83%E8%AE%B0%E5%BD%95%2007.md)\n"
+        "- [log](../sources/caf%C3%A9%20log.md)\n"
         "- [RAG](./rag.md#chunking)\n"
-        "- [外部](https://example.com/a.md)\n",
+        "- [external](https://example.com/a.md)\n",
         encoding="utf-8",
     )
 
     graph = svc.build_graph()
     edges = {(l["source"], l["target"]) for l in graph["links"]}
-    assert ("concepts/health.md", "sources/训练记录 07.md") in edges
+    assert ("concepts/health.md", "sources/café log.md") in edges
     assert ("concepts/health.md", "concepts/rag.md") in edges
     assert len(edges) == 2

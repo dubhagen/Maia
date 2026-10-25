@@ -141,9 +141,9 @@ def test_an_agent_opts_out_by_having_its_own_copy(registry, tmp_path):
 
 
 def test_legacy_config_keeps_the_configured_workspace(tmp_path):
-    set_agent_registry(AgentRegistry.from_config({"agent_workspace": str(tmp_path / "cow")}))
+    set_agent_registry(AgentRegistry.from_config({"agent_workspace": str(tmp_path / "maia")}))
     try:
-        assert state_dir.state_root() == (tmp_path / "cow").resolve()
+        assert state_dir.state_root() == (tmp_path / "maia").resolve()
     finally:
         set_agent_registry(None)
 
@@ -255,7 +255,7 @@ _SINGLE_AGENT_LAYOUT = {
 
 @pytest.mark.parametrize("prepopulated", [False, True], ids=["empty", "populated"])
 def test_a_single_agent_install_keeps_every_path_it_has_today(tmp_path, prepopulated):
-    root = tmp_path / "cow"
+    root = tmp_path / "maia"
     if prepopulated:
         for parts in _SINGLE_AGENT_LAYOUT.values():
             (root / Path(*parts)).mkdir(parents=True, exist_ok=True)

@@ -105,7 +105,7 @@ class TerminalAgentRenderer:
             if self._answer_active:
                 self._close_section()
             if not self._reasoning_active:
-                self._print(_Style.wrap("💭 思考  ", _Style.DIM, _Style.MAGENTA), end="\n")
+                self._print(_Style.wrap("💭 Thinking  ", _Style.DIM, _Style.MAGENTA), end="\n")
                 self._reasoning_active = True
             self._print(_Style.wrap(delta, _Style.DIM, _Style.ITALIC))
 
@@ -155,7 +155,7 @@ class TerminalAgentRenderer:
             file_path = data.get("path", "")
             file_name = data.get("file_name", "")
             label = file_name or file_path
-            self._print(_Style.wrap(f"📎 文件: {label}", _Style.BLUE), end="\n")
+            self._print(_Style.wrap(f"📎 File: {label}", _Style.BLUE), end="\n")
 
         elif event_type == "error":
             self._close_section()
@@ -164,7 +164,7 @@ class TerminalAgentRenderer:
 
         elif event_type == "agent_cancelled":
             self._close_section()
-            self._print(_Style.wrap("⏹ 已中止", _Style.YELLOW), end="\n")
+            self._print(_Style.wrap("⏹ Stopped", _Style.YELLOW), end="\n")
 
         elif event_type == "agent_end":
             self._close_section()

@@ -65,7 +65,7 @@ def _stage_from_local(tmp_path):
     apply_install_fields(config["weekly-report"], {
         "category": "market",
         "display_name": "Weekly Report",
-        "display_description": "整理本周工作",
+        "display_description": "Organize this week's work",
         "icon": "https://cdn.example.test/icon.png",
         "version": "1.2.0",
     })
@@ -97,7 +97,7 @@ def test_confirm_keeps_the_registrys_presentation_fields(tmp_path, live_dir):
     entry = json.loads((live_dir / "skills_config.json").read_text(encoding="utf-8"))["weekly-report"]
     assert entry["category"] == "market"
     assert entry["display_name"] == "Weekly Report"
-    assert entry["display_description"] == "整理本周工作"
+    assert entry["display_description"] == "Organize this week's work"
     assert entry["icon"] == "https://cdn.example.test/icon.png"
     assert entry["version"] == "1.2.0"
 
@@ -115,7 +115,7 @@ def test_confirm_without_registry_fields_keeps_existing_ones(tmp_path, live_dir)
     (live_dir / "weekly-report").mkdir()
     (live_dir / "weekly-report" / "SKILL.md").write_bytes(_skill_md("weekly-report"))
     (live_dir / "skills_config.json").write_text(json.dumps({"weekly-report": {
-        "name": "weekly-report", "enabled": True, "source": "linkai", "category": "market",
+        "name": "weekly-report", "enabled": True, "source": "url", "category": "market",
         "icon": "https://cdn.example.test/icon.png", "version": "1.0.0",
     }}), encoding="utf-8")
     svc = _service(live_dir)

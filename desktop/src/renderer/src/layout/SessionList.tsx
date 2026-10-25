@@ -25,7 +25,7 @@ import NewChatMenu from '../components/NewChatMenu'
 import AgentAvatar from '../components/AgentAvatar'
 import { Modal, Btn, TextInput } from '../pages/settings/primitives'
 
-const COLLAPSED_KEY = 'cow_collapsed_projects'
+const COLLAPSED_KEY = 'maia_collapsed_projects'
 
 function loadCollapsed(): Set<string> {
   try {

@@ -1,34 +1,34 @@
 """
 Unified chat message class for different channel implementations.
 
-填好必填项(群聊6个，非群聊8个)，即可接入ChatChannel，并支持插件，参考TerminalChannel
+Fill in the required fields (6 for a group chat, 8 otherwise) to plug into ChatChannel, with plugin support. See TerminalChannel.
 
 ChatMessage
-msg_id: 消息id (必填)
-create_time: 消息创建时间
+msg_id: message id (required)
+create_time: when the message was created
 
-ctype: 消息类型 : ContextType (必填)
-content: 消息内容, 如果是声音/图片，这里是文件路径 (必填)
+ctype: message type: ContextType (required)
+content: message content. For audio or an image, this is a file path (required)
 
-from_user_id: 发送者id (必填)
-from_user_nickname: 发送者昵称
-to_user_id: 接收者id (必填)
-to_user_nickname: 接收者昵称
+from_user_id: sender id (required)
+from_user_nickname: sender nickname
+to_user_id: recipient id (required)
+to_user_nickname: recipient nickname
 
-other_user_id: 对方的id，如果你是发送者，那这个就是接收者id，如果你是接收者，那这个就是发送者id，如果是群消息，那这一直是群id (必填)
-other_user_nickname: 同上
+other_user_id: the other party's id. If you are the sender, this is the recipient id. If you are the recipient, this is the sender id. For a group message, this is always the group id (required)
+other_user_nickname: same as above
 
-is_group: 是否是群消息 (群聊必填)
-is_at: 是否被at
+is_group: whether this is a group message (required for a group chat)
+is_at: whether this message mentions the bot
 
-- (群消息时，一般会存在实际发送者，是群内某个成员的id和昵称，下列项仅在群消息时存在)
-actual_user_id: 实际发送者id (群聊必填)
-actual_user_nickname：实际发送者昵称
-self_display_name: 自身的展示名，设置群昵称时，该字段表示群昵称
+- (A group message usually also has the real sender, a member id and nickname. The fields below exist only for group messages.)
+actual_user_id: real sender id (required for a group chat)
+actual_user_nickname: real sender nickname
+self_display_name: this bot's display name. When a group nickname is set, this field is that nickname
 
-_prepare_fn: 准备函数，用于准备消息的内容，比如下载图片等,
-_prepared: 是否已经调用过准备函数
-_rawmsg: 原始消息对象
+_prepare_fn: prepare callback, used to get the message ready, for example by downloading an image,
+_prepared: whether the prepare callback has already run
+_rawmsg: the original message object
 
 """
 

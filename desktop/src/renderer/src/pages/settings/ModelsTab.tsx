@@ -36,26 +36,9 @@ import {
   type CatalogDraftRow,
 } from './ModelCatalogEditor'
 import { normEntries, providerLabel, resolveVoices, CUSTOM_OPTION } from './modelsHelpers'
-import { product } from '@product'
 
-// Whether the "add custom provider" entry is available. Defaults to true.
-const allowCustomProviders = product.models?.allowCustomProviders !== false
-
-// LinkAI is an aggregation platform, so when the LinkAI provider is selected we
-// point users to its console to create/manage the aggregated key. Only shown
-// for that provider — other vendors manage keys on their own sites.
-const ManageLinkAIKeyLink: React.FC = () => (
-  <button
-    type="button"
-    onClick={() =>
-      window.open('https://link-ai.tech/console/models?apikey=1', '_blank', 'noopener,noreferrer')
-    }
-    className="inline-flex items-center gap-1 text-xs text-accent hover:underline cursor-pointer"
-  >
-    {t('models_manage_api_key')}
-    <ExternalLink size={11} className="shrink-0" />
-  </button>
-)
+// Custom vendor cards are gone. Model ids are typed against the LiteLLM proxy.
+const allowCustomProviders = false
 
 interface ModelsTabProps {
   baseUrl: string
@@ -530,10 +513,7 @@ const VendorModal: React.FC<{
           <Dropdown value={pickId} options={pickOptions} onChange={onPick} />
         </Field>
       )}
-      <Field
-        label="API Key"
-        labelAction={effective?.id === 'linkai' ? <ManageLinkAIKeyLink /> : undefined}
-      >
+      <Field label="API Key">
         <div className="relative">
           <TextInput
             type={keyVisible ? 'text' : 'password'}

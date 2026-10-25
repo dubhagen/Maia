@@ -95,7 +95,8 @@ def parse_metadata(frontmatter: Dict[str, Any]) -> Optional[SkillMetadata]:
     if not isinstance(metadata_raw, dict):
         return None
     
-    # Unwrap nested namespace (e.g. {"openclaw": {...}} or {"cowagent": {...}})
+    # Unwrap nested namespace. "maia" is canonical. "cow", "cowagent", and
+    # "openclaw" still load so existing skills keep their requirements.
     meta_obj = _unwrap_metadata_namespace(metadata_raw)
     
     # Parse install specs
@@ -147,12 +148,14 @@ def parse_metadata(frontmatter: Dict[str, Any]) -> Optional[SkillMetadata]:
     )
 
 
-_KNOWN_METADATA_NAMESPACES = {"cowagent", "openclaw"}
+# Canonical key is "maia". The older product keys stay so a skill written
+# for the upstream project still declares its requirements here.
+_KNOWN_METADATA_NAMESPACES = {"maia", "cow", "cowagent", "openclaw"}
 
 
 def _unwrap_metadata_namespace(metadata_raw: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Unwrap a single-key namespace wrapper like {"cowagent": {...} or {"openclaw": {...}}}.
+    Unwrap a single-key namespace wrapper like {"maia": {...}} or {"openclaw": {...}}.
     If the top-level dict has exactly one key matching a known namespace, return the inner dict.
     Otherwise return the original dict unchanged.
     """

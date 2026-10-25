@@ -338,7 +338,7 @@ def test_read_core_file_preserves_utf8_content(admin):
     service, root, _ = admin
     workspace = root / "research"
     service.create_agent("research", "Research", str(workspace))
-    content = "# 核心文件\n只读内容 🙂\n"
+    content = "# Core files\nread-only content \U0001f642\n"
     raw = content.encode("utf-8")
     (workspace / "AGENT.md").write_bytes(raw)
 

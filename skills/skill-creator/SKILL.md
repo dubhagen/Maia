@@ -282,7 +282,7 @@ Write the YAML frontmatter with `name`, `description`, and optional `metadata`:
 - `metadata`: (Optional) Specify requirements and configuration
   - `requires.bins`: Required binaries (e.g., `["curl", "jq"]`)
   - `requires.env`: Required environment variables — all must be set (e.g., `["MYAPI_KEY"]`)
-  - `requires.anyEnv`: Alternative environment variables — at least one must be set (e.g., `["OPENAI_API_KEY", "LINKAI_API_KEY"]`)
+  - `requires.anyEnv`: Alternative environment variables — at least one must be set (e.g., `["OPENAI_API_KEY", "EXAMPLE_API_KEY"]`)
   - `requires.anyBins`: Alternative binaries — at least one must be present
   - `always`: Set to `true` to always load regardless of requirements
   - `emoji`: Skill icon (optional)
@@ -303,7 +303,7 @@ metadata:
 ---
 ```
 
-If your skill supports multiple API key providers (e.g., OpenAI or LinkAI), use `requires.anyEnv`:
+If your skill supports more than one API key (for example either of two providers), use `requires.anyEnv`:
 
 ```yaml
 ---
@@ -312,7 +312,7 @@ description: Analyze images using Vision API
 metadata:
   requires:
     bins: ["curl"]
-    anyEnv: ["OPENAI_API_KEY", "LINKAI_API_KEY"]
+    anyEnv: ["OPENAI_API_KEY", "EXAMPLE_API_KEY"]
 ---
 ```
 
@@ -331,7 +331,7 @@ This skill requires an API key from [Service Name].
 
 1. Visit https://service.com to get an API key
 2. Configure it using: `env_config(action="set", key="SERVICE_API_KEY", value="your-key")`
-3. Or manually add to `~/cow/.env`: `SERVICE_API_KEY=your-key`
+3. Or manually add to `~/maia/.env`: `SERVICE_API_KEY=your-key`
 4. Restart the agent for changes to take effect
 
 ## Usage
@@ -387,7 +387,7 @@ Validation checks:
 - Description completeness and quality
 - File organization
 
-**Note**: Validation is optional in COW. Mainly useful for troubleshooting format issues.
+**Note**: Validation is optional in MAIA. Mainly useful for troubleshooting format issues.
 
 ### Step 6: Iterate
 

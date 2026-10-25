@@ -20,7 +20,7 @@ DEFAULT_CONFIG = {"action": "ignore"}
     name="Banwords",
     desire_priority=100,
     hidden=True,
-    desc="判断消息中是否有敏感词、决定是否回复。",
+    desc="Check messages for blocked words and decide whether to reply.",
     version="1.0",
     author="lanvent",
 )
@@ -70,7 +70,7 @@ class Banwords(Plugin):
                 self.reply_action = conf.get("reply_action", "ignore")
             logger.debug("[Banwords] inited")
         except Exception as e:
-            logger.debug("[Banwords] init failed, ignore or see https://github.com/zhayujie/chatgpt-on-wechat/tree/master/plugins/banwords .")
+            logger.debug("[Banwords] init failed. See plugins/banwords.")
             raise e
 
     def on_handle_context(self, e_context: EventContext):
@@ -90,7 +90,7 @@ class Banwords(Plugin):
                 return
         elif self.action == "replace":
             if self.searchr.ContainsAny(content):
-                reply = Reply(ReplyType.INFO, "发言中包含敏感词，请重试: \n" + self.searchr.Replace(content))
+                reply = Reply(ReplyType.INFO, "The message contains a blocked word. Try again:\n" + self.searchr.Replace(content))
                 e_context["reply"] = reply
                 e_context.action = EventAction.BREAK_PASS
                 return
@@ -110,10 +110,10 @@ class Banwords(Plugin):
                 return
         elif self.reply_action == "replace":
             if self.searchr.ContainsAny(content):
-                reply = Reply(ReplyType.INFO, "已替换回复中的敏感词: \n" + self.searchr.Replace(content))
+                reply = Reply(ReplyType.INFO, "Blocked words in the reply were replaced:\n" + self.searchr.Replace(content))
                 e_context["reply"] = reply
                 e_context.action = EventAction.CONTINUE
                 return
 
     def get_help_text(self, **kwargs):
-        return "过滤消息中的敏感词。"
+        return "Filter blocked words from messages."

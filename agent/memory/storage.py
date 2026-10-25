@@ -917,14 +917,13 @@ class MemoryStorage:
                 scopes.append("user")
 
         # Step 1: Standard FTS5 (unicode61) — pure ASCII queries only.
-        # Skipped when query contains any CJK characters: unicode61 tokenises CJK
-        # as individual characters without forming meaningful tokens, so it would
-        # match only the ASCII portion of a mixed query (e.g. "Python" from
-        # "Python教程") and silently discard the CJK part.  Those queries go
-        # directly to Step 2 (trigram), which handles both ASCII and CJK together.
+        # Skipped for CJK and for other non-ASCII letters. unicode61 splits CJK
+        # into single characters and folds accents, so it would match only part
+        # of the query. Those queries go to the trigram index, which requires
+        # every term.
         fts1_attempted = False
         if (self.fts5_available
-                and not MemoryStorage._contains_cjk(query)
+                and not MemoryStorage._needs_trigram_query(query)
                 and MemoryStorage._build_fts_query(query)):
             fts1_attempted = True
             fts_results = self._search_fts5(query, user_id, scopes, limit)
@@ -935,7 +934,7 @@ class MemoryStorage:
         # returned nothing (trigram indexes all scripts with 3-char sliding windows,
         # so it can catch terms that unicode61 tokenisation misses).
         if self.trigram_fts5_available and (
-            MemoryStorage._contains_cjk(query) or fts1_attempted
+            MemoryStorage._needs_trigram_query(query) or fts1_attempted
         ):
             trigram_results = self._search_fts5_trigram(query, user_id, scopes, limit)
             if trigram_results:
@@ -944,7 +943,7 @@ class MemoryStorage:
         # Step 3: LIKE fallback — last resort (FTS5 unavailable, CJK queries
         # trigram cannot match, or an FTS5 stage that found nothing).
         if (not self.fts5_available
-                or MemoryStorage._contains_cjk(query)
+                or MemoryStorage._needs_trigram_query(query)
                 or fts1_attempted):
             return self._search_like(query, user_id, scopes, limit)
 
@@ -1234,6 +1233,13 @@ class MemoryStorage:
     def _contains_cjk(text: str) -> bool:
         """Check if text contains CJK or related characters (Chinese, Japanese, Korean)."""
         return bool(_RE_CONTAINS_CJK.search(text))
+
+    @staticmethod
+    def _needs_trigram_query(text: str) -> bool:
+        """True when unicode61 would split or fold the query."""
+        if MemoryStorage._contains_cjk(text):
+            return True
+        return any(ord(ch) > 127 and ch.isalpha() for ch in text)
     
     @staticmethod
     def _build_trigram_query(raw_query: str) -> Optional[str]:

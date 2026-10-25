@@ -400,7 +400,7 @@ class Read(BaseTool):
             "mime_type": mime_type,
             "size": file_size,
             "size_formatted": format_size(file_size),
-            "message": f"{file_type.capitalize()} 文件: {file_name} ({format_size(file_size)})\n提示: 如果需要发送此文件，请使用 send 工具。"
+            "message": f"{file_type.capitalize()} file: {file_name} ({format_size(file_size)})\nTo send this file, use the send tool."
         }
         
         return ToolResult.success(result)
@@ -435,7 +435,7 @@ class Read(BaseTool):
                 "mime_type": mime_type,
                 "size": file_size,
                 "size_formatted": format_size(file_size),
-                "message": f"图片文件: {Path(absolute_path).name} ({format_size(file_size)})\n提示: 如果需要发送此图片，请使用 send 工具。"
+                "message": f"Image file: {Path(absolute_path).name} ({format_size(file_size)})\nTo send this image, use the send tool."
             }
             
             return ToolResult.success(result)
@@ -466,7 +466,7 @@ class Read(BaseTool):
                     "path": absolute_path,
                     "size": file_size,
                     "size_formatted": format_size(file_size),
-                    "message": f"文件过大 ({format_size(file_size)} > 50MB)，无法读取内容。文件路径: {absolute_path}"
+                    "message": f"File is too large ({format_size(file_size)} > 50MB) to read. Path: {absolute_path}"
                 })
             
             # Read file (utf-8-sig strips BOM automatically on Windows)

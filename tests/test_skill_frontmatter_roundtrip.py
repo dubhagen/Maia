@@ -1,6 +1,6 @@
 """A created skill must survive the loader's own frontmatter parser.
 
-The console form writes ``description: <原文>`` into SKILL.md and the loader
+The console form writes ``description: <the original text>`` into SKILL.md and the loader
 reads it back with PyYAML. YAML 1.1 resolves a plain ``no`` / ``off`` /
 ``1:30`` to a bool/int, so a user-typed description can come back changed -
 or as nothing, and a skill with no description is dropped from every list.

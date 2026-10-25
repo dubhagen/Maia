@@ -1,4 +1,4 @@
-"""OpenAI-compatible HTTP adapter for CowAgent chat completions."""
+"""OpenAI-compatible HTTP adapter for Maia chat completions."""
 
 from __future__ import annotations
 
@@ -258,7 +258,7 @@ def _base_chunk(
     model: str,
     delta: dict,
     finish_reason=None,
-    cow_event: dict | None = None,
+    maia_event: dict | None = None,
 ) -> dict:
     payload = {
         "id": completion_id,
@@ -273,13 +273,13 @@ def _base_chunk(
             }
         ],
     }
-    if cow_event is not None:
-        payload["cow_event"] = cow_event
+    if maia_event is not None:
+        payload["maia_event"] = maia_event
     return payload
 
 
 class _ToolEvents:
-    """Turns the Agent's tool and teammate chunks into ``cow_event`` objects.
+    """Turns the Agent's tool and teammate chunks into ``maia_event`` objects.
 
     A call is reported when it starts and again when it finishes, with its
     arguments; the closing batch of a turn repeats results already reported.
@@ -443,12 +443,12 @@ def _stream_completion(
                     created,
                     model,
                     {"reasoning_content": chunk["delta"]},
-                    cow_event={"type": "reasoning", "delta": chunk["delta"]},
+                    maia_event={"type": "reasoning", "delta": chunk["delta"]},
                 )
             )
         else:
             for event in tool_events(chunk):
-                publish(_base_chunk(completion_id, created, model, {}, cow_event=event))
+                publish(_base_chunk(completion_id, created, model, {}, maia_event=event))
 
     def execute() -> None:
         try:
@@ -486,12 +486,12 @@ def _stream_completion(
         closed.set()
         _cancel_agent_request(completion_id, agent_id)
         raise OpenAIAPIError(
-            500, "CowAgent timed out before producing a response.", "timeout"
+            500, "Maia timed out before producing a response.", "timeout"
         ) from error
     if first_item is _STREAM_ERROR:
         closed.set()
         raise OpenAIAPIError(
-            500, "CowAgent failed to complete the request.", "internal_error"
+            500, "Maia failed to complete the request.", "internal_error"
         )
 
     def frames() -> Iterator[str]:
@@ -512,9 +512,9 @@ def _stream_completion(
                             created,
                             model,
                             {},
-                            cow_event={
+                            maia_event={
                                 "type": "error",
-                                "message": "CowAgent failed to complete the request.",
+                                "message": "Maia failed to complete the request.",
                             },
                         )
                     )
@@ -533,10 +533,10 @@ def _stream_completion(
                             created,
                             model,
                             {},
-                            cow_event={
+                            maia_event={
                                 "type": "error",
                                 "message": (
-                                    "CowAgent stopped producing events before the "
+                                    "Maia stopped producing events before the "
                                     "stream finished."
                                 ),
                             },
@@ -619,7 +619,7 @@ def _non_stream_completion(
     except Exception as error:
         logger.exception("[OpenAI API] Chat completion failed")
         raise OpenAIAPIError(
-            500, "CowAgent failed to complete the request.", "internal_error"
+            500, "Maia failed to complete the request.", "internal_error"
         ) from error
     finally:
         registry.unregister(cancel_key)

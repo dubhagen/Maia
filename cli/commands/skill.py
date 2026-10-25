@@ -1,4 +1,4 @@
-"""cow skill - Skill management commands."""
+"""maia skill - Skill management commands."""
 
 import os
 import re
@@ -25,7 +25,6 @@ from cli.utils import (
     load_skills_config,
     custom_skill_hub,
     skill_hub,
-    SKILL_HUB_API,
 )
 
 
@@ -55,12 +54,6 @@ _GITLAB_URL_RE = re.compile(
 )
 _GIT_SSH_RE = re.compile(
     r"^git@([^:]+):([^/]+)/([^/]+?)(?:\.git)?$"
-)
-_CLAWHUB_OWNER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.\-]{0,63}$")
-# A skill page, e.g. https://clawhub.ai/steipete/skills/gog
-_CLAWHUB_URL_RE = re.compile(
-    r"^https?://(?:www\.)?clawhub\.ai/@?([^/?#]+)/skills/([^/?#]+)/?(?:[?#].*)?$",
-    re.IGNORECASE,
 )
 
 # Set while staging a preview so every installer writes into a scratch dir
@@ -131,7 +124,7 @@ def _clone_repo(git_url: str):
 
     Requires git to be installed. The caller must clean up tmp_dir.
     """
-    tmp_dir = tempfile.mkdtemp(prefix="cow-skill-")
+    tmp_dir = tempfile.mkdtemp(prefix="maia-skill-")
     repo_dir = os.path.join(tmp_dir, "repo")
     try:
         import subprocess
@@ -179,7 +172,7 @@ def _download_repo_zip(spec: str, branch: str = "main", host: str = "github", ti
     resp = requests.get(zip_url, timeout=req_timeout, allow_redirects=True)
     resp.raise_for_status()
 
-    tmp_dir = tempfile.mkdtemp(prefix="cow-skill-")
+    tmp_dir = tempfile.mkdtemp(prefix="maia-skill-")
     try:
         zip_path = os.path.join(tmp_dir, "repo.zip")
         with open(zip_path, "wb") as f:
@@ -392,10 +385,10 @@ def _write_skills_config(config: dict, skills_dir: str) -> None:
     write_json_atomic(os.path.join(skills_dir, "skills_config.json"), config)
 
 
-def _register_installed_skill(name: str, source: str = "cowhub", display_name: str = "", agent_id: str = None):
+def _register_installed_skill(name: str, source: str = "maiahub", display_name: str = "", agent_id: str = None):
     """Register a newly installed skill into skills_config.json.
 
-    source values: builtin, cow, github, clawhub, linkai, local, url
+    source values: builtin, maia, github, local, url
     """
     skills_dir = _target_skills_dir(agent_id)
     config_path = os.path.join(skills_dir, "skills_config.json")
@@ -573,26 +566,18 @@ def _install_targz_bytes(content: bytes, name: str, skills_dir: str, result: Ins
 
 def _print_install_success(name: str, source: str):
     """Print a unified install success message with description and source."""
-    from cli.utils import get_cli_language
-
-    # Import `common` only after get_cli_language() runs ensure_sys_path(),
-    # so it works when `cow` is invoked from outside the project directory.
-    get_cli_language()  # resolve cow_lang so i18n.t reflects config
-    from common import i18n
-    _t = i18n.t
-
     skills_dir = get_skills_dir()
     config = load_skills_config()
     display = config.get(name, {}).get("display_name", "")
     desc = _read_skill_description(os.path.join(skills_dir, name))
     click.echo(click.style(f"✓ {name}", fg="green"))
     if display and display != name:
-        click.echo(_t(f"  名称: {display}", f"  Name: {display}"))
+        click.echo(f"  Name: {display}")
     if desc:
         if len(desc) > 60:
             desc = desc[:57] + "…"
-        click.echo(_t(f"  描述: {desc}", f"  Description: {desc}"))
-    click.echo(_t(f"  来源: {source}", f"  Source: {source}"))
+        click.echo(f"  Description: {desc}")
+    click.echo(f"  Source: {source}")
 
 
 def _validate_skill_name(name: str):
@@ -619,33 +604,6 @@ def _check_skill_name(name: str):
         raise SkillInstallError(
             f"Invalid skill name '{name}'. Use only letters, digits, hyphens, and underscores."
         )
-
-
-def is_clawhub_url(value: str) -> bool:
-    return bool(_CLAWHUB_URL_RE.match((value or "").strip()))
-
-
-def parse_clawhub_ref(ref: str):
-    """Split a ClawHub reference into ``(owner, slug)``; owner is None if not given.
-
-    Accepts ``slug``, ``owner/slug``, ``@owner/slug`` and a skill page URL.
-    ClawHub slugs are only unique per publisher, so a slug several publishers
-    share can only be downloaded together with its owner.
-    """
-    ref = (ref or "").strip()
-    m = _CLAWHUB_URL_RE.match(ref)
-    if m:
-        owner, slug = m.groups()
-    elif "/" in ref:
-        owner, slug = ref.split("/", 1)
-    else:
-        owner, slug = None, ref
-    if owner is not None:
-        owner = owner.lstrip("@")
-        if not _CLAWHUB_OWNER_RE.match(owner):
-            raise SkillInstallError(f"Invalid ClawHub owner '{owner}'.")
-    _check_skill_name(slug)
-    return owner, slug
 
 
 def _with_query(url: str, **params) -> str:
@@ -741,12 +699,12 @@ def _record_hub_fields(names: List[str], data: dict, agent_id: str = None) -> No
 
 @click.group()
 def skill():
-    """Manage CowAgent skills."""
+    """Manage Maia skills."""
     pass
 
 
 # ------------------------------------------------------------------
-# cow skill list
+# maia skill list
 # ------------------------------------------------------------------
 @skill.command("list")
 @click.option("--remote", is_flag=True, help="Browse skills on Skill Hub")
@@ -847,6 +805,9 @@ _REMOTE_PAGE_SIZE = 10
 def _list_remote(page: int = 1):
     """List skills from remote Skill Hub with server-side pagination."""
     hub_api, hub_headers = skill_hub()
+    if not hub_api:
+        click.echo("Skill Hub is disabled. Install a skill from a git URL.", err=True)
+        sys.exit(1)
     try:
         resp = requests.get(
             f"{hub_api}/skills",
@@ -889,25 +850,26 @@ def _list_remote(page: int = 1):
     click.echo()
     nav_parts = []
     if page > 1:
-        nav_parts.append(f"cow skill list --remote --page {page - 1}")
+        nav_parts.append(f"maia skill list --remote --page {page - 1}")
     if page < total_pages:
-        nav_parts.append(f"cow skill list --remote --page {page + 1}")
+        nav_parts.append(f"maia skill list --remote --page {page + 1}")
     if nav_parts:
         click.echo(f"  Navigate: {' | '.join(nav_parts)}")
-    click.echo("  Install:  cow skill install <name>")
-    if not custom_skill_hub():
-        click.echo("  Browse:   https://skills.cowagent.ai")
+    click.echo("  Install:  maia skill install <git-url>")
     click.echo()
 
 
 # ------------------------------------------------------------------
-# cow skill search
+# maia skill search
 # ------------------------------------------------------------------
 @skill.command()
 @click.argument("query")
 def search(query):
     """Search skills on Skill Hub."""
     hub_api, hub_headers = skill_hub()
+    if not hub_api:
+        click.echo("Skill Hub is disabled. Install a skill from a git URL.", err=True)
+        sys.exit(1)
     try:
         resp = requests.get(f"{hub_api}/skills/search", params={"q": query}, headers=hub_headers, timeout=10)
         resp.raise_for_status()
@@ -937,7 +899,7 @@ def search(query):
         status = click.style("installed", fg="green") if name in installed else "—"
         click.echo(f"  {name:<{name_w}} {status:<12} {desc}")
 
-    click.echo("\n  Install with: cow skill install <name>\n")
+    click.echo("\n  Install with: maia skill install <name>\n")
 
 
 # ------------------------------------------------------------------
@@ -1017,21 +979,6 @@ def _route_install(name: str, result: InstallResult, agent_id: str = None):
         else:
             _check_skill_name(raw)
             _install_hub(raw, result, provider="github", agent_id=agent_id)
-        return
-
-    # --- clawhub: prefix, or a ClawHub skill page URL ---
-    if name.startswith("clawhub:") or is_clawhub_url(name):
-        owner, skill_name = parse_clawhub_ref(name[8:] if name.startswith("clawhub:") else name)
-        _install_hub(skill_name, result, provider="clawhub", owner=owner, agent_id=agent_id)
-        return
-
-    # --- linkai: prefix ---
-    if name.startswith("linkai:"):
-        skill_code = name[7:]
-        # LinkAI codes can be mixed-case alphanumeric; validate loosely
-        if not re.match(r"^[a-zA-Z0-9_\-]{1,128}$", skill_code):
-            raise SkillInstallError(f"Invalid LinkAI skill code '{skill_code}'.")
-        _install_hub(skill_code, result, provider="linkai", agent_id=agent_id)
         return
 
     # --- owner/repo or owner/repo#subpath shorthand ---
@@ -1224,7 +1171,7 @@ def commit_staged(staging_dir: str, names=None, agent_id: str = None) -> list:
 
 
 # ------------------------------------------------------------------
-# cow skill install (CLI thin wrapper)
+# maia skill install (CLI thin wrapper)
 # ------------------------------------------------------------------
 @skill.command()
 @click.argument("name")
@@ -1237,21 +1184,21 @@ def install(name):
 
     Examples:
 
-      cow skill install pptx                          (from Skill Hub)
+      maia skill install pptx                          (from Skill Hub)
 
-      cow skill install larksuite/cli                 (GitHub shorthand, all skills)
+      maia skill install larksuite/cli                 (GitHub shorthand, all skills)
 
-      cow skill install larksuite/cli#skills/lark-im  (single skill by subpath)
+      maia skill install larksuite/cli#skills/lark-im  (single skill by subpath)
 
-      cow skill install https://github.com/owner/repo
+      maia skill install https://github.com/owner/repo
 
-      cow skill install https://gitlab.com/org/repo
+      maia skill install https://gitlab.com/org/repo
 
-      cow skill install git@github.com:owner/repo.git
+      maia skill install git@github.com:owner/repo.git
 
-      cow skill install ./my-local-skills             (local directory)
+      maia skill install ./my-local-skills             (local directory)
 
-      cow skill install https://example.com/path/to/SKILL.md
+      maia skill install https://example.com/path/to/SKILL.md
     """
     result = install_skill(name)
     for msg in result.messages:
@@ -1262,16 +1209,16 @@ def install(name):
 
 
 def _install_hub(name, result: InstallResult, provider=None, agent_id: str = None, owner: str = None):
-    """Install a skill from Skill Hub.
-
-    ``owner`` picks one publisher's skill on a registry whose slugs are only
-    unique per publisher (ClawHub).
-    """
+    """Install a skill from a Skill Hub the user configured."""
     skills_dir = _target_skills_dir(agent_id)
     os.makedirs(skills_dir, exist_ok=True)
 
     result.messages.append(f"Fetching skill info for '{name}'...")
     hub_api, hub_headers = skill_hub(provider)
+    if not hub_api:
+        raise SkillInstallError(
+            "Skill Hub is disabled. Install from a git URL or a local path."
+        )
     custom_hub = not provider and custom_skill_hub()
 
     body = {}
@@ -1291,12 +1238,6 @@ def _install_hub(name, result: InstallResult, provider=None, agent_id: str = Non
             break
         except requests.HTTPError as e:
             not_found = e.response is not None and e.response.status_code == 404
-            if not_found and custom_hub:
-                # Unknown to the configured registry: the default hub may
-                # still have it, and it never receives the registry's key.
-                result.messages.append(f"'{name}' not found on the configured registry, trying Skill Hub...")
-                hub_api, hub_headers, custom_hub = SKILL_HUB_API, {}, False
-                continue
             if not_found:
                 raise SkillInstallError(f"Skill '{name}' not found on Skill Hub.")
             raise SkillInstallError(f"Failed to fetch skill: {_hub_error_message(e)}")
@@ -1357,9 +1298,9 @@ def _install_hub(name, result: InstallResult, provider=None, agent_id: str = Non
             expected_checksum = mirror_resp.headers.get("X-Checksum-Sha256")
             _check_checksum(mirror_resp.content, expected_checksum)
             installed_before = len(result.installed)
-            _install_zip_bytes(mirror_resp.content, name, skills_dir, result=result, source_label="cowhub", display_name=hub_display_name, agent_id=agent_id)
+            _install_zip_bytes(mirror_resp.content, name, skills_dir, result=result, source_label="maiahub", display_name=hub_display_name, agent_id=agent_id)
             if len(result.installed) == installed_before:
-                _register_installed_skill(name, source="cowhub", display_name=hub_display_name, agent_id=agent_id)
+                _register_installed_skill(name, source="maiahub", display_name=hub_display_name, agent_id=agent_id)
                 result.installed.append(name)
                 result.messages.append(f"Installed '{name}' from mirror.")
             return
@@ -1370,7 +1311,10 @@ def _install_hub(name, result: InstallResult, provider=None, agent_id: str = Non
                 parsed = urlparse(download_url)
                 if parsed.scheme != "https":
                     raise SkillInstallError("Refusing to download from non-HTTPS URL.")
-                src_provider = data.get("source_provider", "registry")
+                host = (parsed.hostname or "").lower()
+                src_provider = str(data.get("source_provider", "registry") or "")
+                if src_provider.lower() in ("clawhub", "linkai") or host == "clawhub.ai" or host.endswith(".clawhub.ai"):
+                    raise SkillInstallError("Unsupported skill source.")
                 # The mirror is keyed by slug alone, so it cannot honour a
                 # requested publisher and might hand back someone else's skill.
                 has_mirror = data.get("has_mirror", False) and not owner
@@ -1439,9 +1383,9 @@ def _install_hub(name, result: InstallResult, provider=None, agent_id: str = Non
                 expected_checksum = mirror_resp.headers.get("X-Checksum-Sha256")
                 _check_checksum(mirror_resp.content, expected_checksum)
                 installed_before = len(result.installed)
-                _install_zip_bytes(mirror_resp.content, name, skills_dir, result=result, source_label="cowhub", display_name=hub_display_name, agent_id=agent_id)
+                _install_zip_bytes(mirror_resp.content, name, skills_dir, result=result, source_label="maiahub", display_name=hub_display_name, agent_id=agent_id)
                 if len(result.installed) == installed_before:
-                    _register_installed_skill(name, source="cowhub", display_name=hub_display_name, agent_id=agent_id)
+                    _register_installed_skill(name, source="maiahub", display_name=hub_display_name, agent_id=agent_id)
                     result.installed.append(name)
                     result.messages.append(f"Installed '{name}' from mirror.")
             else:
@@ -1466,7 +1410,7 @@ def _install_hub(name, result: InstallResult, provider=None, agent_id: str = Non
         expected_checksum = resp.headers.get("X-Checksum-Sha256")
         _check_checksum(resp.content, expected_checksum)
         installed_before = len(result.installed)
-        _install_zip_bytes(resp.content, name, skills_dir, result=result, source_label="cowhub", agent_id=agent_id)
+        _install_zip_bytes(resp.content, name, skills_dir, result=result, source_label="maiahub", agent_id=agent_id)
         if len(result.installed) == installed_before:
             _register_installed_skill(name, agent_id=agent_id)
             result.installed.append(name)
@@ -1686,7 +1630,7 @@ def _install_zip_bytes(content, name, skills_dir, result: InstallResult = None, 
 
 
 # ------------------------------------------------------------------
-# cow skill uninstall
+# maia skill uninstall
 # ------------------------------------------------------------------
 @skill.command()
 @click.argument("name")
@@ -1727,7 +1671,7 @@ def uninstall(name, yes):
 
 
 # ------------------------------------------------------------------
-# cow skill enable / disable
+# maia skill enable / disable
 # ------------------------------------------------------------------
 @skill.command()
 @click.argument("name")
@@ -1773,7 +1717,7 @@ def _set_enabled(name, enabled):
 
 
 # ------------------------------------------------------------------
-# cow skill info
+# maia skill info
 # ------------------------------------------------------------------
 @skill.command()
 @click.argument("name")

@@ -6,7 +6,7 @@ so reading ``clist[0]`` raises ``IndexError`` -- in ``plugins/role/role.py:141``
 and in ``plugins/dungeon/dungeon.py:76``. Nothing on the way out handles it:
 ``PluginManager.emit_event`` calls the handler directly, ``channel/chat_channel.py``
 does not wrap it, and the worker's failure callback only logs. An accidental
-enter, or a WeChat text bubble with no body, therefore produces no reply of any
+enter, or an empty text bubble, therefore produces no reply of any
 kind and the turn dies before the model is even called. ROLE is enabled by
 default; DUNGEON is opt-in and carries the identical bug.
 
@@ -134,7 +134,7 @@ def test_a_blank_message_mid_adventure_does_not_advance_the_story():
     # user_action[-1] -- an empty string would raise there too. The blank has to
     # be dropped before any of that.
     dungeon = Dungeon()
-    _handled(Dungeon, dungeon_module, "$开始冒险", plugin=dungeon)
+    _handled(Dungeon, dungeon_module, "$dungeon start", plugin=dungeon)
     assert "s1" in dungeon.games
 
     event = _handled(Dungeon, dungeon_module, " ", plugin=dungeon)
@@ -145,17 +145,17 @@ def test_a_blank_message_mid_adventure_does_not_advance_the_story():
 
 
 def test_the_sibling_customize_guard_still_answers():
-    # The $设定扮演 clist[1] fix has to survive this change: a blank must not
+    
     # start short-circuiting commands that legitimately split to one element.
-    event = _handled(Role, role_module, "$设定扮演")
+    event = _handled(Role, role_module, "$role custom")
 
     assert event["reply"] is not None
-    assert "使用方法" in event["reply"].content
+    assert event["reply"].content.strip()
 
 
 def test_a_real_command_is_still_matched():
     # And the commands themselves must be unaffected by the new early return.
-    event = _handled(Role, role_module, "$角色")
+    event = _handled(Role, role_module, "$role")
 
     assert event["reply"] is not None
-    assert "使用方法" in event["reply"].content
+    assert event["reply"].content.strip()

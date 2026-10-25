@@ -54,16 +54,16 @@ class ChatHandler:
         # scripts while unchanged ones stay cacheable.
         html = template.render('chat.html')
         # Inject the backend-resolved default language for first-load fallback.
-        html = html.replace("{{COW_DEFAULT_LANG}}", i18n.get_language())
+        html = html.replace("{{MAIA_DEFAULT_LANG}}", i18n.get_language())
         return html
 
 
 class AssetsHandler:
-    def GET(self, file_path):  # 修改默认参数
+    def GET(self, file_path):  
         try:
-            # 如果请求是/static/，需要处理
+            
             if file_path == '':
-                # 返回目录列表...
+                
                 pass
 
             # This module lives in channel/web/api/, one level below the web
@@ -86,12 +86,12 @@ class AssetsHandler:
                 logger.debug(f"Static file not found: {full_path}")
                 raise web.notfound()
 
-            # 设置正确的Content-Type
+            
             content_type = mimetypes.guess_type(full_path)[0]
             if content_type:
                 web.header('Content-Type', content_type)
             else:
-                # 默认为二进制流
+                
                 web.header('Content-Type', 'application/octet-stream')
 
             # Without a validator a browser has nothing to cache on, so the
@@ -118,7 +118,7 @@ class AssetsHandler:
             if web.ctx.get('env', {}).get('HTTP_IF_NONE_MATCH') == etag:
                 raise web.notmodified()
 
-            # 读取并返回文件内容
+            
             with open(full_path, 'rb') as f:
                 return f.read()
 

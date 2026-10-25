@@ -1,9 +1,9 @@
 import { create } from 'zustand'
 
-const NAV_KEY = 'cow_nav_collapsed'
-const SESSIONS_KEY = 'cow_sessions_collapsed'
-const TASK_NOTIFY_KEY = 'cow_task_notify'
-const TASK_NOTIFY_SOUND_KEY = 'cow_task_notify_sound'
+const NAV_KEY = 'maia_nav_collapsed'
+const SESSIONS_KEY = 'maia_sessions_collapsed'
+const TASK_NOTIFY_KEY = 'maia_task_notify'
+const TASK_NOTIFY_SOUND_KEY = 'maia_task_notify_sound'
 
 interface UIState {
   /** Navigation rail collapsed (icon-only) vs expanded (icon + label). */

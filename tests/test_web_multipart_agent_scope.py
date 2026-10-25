@@ -39,7 +39,7 @@ class _QuietHandler(WSGIRequestHandler):
 @pytest.fixture
 def console(tmp_path, monkeypatch):
     """A running console whose Agents own separate workspaces under tmp_path."""
-    monkeypatch.setenv("COW_DESKTOP_TOKEN", DESKTOP_TOKEN)
+    monkeypatch.setenv("MAIA_DESKTOP_TOKEN", DESKTOP_TOKEN)
 
     workspaces = {
         None: tmp_path / "default",

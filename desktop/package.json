@@ -1,9 +1,9 @@
 {
-  "name": "cowagent-desktop",
-  "version": "2.2.1",
-  "description": "CowAgent Desktop Client - AI Agent on your desktop",
+  "name": "maia-desktop",
+  "version": "0.99.0",
+  "description": "Maia desktop client",
   "main": "dist/main/index.js",
-  "author": "CowAgent",
+  "author": "dubhagen",
   "license": "MIT",
   "scripts": {
     "dev": "npm run build && electron .",
@@ -46,8 +46,8 @@
     "vite": "^6.0.3"
   },
   "build": {
-    "appId": "com.cowagent.desktop",
-    "productName": "CowAgent",
+    "appId": "com.dubhagen.maia",
+    "productName": "Maia",
     "directories": {
       "output": "release"
     },
@@ -57,8 +57,8 @@
     ],
     "extraResources": [
       {
-        "from": "build/dist/cowagent-backend",
-        "to": "backend/cowagent-backend"
+        "from": "build/dist/maia-backend",
+        "to": "backend/maia-backend"
       },
       {
         "from": "resources",
@@ -108,10 +108,6 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
-    },
-    "publish": {
-      "provider": "generic",
-      "url": "https://cowagent.ai/update/"
     }
   },
   "overrides": {

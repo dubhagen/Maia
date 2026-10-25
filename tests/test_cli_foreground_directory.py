@@ -29,7 +29,7 @@ def test_foreground_launch_preserves_existing_workspace(tmp_path, case):
     (workspace / "MEMORY.md").write_text("owned existing memory", encoding="utf-8")
     (project / "config.json").write_text(json.dumps({
         "agent_workspace": str(workspace) if case == "absolute_outside" else "./workspace",
-        "channel_type": ["terminal"], "cow_lang": "en", "model": "owned-unused-model",
+        "channel_type": ["terminal"], "maia_lang": "en", "model": "owned-unused-model",
     }), encoding="utf-8")
     # Observe canonical startup resolution without starting a gateway or model.
     (project / "app.py").write_text('''import json

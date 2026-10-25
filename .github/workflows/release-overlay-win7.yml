@@ -17,8 +17,8 @@ name: Release Desktop Overlay (Win7 legacy)
 # no longer worth maintaining.
 #
 # UPDATE FEED — DEDICATED CHANNEL (the crux)
-# The overlay client reads a STATIC feed (generic provider) at
-# cdn.link-ai.tech/linkai-desktop/. Standard win and Win7 win are both the
+# The upstream overlay client read a static generic-provider feed on a
+# LinkAI CDN. This fork does not publish that feed. Standard win and Win7 win are both the
 # "latest" channel, so they'd collide on the same latest.yml — and a Win7 client
 # offered the standard package can't run it. So this leg builds on its own
 # channel `latest-win7` (`publish.channel`), which makes electron-builder emit
@@ -73,8 +73,9 @@ permissions:
   contents: read
 
 env:
-  OVERLAY_REPO: zhayujie/cow-private-overlay
-  R2_BUCKET: cow-skills
+  # Upstream private overlay. This fork does not check it out or publish it.
+  OVERLAY_REPO: ""
+  R2_BUCKET: maia-skills
   # Dedicated update channel: isolates the Win7 feed (latest-win7.yml) from the
   # standard win feed (latest.yml). Both are the "latest" release channel but
   # target different Windows generations, so they must not share a feed file.
@@ -82,6 +83,7 @@ env:
 
 jobs:
   build:
+    if: false
     name: Build Windows x64 (Win7 legacy overlay)
     runs-on: windows-latest
     steps:
@@ -145,7 +147,7 @@ jobs:
           pip install -r /tmp/requirements-win7.txt
           pip install pyinstaller
           # Run from repo root so the spec's relative datas resolve correctly.
-          pyinstaller desktop/build/cowagent-backend.spec \
+          pyinstaller desktop/build/maia-backend.spec \
             --noconfirm \
             --distpath desktop/build/dist \
             --workpath desktop/build/build-work
@@ -224,16 +226,16 @@ jobs:
         working-directory: overlay
         shell: bash
         env:
-          COW_CORE_DIR: ${{ github.workspace }}/desktop
+          MAIA_CORE_DIR: ${{ github.workspace }}/desktop
           # Trusted-client SMS secret (matches client.sms.secret on the server).
           CLIENT_SMS_SECRET: ${{ secrets.CLIENT_SMS_SECRET }}
           # Windows code signing via the signing CLI; SIGNTOOL_PATH was exported
-          # by the download step above. COW_SIGN_DRY_RUN (repo variable) validates
+          # by the download step above. MAIA_SIGN_DRY_RUN (repo variable) validates
           # the pipeline with a self-signed cert, consuming no signing quota.
           SIGNTOOL_ACCESS_KEY: ${{ secrets.SIGNTOOL_ACCESS_KEY }}
           SIGNTOOL_ACCESS_SECRET: ${{ secrets.SIGNTOOL_ACCESS_SECRET }}
           SIGNTOOL_CERT_CODE: ${{ secrets.SIGNTOOL_CERT_CODE }}
-          COW_SIGN_DRY_RUN: ${{ vars.COW_SIGN_DRY_RUN }}
+          MAIA_SIGN_DRY_RUN: ${{ vars.MAIA_SIGN_DRY_RUN }}
         run: |
           node build-overlay.mjs --win --x64 --publish always \
             -c.publish.channel="$WIN7_CHANNEL" \
@@ -246,7 +248,7 @@ jobs:
         working-directory: overlay
         shell: bash
         env:
-          COW_CORE_DIR: ${{ github.workspace }}/desktop
+          MAIA_CORE_DIR: ${{ github.workspace }}/desktop
         run: node rewrite-yml.mjs "${{ inputs.version }}"
 
       # wrangler@latest needs Node >=22 while the packager runs on Node 20. The
@@ -268,7 +270,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          COW_CORE_DIR: ${{ github.workspace }}/desktop
+          MAIA_CORE_DIR: ${{ github.workspace }}/desktop
           R2_PREFIX: ${{ secrets.OVERLAY_R2_PREFIX }}
           R2_VERSION: ${{ inputs.version }}
           UPLOAD_TOOL: wrangler

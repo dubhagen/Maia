@@ -1,8 +1,7 @@
 """Matching a leading @mention against a conversation's roster.
 
-Channel-agnostic: the Web console and IM channels (Feishu, ...) all decide who
-a turn is addressed to with the same rule, so a name resolves the same way
-whether it was typed in a browser or an IM group.
+Channel-agnostic: the web console and the local terminal decide who a turn is
+addressed to with the same rule, so a name resolves the same way in either place.
 """
 
 import pytest
@@ -12,14 +11,14 @@ from agent.team_addressing import addressed_agent_id, roster_from_members
 
 
 ROSTER = [
-    {"id": "leader", "name": "队长"},
-    {"id": "ops", "name": "运维"},
-    {"id": "ops-lead", "name": "运维主管"},
+    {"id": "leader", "name": "Lead"},
+    {"id": "ops", "name": "Ops"},
+    {"id": "ops-lead", "name": "Ops Lead"},
 ]
 
 
 def test_leading_mention_by_name():
-    assert addressed_agent_id("@运维 帮我查一下", ROSTER) == "ops"
+    assert addressed_agent_id("@Ops take a look", ROSTER) == "ops"
 
 
 def test_leading_mention_by_id():
@@ -27,21 +26,20 @@ def test_leading_mention_by_id():
 
 
 def test_longest_label_wins_when_names_overlap():
-    # "运维主管" contains "运维"; the longer, exact label must win.
-    assert addressed_agent_id("@运维主管 处理下", ROSTER) == "ops-lead"
+    assert addressed_agent_id("@Ops Lead handle", ROSTER) == "ops-lead"
 
 
 def test_mention_must_lead():
     # Naming someone mid-sentence is talking about them, not handing the turn.
-    assert addressed_agent_id("帮我 @运维 一下", ROSTER) == ""
+    assert addressed_agent_id("ask @Ops please", ROSTER) == ""
 
 
 def test_no_mention_returns_empty():
-    assert addressed_agent_id("你好", ROSTER) == ""
+    assert addressed_agent_id("hello", ROSTER) == ""
 
 
 def test_unknown_name_returns_empty():
-    assert addressed_agent_id("@财务 报销", ROSTER) == ""
+    assert addressed_agent_id("@Finance reimburse", ROSTER) == ""
 
 
 def test_empty_roster_returns_empty():
@@ -51,30 +49,30 @@ def test_empty_roster_returns_empty():
 def test_boundary_requires_separator_or_end():
     # "@opsx" is not "@ops": a bare prefix must not match a different name.
     assert addressed_agent_id("@opsx hi", ROSTER) == ""
-    # colon / comma / whitespace / CJK punctuation all count as a boundary
-    assert addressed_agent_id("@ops：查一下", ROSTER) == "ops"
+    # colon / comma / whitespace / fullwidth punctuation all count as a boundary
+    assert addressed_agent_id("@ops\uff1acheck", ROSTER) == "ops"
     assert addressed_agent_id("@ops", ROSTER) == "ops"
 
 
 def test_sentence_ending_punctuation_is_a_boundary():
-    assert addressed_agent_id("@运维。帮我查", ROSTER) == "ops"
-    assert addressed_agent_id("@运维！停下", ROSTER) == "ops"
-    assert addressed_agent_id("@运维？在吗", ROSTER) == "ops"
-    assert addressed_agent_id("@运维；继续", ROSTER) == "ops"
+    assert addressed_agent_id("@Ops\u3002check", ROSTER) == "ops"
+    assert addressed_agent_id("@Ops\uff01stop", ROSTER) == "ops"
+    assert addressed_agent_id("@Ops\uff1fthere", ROSTER) == "ops"
+    assert addressed_agent_id("@Ops\uff1bcontinue", ROSTER) == "ops"
     assert addressed_agent_id("@ops! stop", ROSTER) == "ops"
 
 
 def test_strip_address_drops_the_boundary_punctuation():
     from agent.team_addressing import strip_address
 
-    assert strip_address("@运维。帮我查日志", ["运维", "ops"]) == "帮我查日志"
-    assert strip_address("@ops, check logs", ["运维", "ops"]) == "check logs"
-    assert strip_address("@运维。", ["运维", "ops"]) == "@运维。"
+    assert strip_address("@Ops\u3002check logs", ["Ops", "ops"]) == "check logs"
+    assert strip_address("@ops, check logs", ["Ops", "ops"]) == "check logs"
+    assert strip_address("@Ops\u3002", ["Ops", "ops"]) == "@Ops\u3002"
 
 
 def test_dot_is_not_a_boundary_to_keep_domain_names():
     # "@ops.com" must not resolve to the "ops" teammate; "." stays excluded.
-    assert addressed_agent_id("@ops.com 你好", ROSTER) == ""
+    assert addressed_agent_id("@ops.com hello", ROSTER) == ""
 
 
 @pytest.fixture
@@ -87,7 +85,7 @@ def registry(tmp_path):
     """
     pinned = AgentRegistry(
         [
-            AgentProfile("agent-abc", "CowAgent", str(tmp_path / "cow")),
+            AgentProfile("agent-abc", "Maia", str(tmp_path / "maia")),
             AgentProfile("ops", "Ops", str(tmp_path / "ops")),
         ],
         default_agent_id="agent-abc",
@@ -112,7 +110,7 @@ def test_a_member_invited_by_the_default_alias_stays_on_the_roster(registry):
 
     assert [item["id"] for item in roster] == ["ops", "agent-abc"]
     # Reachable by what a roster carries: the display name, or the real id.
-    assert addressed_agent_id("@CowAgent hi", roster) == "agent-abc"
+    assert addressed_agent_id("@Maia hi", roster) == "agent-abc"
     assert addressed_agent_id("@agent-abc hi", roster) == "agent-abc"
 
 
@@ -175,7 +173,7 @@ def test_the_session_team_panel_resolves_the_default_alias_too(registry):
     state = _session_team_state({"members": ["default"]}, "ops")
 
     assert [member["id"] for member in state["members"]] == ["agent-abc"]
-    assert state["members"][0]["name"] == "CowAgent"
+    assert state["members"][0]["name"] == "Maia"
     assert state["members"][0]["available"] is True
 
 

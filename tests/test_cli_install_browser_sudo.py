@@ -1,5 +1,5 @@
 # encoding:utf-8
-"""`cow install-browser` must not require a `sudo` binary to exist.
+"""`maia install-browser` must not require a `sudo` binary to exist.
 
 A container is usually root already and ships no `sudo` at all, so the
 hard-coded `["sudo", "apt-get", ...]` made the whole installer abort with an

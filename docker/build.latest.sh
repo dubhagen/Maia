@@ -3,6 +3,6 @@
 unset KUBECONFIG
 
 cd .. && docker build -f docker/Dockerfile.latest \
-             -t zhayujie/chatgpt-on-wechat .
+             -t maia:local .
 
-docker tag zhayujie/chatgpt-on-wechat zhayujie/chatgpt-on-wechat:$(date +%y%m%d)
+docker tag maia:local maia:local-$(date +%y%m%d)

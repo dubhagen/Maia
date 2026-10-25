@@ -13,7 +13,7 @@ import pytest
 from cli.commands import skill as cli_skill
 
 EXISTING = {
-    "beta": {"name": "beta", "source": "cowhub", "enabled": True, "category": "skill"},
+    "beta": {"name": "beta", "source": "maiahub", "enabled": True, "category": "skill"},
     "gamma": {"name": "gamma", "source": "github", "enabled": False, "category": "skill"},
 }
 

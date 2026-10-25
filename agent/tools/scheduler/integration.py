@@ -316,10 +316,9 @@ def init_scheduler(agent_bridge, workspace_root: str = None, agent_id: str = Non
 def _primary_channel_type(raw) -> str:
     """Normalize a task's stored channel_type to a single channel name.
 
-    config.json allows a comma-joined value (e.g. "feishu,dingtalk") that
+    config.json allows a comma-joined value (e.g. "web,terminal") that
     app.py splits into several channels at startup. A scheduled task, though,
-    delivers to one place, and create_channel() only understands a single type
-    — passing the whole "feishu,dingtalk" string lands in its `else: raise`.
+    delivers to one place, and create_channel() only understands a single type.
     Take the first non-empty entry so a task copied from that config still
     delivers instead of failing every tick.
     """
@@ -329,48 +328,11 @@ def _primary_channel_type(raw) -> str:
     return first or "unknown"
 
 
-def _is_live_channel_instance(channel) -> bool:
-    """True when *channel* is one ChannelManager is actually running.
-
-    Distinguishes a real, started instance (which reflects real login/token
-    state) from the bare singleton ``create_channel`` hands back when nothing is
-    running. Only for the former does an empty token map mean "not ready"; for
-    the latter it means "we can't tell", so callers must not hard-block on it.
-    """
-    try:
-        from common.channel_registry import get_channel_manager
-        manager = get_channel_manager()
-        if manager is None:
-            return False
-        for _name, ch in manager.find_channels_by_type(getattr(channel, "channel_type", "")):
-            if ch is channel:
-                return True
-    except Exception:
-        return False
-    return False
-
-
-def _channel_holds_receiver(channel, channel_type: str, receiver: str) -> bool:
-    """Whether *channel* already knows how to reach *receiver*.
-
-    Used to disambiguate when several running instances of one type exist and
-    the task carries no instance_id: the right one is the login that actually
-    holds this receiver's context token. Only weixin keeps such per-receiver
-    tokens; for other types we can't tell, so we don't claim a match.
-    """
-    if channel_type == "weixin":
-        tokens = getattr(channel, "_context_tokens", None)
-        return bool(tokens and receiver in tokens)
-    return False
-
-
 def _recover_instance_id_from_directory(channel_type: str, receiver: str) -> str:
     """The instance that first saw *receiver*, per the recipient directory.
 
-    A receiver id is only meaningful within the instance that issued it — a
-    Feishu ``open_id`` is scoped to one app, so sending it through a different
-    Feishu instance fails with ``open_id cross app``. When a task carries no
-    (or a stale) instance_id, the recipient directory — keyed by
+    A receiver id is only meaningful within the instance that issued it.
+    When a task carries no (or a stale) instance_id, the recipient directory — keyed by
     ``(instance_id, receiver)`` — is the authoritative place to recover the
     right instance. Returns "" when unknown.
     """
@@ -409,15 +371,10 @@ def _resolve_delivery_channel(channel_type: str, instance_id: str = "", receiver
       2. Task carries no (or a stale) instance_id — recover the right live
          instance without ever sending to the wrong login:
            a. Ask the recipient directory which instance first saw this
-              receiver, then use that instance. This is what keeps an
-              app-scoped id (a Feishu open_id) from being sent through a
-              different app instance (``open_id cross app``).
-           b. Else pick the instance already holding the receiver's token
-              (weixin keeps per-receiver tokens).
-           c. Else, only when exactly one instance of the type runs, use it.
+              receiver, then use that instance.
+           b. Else, only when exactly one instance of the type runs, use it.
               With several running instances and no way to tell them apart we
-              refuse to guess (returning that lone-or-none live instance),
-              since a wrong pick delivers to the wrong account.
+              refuse to guess, since a wrong pick delivers to the wrong account.
       3. Fall back to ``create_channel`` (legacy single-instance) only when no
          manager or no running instance of the type exists.
     """
@@ -447,16 +404,8 @@ def _resolve_delivery_channel(channel_type: str, instance_id: str = "", receiver
                         )
                         return live
 
-                # (2b) Token-holder (weixin): the login that already knows them.
-                if receiver:
-                    for _name, ch in candidates:
-                        if _channel_holds_receiver(ch, channel_type, receiver):
-                            return ch
-
-                # (2c) Only safe to auto-pick when the type runs a single
-                # instance. Several instances with app-scoped receiver ids
-                # (Feishu open_id) must not be guessed — that would deliver to
-                # the wrong app. Leave it to the bare fallback / hard failure.
+                # Only safe to auto-pick when the type runs a single instance.
+                # Several instances must not be guessed.
                 if len(candidates) == 1:
                     return candidates[0][1]
                 logger.warning(
@@ -476,10 +425,8 @@ def _is_channel_ready(
 ) -> bool:
     """Best-effort readiness probe for outbound channels.
 
-    Returns False when we know the send will drop (e.g. weixin not yet
-    logged in, web session has no polling queue), so the scheduler can
-    defer instead of consuming the task. Unknown channels return True
-    to preserve previous behaviour.
+    Returns False when we know the send will drop, so the scheduler can
+    defer instead of consuming the task. Unknown channels return True.
 
     Probes the same live instance delivery will use, so a "ready" answer means
     *that* instance is ready, not some other login of the same channel type.
@@ -490,23 +437,6 @@ def _is_channel_ready(
         channel = _resolve_delivery_channel(channel_type, instance_id, receiver)
         if channel is None:
             return False
-
-        if channel_type == "weixin":
-            tokens = getattr(channel, "_context_tokens", None)
-            if not tokens or receiver not in tokens:
-                # The token check only means something for the *running* login.
-                # If we're staring at a bare, never-started singleton (no live
-                # instance in the manager), its token map is empty no matter
-                # what — blocking here would defer forever (issue #3120). Fall
-                # back to the pre-check behaviour and let the send attempt run.
-                if not _is_live_channel_instance(channel):
-                    logger.debug(
-                        "[Scheduler] weixin readiness inconclusive (no live "
-                        f"instance for receiver={receiver}); allowing send attempt"
-                    )
-                    return True
-                return False
-            return True
 
         if channel_type == "web":
             # A web session is always a valid delivery target: the message is
@@ -799,10 +729,6 @@ def _execute_agent_task(
             logger.error(f"[Scheduler] Task {task['id']}: No receiver specified")
             return True
         
-        # Check for unsupported channels
-        if channel_type == "dingtalk":
-            logger.warning(f"[Scheduler] Task {task['id']}: DingTalk channel does not support scheduled messages (Stream mode limitation). Task will execute but message cannot be sent.")
-        
         logger.info(f"[Scheduler] Task {task['id']}: Executing agent task '{task_description}'")
 
         # Wrap the raw description with an execution directive. The stored
@@ -810,11 +736,12 @@ def _execute_agent_task(
         # Without this prefix the agent may treat it as a spec to acknowledge
         # instead of a task to run right now, especially after a mid-run failure.
         execution_prompt = (
-            "这是一个定时任务的立即执行请求，当前已到执行时刻。"
-            "请直接完成下面描述的任务并产出最终交付内容，"
-            "无需复述、确认或讨论任务规则，不要输出任务指令或调试信息。"
-            "若执行失败，返回简洁明确的失败说明。\n\n"
-            f"任务描述：\n{task_description}"
+            "This is a scheduled task that is due now. "
+            "Complete the task below and return the final deliverable. "
+            "Do not repeat, confirm, or discuss the task rules, and do not "
+            "print the task instruction or debug information. "
+            "If execution fails, return a short failure explanation.\n\n"
+            f"Task:\n{task_description}"
         )
 
         # Create a unique session_id for this scheduled task to avoid polluting user's conversation
@@ -833,18 +760,6 @@ def _execute_agent_task(
             import uuid
             request_id = f"scheduler_{task['id']}_{uuid.uuid4().hex[:8]}"
             context["request_id"] = request_id
-        elif channel_type == "feishu":
-            context["receive_id_type"] = "chat_id" if is_group else "open_id"
-            context["msg"] = None
-        elif channel_type == "dingtalk":
-            # DingTalk requires msg object, set to None for scheduled tasks
-            context["msg"] = None
-            if not is_group:
-                sender_staff_id = action.get("dingtalk_sender_staff_id")
-                if sender_staff_id:
-                    context["dingtalk_sender_staff_id"] = sender_staff_id
-        elif channel_type == "wecom_bot":
-            context["msg"] = None
 
         # Use Agent to execute the task
         # Mark this as a scheduled task execution to prevent recursive task creation
@@ -930,34 +845,10 @@ def _execute_send_message(
         
         # Channel-specific context setup
         if channel_type == "web":
-            # Web channel needs request_id
             import uuid
             request_id = f"scheduler_{task['id']}_{uuid.uuid4().hex[:8]}"
             context["request_id"] = request_id
             logger.debug(f"[Scheduler] Generated request_id for web channel: {request_id}")
-        elif channel_type == "feishu":
-            # Feishu channel: for scheduled tasks, send as new message (no msg_id to reply to)
-            # Use chat_id for groups, open_id for private chats
-            context["receive_id_type"] = "chat_id" if is_group else "open_id"
-            # Keep isgroup as is, but set msg to None (no original message to reply to)
-            # Feishu channel will detect this and send as new message instead of reply
-            context["msg"] = None
-            logger.debug(f"[Scheduler] Feishu: receive_id_type={context['receive_id_type']}, is_group={is_group}, receiver={receiver}")
-        elif channel_type == "dingtalk":
-            # DingTalk channel setup
-            context["msg"] = None
-            # 如果是单聊，需要传递 sender_staff_id
-            if not is_group:
-                sender_staff_id = action.get("dingtalk_sender_staff_id")
-                if sender_staff_id:
-                    context["dingtalk_sender_staff_id"] = sender_staff_id
-                    logger.debug(f"[Scheduler] DingTalk single chat: sender_staff_id={sender_staff_id}")
-                else:
-                    logger.warning(f"[Scheduler] Task {task['id']}: DingTalk single chat message missing sender_staff_id")
-        elif channel_type == "wecom_bot":
-            context["msg"] = None
-        elif channel_type == "qq":
-            context["msg"] = None
 
         # Create reply
         reply = Reply(ReplyType.TEXT, content)
@@ -1035,11 +926,6 @@ def _execute_tool_call(
             import uuid
             request_id = f"scheduler_{task['id']}_{uuid.uuid4().hex[:8]}"
             context["request_id"] = request_id
-        elif channel_type == "feishu":
-            context["receive_id_type"] = "chat_id" if is_group else "open_id"
-            context["msg"] = None
-        elif channel_type == "wecom_bot":
-            context["msg"] = None
 
         reply = Reply(ReplyType.TEXT, content)
 
@@ -1109,11 +995,6 @@ def _execute_skill_call(
             import uuid
             request_id = f"scheduler_{task['id']}_{uuid.uuid4().hex[:8]}"
             context["request_id"] = request_id
-        elif channel_type == "feishu":
-            context["receive_id_type"] = "chat_id" if is_group else "open_id"
-            context["msg"] = None
-        elif channel_type == "wecom_bot":
-            context["msg"] = None
 
         try:
             reply = agent_bridge.agent_reply(query, context=context, on_event=None, clear_history=False)

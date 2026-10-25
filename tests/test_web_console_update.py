@@ -37,8 +37,8 @@ def test_parse_and_compare_versions():
 def test_git_checkout_is_supported_on_unix(tmp_path, monkeypatch):
     (tmp_path / ".git").mkdir()
     monkeypatch.setattr(sys, "platform", "linux")
-    monkeypatch.delenv("COW_DESKTOP", raising=False)
-    monkeypatch.delenv("COW_DOCKER", raising=False)
+    monkeypatch.delenv("MAIA_DESKTOP", raising=False)
+    monkeypatch.delenv("MAIA_DOCKER", raising=False)
     monkeypatch.setattr("cli.update_service._is_docker_install", lambda: False)
     kind = detect_install_kind(str(tmp_path))
     assert kind.kind == "git"
@@ -53,8 +53,8 @@ def _native_git_worktree(tmp_path, monkeypatch, detached=False, separate_gitdir=
             monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
     monkeypatch.setenv("GIT_CONFIG_GLOBAL", os.devnull)
-    monkeypatch.delenv("COW_DESKTOP", raising=False)
-    monkeypatch.delenv("COW_DOCKER", raising=False)
+    monkeypatch.delenv("MAIA_DESKTOP", raising=False)
+    monkeypatch.delenv("MAIA_DOCKER", raising=False)
     monkeypatch.setattr("cli.update_service._is_docker_install", lambda: False)
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -97,7 +97,7 @@ def test_native_gitfile_dirty_checkout_blocks_before_restart(tmp_path, monkeypat
     assert caught.value.step == "git_pull"
     assert "local changes" in str(caught.value)
     assert changed.read_text(encoding="utf-8") == "owned local changes\n"
-    assert not (worktree / ".cow.pid").exists()
+    assert not (worktree / ".maia.pid").exists()
 
 
 def test_native_detached_worktree_pull_failure_stays_safe(tmp_path, monkeypatch):
@@ -112,7 +112,7 @@ def test_native_detached_worktree_pull_failure_stays_safe(tmp_path, monkeypatch)
 
 
 def test_arbitrary_gitfile_is_not_update_supported(tmp_path, monkeypatch):
-    monkeypatch.delenv("COW_DESKTOP", raising=False)
+    monkeypatch.delenv("MAIA_DESKTOP", raising=False)
     monkeypatch.setattr("cli.update_service._is_docker_install", lambda: False)
     (tmp_path / ".git").write_text("arbitrary marker\n", encoding="utf-8")
     kind = detect_install_kind(str(tmp_path))
@@ -131,7 +131,7 @@ def test_gitfile_without_git_executable_degrades(tmp_path, monkeypatch):
 def test_windows_git_checkout_degrades(tmp_path, monkeypatch):
     (tmp_path / ".git").mkdir()
     monkeypatch.setattr(sys, "platform", "win32")
-    monkeypatch.delenv("COW_DESKTOP", raising=False)
+    monkeypatch.delenv("MAIA_DESKTOP", raising=False)
     monkeypatch.setattr("cli.update_service._is_docker_install", lambda: False)
     kind = detect_install_kind(str(tmp_path))
     assert kind.kind == "git"
@@ -147,7 +147,7 @@ def test_docker_and_packaged_degrade(tmp_path, monkeypatch):
     assert kind.update_supported is False
 
     monkeypatch.setattr("cli.update_service._is_docker_install", lambda: False)
-    monkeypatch.setenv("COW_DESKTOP", "1")
+    monkeypatch.setenv("MAIA_DESKTOP", "1")
     kind = detect_install_kind(str(tmp_path))
     assert kind.kind == "packaged"
     assert kind.update_supported is False
@@ -168,32 +168,18 @@ def test_version_payload_does_not_call_github(monkeypatch):
     assert called == []
 
 
-def test_check_for_updates_uses_github_and_filters(monkeypatch):
-    monkeypatch.setattr(
-        "cli.update_service.fetch_github_releases",
-        lambda timeout=20: [
-            {"tag_name": "2.1.9", "name": "2.1.9", "body": "newer", "html_url": "https://example/2.1.9", "published_at": "2026-09-14", "prerelease": False, "draft": False},
-            {"tag_name": "2.1.8", "name": "2.1.8", "body": "current", "html_url": "https://example/2.1.8", "published_at": "2026-09-11", "prerelease": False, "draft": False},
-            {"tag_name": "9.0.0", "name": "nightly", "body": "skip", "html_url": "", "published_at": "", "prerelease": True, "draft": False},
-        ],
-    )
-    result = check_for_updates("2.1.8")
-    assert result["up_to_date"] is False
-    assert result["latest"]["tag"] == "2.1.9"
-    assert [item["tag"] for item in result["newer_releases"]] == ["2.1.9"]
-    assert result["current_release"]["tag"] == "2.1.8"
+def test_check_for_updates_does_not_use_github(monkeypatch):
+    def boom(*args, **kwargs):
+        raise AssertionError("release lookup must not call GitHub")
 
-
-def test_check_up_to_date(monkeypatch):
-    monkeypatch.setattr(
-        "cli.update_service.fetch_github_releases",
-        lambda timeout=20: [
-            {"tag_name": "2.1.8", "name": "2.1.8", "body": "notes", "html_url": "u", "published_at": "", "prerelease": False, "draft": False},
-        ],
-    )
+    monkeypatch.setattr("cli.update_service.fetch_github_releases", boom)
     result = check_for_updates("2.1.8")
+    assert result["status"] == "success"
     assert result["up_to_date"] is True
+    assert result["latest"] is None
     assert result["newer_releases"] == []
+    assert result["current_version"] == "2.1.8"
+    assert "git pull" in result["message"]
 
 
 def test_failed_pip_resets_git(tmp_path, monkeypatch):

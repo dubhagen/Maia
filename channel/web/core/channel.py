@@ -26,7 +26,6 @@ import web
 from bridge.context import *
 from bridge.reply import Reply, ReplyType
 from channel.chat_channel import ChatChannel, check_prefix
-from channel.web.core import providers
 from channel.web.core._common import (
     _addressed_agent_id, _build_artifact_payload, _build_preview_url, _cancel_reply_text,
     _desktop_token_matches, _first_value, _get_upload_dir, _get_workspace_root,
@@ -72,12 +71,12 @@ class WebChannel(ChatChannel):
         self._sse_janitor_started = False
 
     def _generate_msg_id(self):
-        """生成唯一的消息ID"""
+        """Generate a unique message id."""
         self.msg_id_counter += 1
         return str(int(time.time())) + str(self.msg_id_counter)
 
     def _generate_request_id(self):
-        """生成唯一的请求ID"""
+        """Generate a unique request id."""
         return str(uuid.uuid4())
 
     def _publish_sse_event(self, request_id: str, event: dict) -> bool:
@@ -475,7 +474,7 @@ class WebChannel(ChatChannel):
             elif event_type == "error":
                 # Agent raised an exception (LLM 401/timeout/etc). Surface the
                 # real message instead of letting the empty-response fallback
-                # below hide it as "(模型未返回任何内容)".
+                
                 err_msg = data.get("error") or "unknown error"
                 logger.warning(
                     f"[WebChannel] agent_stream emitted error for "
@@ -523,9 +522,7 @@ class WebChannel(ChatChannel):
                         )
                         publish({
                             "type": "done",
-                            "content": i18n.t(
-                                "(模型未返回任何内容，请重试或换一种方式描述你的需求)",
-                                "(The model returned no content. Please retry or rephrase your request.)",
+                            "content": i18n.t("(The model returned no content. Please retry or rephrase your request.)",
                             ),
                             "request_id": request_id,
                             "timestamp": time.time(),
@@ -659,24 +656,11 @@ class WebChannel(ChatChannel):
             return "voice_if_voice"
         return "off"
 
-    # Mirror of ModelsHandler._TTS_PROVIDERS. zhipu is intentionally omitted
-    # from the UI (GLM-TTS prelude beep); pinning it in config.json still works.
-    _TTS_PROVIDERS_SUGGEST_ORDER = ["openai", "minimax", "dashscope", "linkai"]
-
     @classmethod
     def _tts_provider_ready(cls) -> bool:
-        """True if user picked a provider OR any suggested vendor has an API key."""
-        if (conf().get("text_to_voice") or "").strip():
-            return True
-        for pid in cls._TTS_PROVIDERS_SUGGEST_ORDER:
-            meta = providers.PROVIDER_MODELS.get(pid) or {}
-            key_field = meta.get("api_key_field")
-            if not key_field:
-                continue
-            val = (conf().get(key_field) or "").strip()
-            if val and val not in ("YOUR API KEY", "YOUR_API_KEY"):
-                return True
-        return False
+        """Voice replies stay off until a LiteLLM TTS model id is set."""
+        del cls
+        return bool(str(conf().get("tts_model") or "").strip())
 
     def _maybe_dispatch_auto_tts(
         self,
@@ -1112,18 +1096,18 @@ class WebChannel(ChatChannel):
                             )
                         )
                         label = (
-                            i18n.t('工作空间目录', 'Workspace directory') if is_dir
-                            else i18n.t('工作空间文件', 'Workspace file')
+                            i18n.t('Workspace directory') if is_dir
+                            else i18n.t('Workspace file')
                         )
                         file_refs.append(f"[{label}: {fpath}]")
                     elif ftype == "image":
-                        file_refs.append(f"[{i18n.t('图片', 'Image')}: {fpath}]")
+                        file_refs.append(f"[{i18n.t('Image')}: {fpath}]")
                     elif ftype == "video":
-                        file_refs.append(f"[{i18n.t('视频', 'Video')}: {fpath}]")
+                        file_refs.append(f"[{i18n.t('Video')}: {fpath}]")
                     elif ftype == "directory":
-                        file_refs.append(f"[{i18n.t('目录', 'Directory')}: {fpath}]")
+                        file_refs.append(f"[{i18n.t('Directory')}: {fpath}]")
                     else:
-                        file_refs.append(f"[{i18n.t('文件', 'File')}: {fpath}]")
+                        file_refs.append(f"[{i18n.t('File')}: {fpath}]")
                 if file_refs:
                     prompt = prompt + "\n" + "\n".join(file_refs)
                     logger.info(f"[WebChannel] Attached {len(file_refs)} file(s) to message")
@@ -1450,7 +1434,7 @@ class WebChannel(ChatChannel):
             if request_id and request_id in self.sse_streams:
                 self._publish_sse_event(request_id, {
                     "type": "cancelled",
-                    "content": "🛑 Cancelled" if lang.startswith("en") else "🛑 已中止",
+                    "content": "🛑 Cancelled",
                     "request_id": request_id,
                     "timestamp": time.time(),
                 })
@@ -1507,12 +1491,12 @@ class WebChannel(ChatChannel):
             if session_queue_key not in self.session_queues:
                 self.session_queues[session_queue_key] = Queue()
 
-            # 尝试从队列获取响应，不等待
+            
             try:
-                # 使用peek而不是get，这样如果前端没有成功处理，下次还能获取到
+                
                 response = self.session_queues[session_queue_key].get(block=False)
 
-                # 返回响应，包含请求ID以区分不同请求
+                
                 return json.dumps({
                     "status": "success",
                     "has_content": True,
@@ -1522,7 +1506,7 @@ class WebChannel(ChatChannel):
                 })
 
             except Empty:
-                # 没有新响应
+                
                 return json.dumps({"status": "success", "has_content": False})
 
         except Exception as e:
@@ -1532,10 +1516,10 @@ class WebChannel(ChatChannel):
     def startup(self):
         configured_host = conf().get("web_host", "")
         host = configured_host or ("0.0.0.0" if _is_password_enabled() else "127.0.0.1")
-        # The desktop app passes its chosen port via COW_WEB_PORT so its backend
+        # The desktop app passes its chosen port via MAIA_WEB_PORT so its backend
         # never collides with a source-run web console (default 9899). This makes
         # the port a single source of truth owned by the Electron shell.
-        port = int(os.environ.get("COW_WEB_PORT") or conf().get("web_port", 9899))
+        port = int(os.environ.get("MAIA_WEB_PORT") or conf().get("web_port", 9899))
         is_public_bind = host in ("0.0.0.0", "::")
 
         self._cleanup_stale_voice_recordings()
@@ -1544,44 +1528,7 @@ class WebChannel(ChatChannel):
             """Announce the console. Only called once the socket is actually
             bound — printing it up front made a failed bind look like a
             successful startup in the logs."""
-            # Print available channel types (ordered by language: prioritize
-            # locally-popular channels for the current UI language)
-            logger.info(
-                "[WebChannel] Available channels (edit `channel_type` in config.json to switch, separate multiple with commas):")
-            zh_channels = [
-                ("web", "Web"),
-                ("terminal", "Terminal"),
-                ("weixin", "WeChat"),
-                ("feishu", "Feishu"),
-                ("dingtalk", "DingTalk"),
-                ("wecom_bot", "WeCom Bot"),
-                ("wechatcom_app", "WeCom App"),
-                ("wechat_kf", "WeChat Customer Service"),
-                ("wechatmp", "WeChat Official Account"),
-                ("wechatmp_service", "WeChat Official Account (Service)"),
-                ("telegram", "Telegram"),
-                ("slack", "Slack"),
-                ("discord", "Discord"),
-            ]
-            en_channels = [
-                ("web", "Web"),
-                ("terminal", "Terminal"),
-                ("telegram", "Telegram"),
-                ("slack", "Slack"),
-                ("discord", "Discord"),
-                ("weixin", "WeChat"),
-                ("feishu", "Feishu"),
-                ("dingtalk", "DingTalk"),
-                ("wecom_bot", "WeCom Bot"),
-                ("wechatcom_app", "WeCom App"),
-                ("wechat_kf", "WeChat Customer Service"),
-                ("wechatmp", "WeChat Official Account"),
-                ("wechatmp_service", "WeChat Official Account (Service)"),
-            ]
-            channels = en_channels if i18n.get_language() == "en" else zh_channels
-            name_width = max(len(name) for name, _ in channels)
-            for idx, (name, label) in enumerate(channels, 1):
-                logger.info(f"[WebChannel]  {idx:>2}. {name:<{name_width}} - {label}")
+            logger.info("[WebChannel] Chat channels: web console and the local terminal.")
             logger.info("[WebChannel] ✅ Web console is running")
             logger.info(f"[WebChannel] 🌐 Local access: {scheme}://localhost:{port}")
             if is_public_bind:
@@ -1593,7 +1540,7 @@ class WebChannel(ChatChannel):
 
             # In desktop mode the Electron shell renders the UI, so don't pop a
             # browser window (also avoids issues when running detached/headless).
-            if os.environ.get("COW_DESKTOP") != "1":
+            if os.environ.get("MAIA_DESKTOP") != "1":
                 try:
                     import webbrowser
                     webbrowser.open(f"{scheme}://localhost:{port}")
@@ -1620,10 +1567,10 @@ class WebChannel(ChatChannel):
         from channel.web.web_channel import build_app
         app = build_app()
 
-        # 完全禁用web.py的HTTP日志输出
+        
         web.httpserver.LogMiddleware.log = lambda self, status, environ: None
 
-        # 配置web.py的日志级别为ERROR
+        
         logging.getLogger("web").setLevel(logging.ERROR)
         logging.getLogger("web.httpserver").setLevel(logging.ERROR)
 
@@ -1634,7 +1581,7 @@ class WebChannel(ChatChannel):
         func = web.httpserver.LogMiddleware(func)
 
         # The desktop shell probes and loads the console over plain http.
-        https_enabled = bool(conf().get("web_https_enabled", False)) and os.environ.get("COW_DESKTOP") != "1"
+        https_enabled = bool(conf().get("web_https_enabled", False)) and os.environ.get("MAIA_DESKTOP") != "1"
         try:
             certfile, keyfile = resolve_tls_config(
                 https_enabled,

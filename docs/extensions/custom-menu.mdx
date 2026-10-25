@@ -6,7 +6,7 @@ description: "Customize the sidebar in the web console and desktop app: reorder 
 The sidebar menu can be arranged the way you work: reorder and group it, hide the pages you rarely use, and add web pages and documents the Agent created, or any URL, so they open in one click like a built-in page. The Web Console and the desktop client share one menu.
 
 <Frame caption="An ops dashboard maintained by the Agent, pinned to a Workbench group and opened right inside the console">
-  <img src="https://cdn.jsdelivr.net/gh/zhayujie/cowagent-assets@main/screenshots/en/web-console-custom-menu.png" alt="Custom menu" width="800" />
+  <img src="/images/screenshots/chat.png" alt="Custom menu" width="800" />
 </Frame>
 
 ## Edit the menu
@@ -20,7 +20,7 @@ There are three ways in:
 - While previewing a web page or Markdown document on the Artifacts page, click "Add to menu"
 
 <Frame caption="The menu editor: drag to reorder and regroup, and add artifacts and web links">
-  <img src="https://cdn.jsdelivr.net/gh/zhayujie/cowagent-assets@main/screenshots/en/web-console-custom-menu-config.png" alt="Menu editor" width="800" />
+  <img src="/images/screenshots/settings.png" alt="Menu editor" width="800" />
 </Frame>
 
 Changes take effect once you click Save in the editor.
@@ -70,7 +70,7 @@ Use "Add → Web link", enter a name and a URL starting with `http://` or `https
 
 ### Location
 
-The menu is saved in `system/menu.json` under the default Agent's workspace (`~/cow/system/menu.json` for a source deployment), and both the Web Console and the desktop client read it. A page one client does not have is skipped there and kept in the menu for the other.
+The menu is saved in `system/menu.json` under the default Agent's workspace (`~/maia/system/menu.json` for a source deployment), and both the Web Console and the desktop client read it. A page one client does not have is skipped there and kept in the menu for the other.
 
 ### Format
 
@@ -85,7 +85,7 @@ The file can also be edited by hand in the format below. A file that cannot be p
       "title": "",
       "items": [
         { "id": "chat", "type": "builtin", "view": "chat", "title": "", "icon": "", "hidden": false },
-        { "id": "m_report", "type": "artifact", "title": "Weekly report", "icon": "chart", "path": "/Users/me/cow/websites/report.html" },
+        { "id": "m_report", "type": "artifact", "title": "Weekly report", "icon": "chart", "path": "/Users/me/maia/websites/report.html" },
         { "id": "m_board", "type": "url", "title": "Dashboard", "icon": "gauge", "url": "https://example.com/board", "open": "embed" }
       ]
     }

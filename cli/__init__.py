@@ -1,4 +1,4 @@
-"""CowAgent CLI - Manage your CowAgent from the command line."""
+"""Maia CLI - Manage your Maia from the command line."""
 
 import os as _os
 

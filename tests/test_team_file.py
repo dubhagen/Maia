@@ -16,7 +16,7 @@ def install(tmp_path):
     Laid out the way a real one is: the default Agent owns the instance root,
     and config.json sits outside it in the data root.
     """
-    root = tmp_path / "cow"
+    root = tmp_path / "maia"
     root.mkdir()
     config = tmp_path / "data" / "config.json"
     config.parent.mkdir()
@@ -87,7 +87,7 @@ class TestSurvivingAMove:
         service, root, _ = install
         service.create_agent("research", "Research")
 
-        moved = tmp_path / "moved-cow"
+        moved = tmp_path / "moved-maia"
         root.rename(moved)
 
         registry = AgentRegistry.from_config(team.resolve(_settings(moved)))
@@ -188,7 +188,7 @@ class TestMigratingAtStartup:
 
     def test_a_single_agent_install_gets_no_file(self, tmp_path):
         """Nothing to move, so nothing appears that was not there before."""
-        root = tmp_path / "cow"
+        root = tmp_path / "maia"
         root.mkdir()
         settings = {"agent_workspace": str(root), "model": "gpt-x"}
 

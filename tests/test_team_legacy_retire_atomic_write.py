@@ -19,7 +19,7 @@ import os
 from agent import team
 
 LEGACY_ROSTER = {
-    "agent_workspace": "/srv/cow",
+    "agent_workspace": "/srv/maia",
     "agents": [{"id": "main", "name": "Main"}],
     "default_agent_id": "main",
     "channel_instances": [{"id": "weixin", "agent_id": "main"}],
@@ -93,4 +93,4 @@ def test_a_retire_still_drops_the_roster_keys(tmp_path):
 
     remaining = json.loads(path.read_text(encoding="utf-8"))
     assert not any(key in remaining for key in team.TEAM_KEYS)
-    assert remaining["agent_workspace"] == "/srv/cow"
+    assert remaining["agent_workspace"] == "/srv/maia"

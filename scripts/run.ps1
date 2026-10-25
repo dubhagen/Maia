@@ -1,13 +1,13 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    CowAgent installer & management script for Windows.
+    Maia installer & management script for Windows.
 .DESCRIPTION
     One-liner install:
-      irm https://cdn.link-ai.tech/code/cow/run.ps1 | iex
+      irm https://raw.githubusercontent.com/dubhagen/Maia/master/scripts/run.ps1 | iex
     Or from a local clone:
       .\scripts\run.ps1              # install / configure
-      .\scripts\run.ps1 start        # start service  (delegates to cow CLI)
+      .\scripts\run.ps1 start        # start service  (delegates to maia CLI)
       .\scripts\run.ps1 stop|restart|status|logs|config|update|help
 #>
 
@@ -19,10 +19,9 @@ param(
 $ErrorActionPreference = "Stop"
 
 # ── ensure UTF-8 everywhere on Windows ───────────────────────────
-# Without this, Chinese text renders as mojibake (e.g. "éæ©") on Windows
-# PowerShell 5.1, whose console defaults to the system ANSI code page (GBK on
-# Chinese systems). Set the active code page AND the console encodings so both
-# our output and any child process (git/python) speak UTF-8.
+# Windows PowerShell 5.1 defaults to the system ANSI code page. Set the
+# active code page AND the console encodings so our output and any child
+# process (git/python) speak UTF-8.
 try { chcp 65001 | Out-Null } catch {}
 try {
     [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -71,35 +70,10 @@ public static class ConsoleQuickEdit {
 } catch {}
 
 # ── colours ──────────────────────────────────────────────────────
-function Write-Cow   { param([string]$M) Write-Host $M -ForegroundColor Green  }
+function Write-Maia   { param([string]$M) Write-Host $M -ForegroundColor Green  }
 function Write-Warn  { param([string]$M) Write-Host $M -ForegroundColor Yellow }
 function Write-Err   { param([string]$M) Write-Host $M -ForegroundColor Red    }
 function Write-Info  { param([string]$M) Write-Host $M -ForegroundColor Cyan   }
-
-# ── i18n: install-flow language ──────────────────────────────────
-# $UiLang controls the language of install prompts/menus ("zh" or "en").
-# Chosen by the user at the first step; defaults to environment detection
-# for management commands (start/stop/...).
-$script:UiLang = ""
-
-# Detect default UI language from the OS culture (best-effort). Checks the
-# display/UI culture first (closest to the user's chosen Windows language),
-# then the regional format culture as a fallback. Any zh-* signal -> "zh".
-function Get-DefaultUiLang {
-    foreach ($getter in @({ (Get-UICulture).Name }, { (Get-Culture).Name })) {
-        try {
-            $name = & $getter
-            if ($name -match '^zh') { return "zh" }
-        } catch {}
-    }
-    return "en"
-}
-
-# Translation helper: T <zh> <en> -> string in the active UI language.
-function T {
-    param([string]$Zh, [string]$En)
-    if ($script:UiLang -eq "en") { return $En } else { return $Zh }
-}
 
 # ── detect project directory ─────────────────────────────────────
 $ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { $PWD.Path }
@@ -109,24 +83,6 @@ $IsProjectDir = (Test-Path "$BaseDir\app.py") -and (Test-Path "$BaseDir\config-t
 if (-not $IsProjectDir) {
     $BaseDir = $PWD.Path
     $IsProjectDir = (Test-Path "$BaseDir\app.py") -and (Test-Path "$BaseDir\config-template.json")
-}
-
-# Initialize $UiLang for management commands: prefer cow_lang from an existing
-# config.json, otherwise fall back to environment detection.
-function Initialize-UiLang {
-    if ($script:UiLang) { return }
-    $cfgLang = ""
-    if (Test-Path "$BaseDir\config.json") {
-        try {
-            $cfg = Get-Content "$BaseDir\config.json" -Raw | ConvertFrom-Json
-            if ($cfg.cow_lang) { $cfgLang = "$($cfg.cow_lang)" }
-        } catch {}
-    }
-    switch ($cfgLang) {
-        "zh"    { $script:UiLang = "zh" }
-        "en"    { $script:UiLang = "en" }
-        default { $script:UiLang = Get-DefaultUiLang }
-    }
 }
 
 # Drain any buffered console keystrokes. During long steps (git clone, pip
@@ -165,14 +121,14 @@ function Select-Menu {
             Write-Host ("  {0}) {1}" -f ($i + 1), $Options[$i])
         }
         do {
-            $sel = Read-Host (T "请输入序号" "Enter number") 
+            $sel = Read-Host "Enter number" 
             if (-not $sel) { $sel = "$($cur + 1)" }
         } while ($sel -notmatch '^\d+$' -or [int]$sel -lt 1 -or [int]$sel -gt $count)
         return [int]$sel
     }
 
     Write-Info $Title
-    Write-Host (T "↑/↓ 选择，Enter 确认" "Use ↑/↓ to move, Enter to select") -ForegroundColor Cyan
+    Write-Host "Use ↑/↓ to move, Enter to select" -ForegroundColor Cyan
 
     # Discard keystrokes buffered during the previous (possibly long-running)
     # step so a leftover Enter doesn't instantly confirm the default option.
@@ -221,30 +177,6 @@ function Select-Menu {
     }
 }
 
-# ── language selection (first step of install) ───────────────────
-function Select-Language {
-    # Order is fixed (English first, Chinese second). The default highlight
-    # follows detection, but conservatively: only a confident "zh" signal
-    # (a zh-* system culture) preselects Chinese; everything else defaults to
-    # English. The menu hint shows in the detected language for familiarity.
-    $detected = Get-DefaultUiLang
-    if ($detected -eq "zh") {
-        $default = 2
-        $script:UiLang = "zh"
-    } else {
-        $default = 1
-        $script:UiLang = "en"
-    }
-
-    $idx = Select-Menu -Title "Select Language / 选择语言" -Options @("English", "中文 (Chinese)") -Default $default
-    switch ($idx) {
-        1 { $script:UiLang = "en" }
-        2 { $script:UiLang = "zh" }
-        default { $script:UiLang = "en" }
-    }
-    $script:InstallLang = $script:UiLang
-}
-
 # ── Python detection ─────────────────────────────────────────────
 function Find-Python {
     # 3.13 compatibility is not great, so prefer 3.7-3.12 and only fall back to 3.13.
@@ -270,67 +202,56 @@ function Find-Python {
 $PythonCmd = Find-Python
 function Assert-Python {
     if (-not $PythonCmd) {
-        Write-Err (T "未找到 Python 3.7-3.13，请从 https://www.python.org/downloads/ 安装" "Python 3.7-3.13 not found. Please install from https://www.python.org/downloads/")
-        Read-Host (T "按回车退出" "Press Enter to exit")
+        Write-Err "Python 3.7-3.13 not found. Please install from https://www.python.org/downloads/"
+        Read-Host "Press Enter to exit"
         exit 1
     }
-    Write-Cow ((T "找到 Python" "Found Python") + ": $PythonCmd")
+    Write-Maia ("Found Python" + ": $PythonCmd")
 }
 
 # ── clone project ────────────────────────────────────────────────
 function Install-Project {
-    if (Test-Path "CowAgent") {
+    if (Test-Path "Maia") {
         # Auto-backup the existing directory without prompting.
-        $backup = "CowAgent_backup_$(Get-Date -Format 'yyyyMMddHHmmss')"
-        Rename-Item "CowAgent" $backup
-        Write-Warn ((T "已存在 CowAgent 目录，已自动备份为" "Existing 'CowAgent' directory backed up to") + " '$backup'")
+        $backup = "Maia_backup_$(Get-Date -Format 'yyyyMMddHHmmss')"
+        Rename-Item "Maia" $backup
+        Write-Warn ("Existing 'Maia' directory backed up to" + " '$backup'")
     }
 
     $gitBin = Get-Command git -ErrorAction SilentlyContinue
     if (-not $gitBin) {
-        Write-Err (T "未找到 Git，请从 https://git-scm.com/download/win 安装" "Git not found. Please install from https://git-scm.com/download/win")
-        Read-Host (T "按回车退出" "Press Enter to exit")
+        Write-Err "Git not found. Please install from https://git-scm.com/download/win"
+        Read-Host "Press Enter to exit"
         exit 1
     }
 
-    Write-Cow (T "正在克隆 CowAgent 项目..." "Cloning CowAgent project...")
+    Write-Maia "Cloning Maia project..."
     $cloneOk = $false
 
     # Test GitHub connectivity before attempting clone
     try {
         $null = Invoke-WebRequest -Uri "https://github.com" -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop
-        Write-Cow (T "GitHub 可达，正在从 GitHub 克隆..." "GitHub is reachable, cloning from GitHub...")
+        Write-Maia "GitHub is reachable, cloning from GitHub..."
         $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
-        git clone --depth 10 --progress "https://github.com/zhayujie/CowAgent.git" 2>&1 | ForEach-Object { Write-Host $_ }
+        git clone --depth 10 --progress "https://github.com/dubhagen/Maia.git" 2>&1 | ForEach-Object { Write-Host $_ }
         if ($LASTEXITCODE -eq 0) { $cloneOk = $true }
         $ErrorActionPreference = $prevEAP
         if (-not $cloneOk) {
-            if (Test-Path "CowAgent") { Remove-Item -Recurse -Force "CowAgent" }
+            if (Test-Path "Maia") { Remove-Item -Recurse -Force "Maia" }
         }
     } catch {}
 
     if (-not $cloneOk) {
-        Write-Warn (T "GitHub 克隆失败或超时，切换到 Gitee 镜像..." "GitHub clone failed or timed out, switching to Gitee mirror...")
-        $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
-        git clone --depth 10 --progress "https://gitee.com/zhayujie/CowAgent.git" 2>&1 | ForEach-Object { Write-Host $_ }
-        if ($LASTEXITCODE -eq 0) { $cloneOk = $true }
-        $ErrorActionPreference = $prevEAP
-        if (-not $cloneOk) {
-            if (Test-Path "CowAgent") { Remove-Item -Recurse -Force "CowAgent" }
-        }
-    }
-
-    if (-not $cloneOk) {
-        Write-Err (T "GitHub 和 Gitee 均克隆失败，请检查网络连接。" "Clone failed from both GitHub and Gitee. Please check your network connection.")
-        Write-Err (T "你也可以手动克隆: git clone https://gitee.com/zhayujie/CowAgent.git" "You can also manually clone: git clone https://gitee.com/zhayujie/CowAgent.git")
-        Read-Host (T "按回车退出" "Press Enter to exit")
+        Write-Err "Clone failed. Please check your network connection."
+        Write-Err "You can also manually clone: git clone https://github.com/dubhagen/Maia.git"
+        Read-Host "Press Enter to exit"
         exit 1
     }
 
-    Set-Location "CowAgent"
+    Set-Location "Maia"
     $script:BaseDir = $PWD.Path
     $script:IsProjectDir = $true
-    Write-Cow ((T "项目已克隆" "Project cloned") + ": $BaseDir")
+    Write-Maia ("Project cloned" + ": $BaseDir")
 }
 
 # Test whether a URL is reachable within a short timeout. Uses a HEAD request
@@ -349,30 +270,21 @@ function Test-UrlReachable {
     }
 }
 
-# Pick the pip index by install language, with the other as fallback:
-#   - zh users: Tsinghua mirror first, official PyPI fallback
-#   - others : official PyPI first, Tsinghua mirror fallback
+# Official PyPI first. If it is unreachable, fall back to a public mirror.
 # Returns an args array to splat into pip (empty = pip default / official PyPI).
 function Get-PipMirrorArgs {
     $tuna = "https://pypi.tuna.tsinghua.edu.cn/simple"
     $pypi = "https://pypi.org/simple"
-    if ($script:UiLang -eq "zh") {
-        if (Test-UrlReachable "$tuna/") {
-            Write-Warn ((T "使用 pip 镜像" "Using pip mirror") + ": $tuna")
-            return @("-i", $tuna)
-        }
-    } else {
-        if ((-not (Test-UrlReachable "$pypi/")) -and (Test-UrlReachable "$tuna/")) {
-            Write-Warn ((T "使用 pip 镜像" "Using pip mirror") + ": $tuna")
-            return @("-i", $tuna)
-        }
+    if ((-not (Test-UrlReachable "$pypi/")) -and (Test-UrlReachable "$tuna/")) {
+        Write-Warn ("Using pip mirror" + ": $tuna")
+        return @("-i", $tuna)
     }
     return @()
 }
 
 # ── install dependencies ─────────────────────────────────────────
 function Install-Dependencies {
-    Write-Cow (T "正在安装依赖..." "Installing dependencies...")
+    Write-Maia "Installing dependencies..."
 
     # Probe the mirror first (with progress hidden so the slow IWR call doesn't
     # leave the screen blank for too long).
@@ -384,36 +296,36 @@ function Install-Dependencies {
     # download can take minutes, and a silent step looks like a hang.
     $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
 
-    Write-Info (T "正在升级 pip 等基础工具..." "Upgrading pip and basic tools...")
+    Write-Info "Upgrading pip and basic tools..."
     & $PythonCmd -m pip install --upgrade pip setuptools wheel @pipMirror
 
-    Write-Info (T "正在安装项目依赖（可能需要几分钟）..." "Installing project dependencies (may take a few minutes)...")
+    Write-Info "Installing project dependencies (may take a few minutes)..."
     # --prefer-binary: avoid building C extensions (e.g. aiohttp) from source,
     # which would require Microsoft C++ Build Tools that most users don't have.
     & $PythonCmd -m pip install --prefer-binary -r "$BaseDir\requirements.txt" @pipMirror
     $pipExit = $LASTEXITCODE
     $ErrorActionPreference = $prevEAP
     if ($pipExit -ne 0) {
-        Write-Warn (T "部分依赖可能有问题，但继续安装..." "Some dependencies may have issues, but continuing...")
+        Write-Warn "Some dependencies may have issues, but continuing..."
     }
 
-    Write-Cow (T "正在注册 cow CLI..." "Registering cow CLI...")
+    Write-Maia "Registering maia CLI..."
     $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
     & $PythonCmd -m pip install -e $BaseDir @pipMirror 2>&1 | Out-Null
     $ErrorActionPreference = $prevEAP
 
-    # Add the Scripts dir (where pip puts cow.exe) to PATH, both for this
-    # session and persistently, so `cow` keeps working after a reboot.
+    # Add the Scripts dir (where pip puts maia.exe) to PATH, both for this
+    # session and persistently, so `maia` keeps working after a reboot.
     $scriptsDir = & $PythonCmd -c "import sysconfig; print(sysconfig.get_path('scripts'))" 2>$null
     if ($scriptsDir -and (Test-Path $scriptsDir)) {
         Add-ScriptsDirToPath $scriptsDir
     }
 
-    $cowBin = Get-Command cow -ErrorAction SilentlyContinue
+    $cowBin = Get-Command maia -ErrorAction SilentlyContinue
     if ($cowBin) {
-        Write-Cow ((T "cow CLI 注册成功" "cow CLI registered") + ": $($cowBin.Source)")
+        Write-Maia ("maia CLI registered" + ": $($cowBin.Source)")
     } else {
-        Write-Warn ((T "cow CLI 不在 PATH 中，你可以使用" "cow CLI not in PATH. You can use") + ": $PythonCmd -m cli.cli")
+        Write-Warn ("maia CLI not in PATH. You can use" + ": $PythonCmd -m cli.cli")
     }
 
     # Optional: bundle ripgrep for a faster search_files tool. Never fatal.
@@ -431,30 +343,29 @@ function Install-Ripgrep {
     try {
         # Already available on PATH? Nothing to do.
         if (Get-Command rg -ErrorAction SilentlyContinue) {
-            Write-Cow (T "已检测到 ripgrep (rg)，跳过安装" "ripgrep (rg) already available, skipping")
+            Write-Maia "ripgrep (rg) already available, skipping"
             return
         }
 
         # Target the Python Scripts dir (already on PATH from Install-Dependencies).
         $scriptsDir = & $PythonCmd -c "import sysconfig; print(sysconfig.get_path('scripts'))" 2>$null
         if (-not $scriptsDir -or -not (Test-Path $scriptsDir)) {
-            Write-Warn (T "跳过 ripgrep 安装（找不到脚本目录），将使用内置兜底搜索" "Skipping ripgrep install (no scripts dir); built-in fallback search will be used")
+            Write-Warn "Skipping ripgrep install (no scripts dir); built-in fallback search will be used"
             return
         }
         $rgTarget = Join-Path $scriptsDir "rg.exe"
         if (Test-Path $rgTarget) { return }
 
-        Write-Cow (T "正在安装 ripgrep（加速文件搜索）..." "Installing ripgrep (faster file search)...")
+        Write-Maia "Installing ripgrep (faster file search)..."
 
         $asset = "ripgrep-$RgVersion-x86_64-pc-windows-msvc.zip"
         # GitHub first, then the jsDelivr/Gitee-style mirror for zh networks.
         $urls = @(
-            "https://github.com/BurntSushi/ripgrep/releases/download/$RgVersion/$asset",
-            "https://cdn.link-ai.tech/code/cow/vendor/$asset"
+            "https://github.com/BurntSushi/ripgrep/releases/download/$RgVersion/$asset"
         )
 
-        $tmpZip = Join-Path $env:TEMP "cow-$asset"
-        $tmpDir = Join-Path $env:TEMP "cow-rg-$([guid]::NewGuid().ToString('N'))"
+        $tmpZip = Join-Path $env:TEMP "maia-$asset"
+        $tmpDir = Join-Path $env:TEMP "maia-rg-$([guid]::NewGuid().ToString('N'))"
         $downloaded = $false
         foreach ($u in $urls) {
             try {
@@ -468,7 +379,7 @@ function Install-Ripgrep {
             }
         }
         if (-not $downloaded) {
-            Write-Warn (T "ripgrep 下载失败，将使用内置兜底搜索（不影响使用）" "ripgrep download failed; built-in fallback search will be used (no impact)")
+            Write-Warn "ripgrep download failed; built-in fallback search will be used (no impact)"
             return
         }
 
@@ -478,9 +389,9 @@ function Install-Ripgrep {
         $rgExe = Get-ChildItem -Path $tmpDir -Recurse -Filter "rg.exe" | Select-Object -First 1
         if ($rgExe) {
             Copy-Item $rgExe.FullName $rgTarget -Force
-            Write-Cow ((T "ripgrep 安装成功" "ripgrep installed") + ": $rgTarget")
+            Write-Maia ("ripgrep installed" + ": $rgTarget")
         } else {
-            Write-Warn (T "ripgrep 解压异常，将使用内置兜底搜索" "ripgrep extraction failed; built-in fallback search will be used")
+            Write-Warn "ripgrep extraction failed; built-in fallback search will be used"
         }
 
         # Best-effort cleanup of temp files.
@@ -488,12 +399,12 @@ function Install-Ripgrep {
         try { Remove-Item $tmpDir -Recurse -Force -ErrorAction SilentlyContinue } catch {}
     } catch {
         # Never let an rg install problem break the main install flow.
-        Write-Warn (T "ripgrep 安装跳过（不影响使用），将使用内置兜底搜索" "ripgrep install skipped (no impact); built-in fallback search will be used")
+        Write-Warn "ripgrep install skipped (no impact); built-in fallback search will be used"
     }
 }
 
 # Add the Python Scripts dir to PATH for this session and persist it to the
-# user PATH (User scope needs no admin rights), so `cow` survives a reboot.
+# user PATH (User scope needs no admin rights), so `maia` survives a reboot.
 function Add-ScriptsDirToPath {
     param([string]$ScriptsDir)
 
@@ -518,248 +429,84 @@ function Add-ScriptsDirToPath {
         if (-not $already) {
             $newPath = if ($userPath) { "$userPath;$ScriptsDir" } else { $ScriptsDir }
             [Environment]::SetEnvironmentVariable("Path", $newPath, "User")
-            Write-Cow ((T "已将 cow 命令目录加入用户 PATH（重启后仍可用）" "Added cow command directory to user PATH (persists after reboot)") + ": $ScriptsDir")
+            Write-Maia ("Added maia command directory to user PATH (persists after reboot)" + ": $ScriptsDir")
         }
     } catch {
-        Write-Warn (T "无法自动写入持久化 PATH，重启后可能需要重新配置。" "Could not persist PATH automatically; you may need to reconfigure after reboot.")
+        Write-Warn "Could not persist PATH automatically; you may need to reconfigure after reboot."
     }
 }
 
 # ── model selection ──────────────────────────────────────────────
-# Order mirrors run.sh: DeepSeek, Claude, Gemini, OpenAI, MiniMax, Zhipu,
-# Qwen, Doubao, Kimi, LinkAI, then Skip (11th option).
-# Each entry: Provider / default model name / config key field / optional base.
-$ModelChoices = @{
-    1  = @{ Provider = "DeepSeek";                Default = "deepseek-flash";                      Field = "deepseek_api_key" }
-    2  = @{ Provider = "Claude";                  Default = "claude-opus-5-5";                     Field = "claude_api_key";    BaseField = "claude_api_base" }
-    3  = @{ Provider = "Gemini";                  Default = "gemini-3.1-pro-preview";              Field = "gemini_api_key";    BaseField = "gemini_api_base" }
-    4  = @{ Provider = "OpenAI";                  Default = "gpt-6.1-sol";                         Field = "open_ai_api_key";   BaseField = "open_ai_api_base" }
-    5  = @{ Provider = "MiniMax";                 Default = "MiniMax-M3";                          Field = "minimax_api_key" }
-    6  = @{ Provider = "GLM";                     Default = "glm-5.3-flash";                       Field = "zhipu_ai_api_key" }
-    7  = @{ Provider = "Qwen (DashScope)";        Default = "qwen3.8-flash";                       Field = "dashscope_api_key" }
-    8  = @{ Provider = "Doubao (Volcengine Ark)"; Default = "doubao-seed-2-1-pro-260628"; Field = "ark_api_key" }
-    9  = @{ Provider = "Kimi (Moonshot)";         Default = "kimi-k3";                             Field = "moonshot_api_key" }
-    10 = @{ Provider = "MiMo";                    Default = "mimo-v2.6-pro";                       Field = "mimo_api_key" }
-    11 = @{ Provider = "LinkAI";                  Default = "deepseek-flash";                      Field = "linkai_api_key";    Linkai = $true }
-}
-
+# One LiteLLM OpenAI-compatible proxy. Model ids pass through unchanged.
 function Select-Model {
     Write-Host ""
-    $title = T "选择 AI 模型" "Select AI Model"
+    $title = "Configure LiteLLM"
     $options = @(
-        "DeepSeek (deepseek-flash, deepseek-v4-pro, etc.)",
-        "Claude (claude-opus-5-5, claude-sonnet-5, etc.)",
-        "Gemini (gemini-3.5-flash, gemini-3.1-pro-preview, etc.)",
-        "OpenAI (gpt-6.1-sol, gpt-6-luna, etc.)",
-        "MiniMax (MiniMax-M3, etc.)",
-        "GLM (glm-5.3-flash, glm-5.3, etc.)",
-        "Qwen (qwen3.8-flash, qwen3.8-max, etc.)",
-        "Doubao (doubao-seed-2.1, etc.)",
-        "Kimi (kimi-k3, etc.)",
-        "MiMo (mimo-v2.6-pro, etc.)",
-        ("LinkAI (" + (T "一个 Key 接入所有模型" "access all models via one API") + ")"),
-        (T "⏭  跳过（稍后在 Web 控制台配置）" "⏭  Skip (configure later in the web console)")
+        "Enter the LiteLLM base URL and a model id",
+        "⏭  Skip (configure later in the web console)"
     )
     $script:ModelChoice = Select-Menu -Title $title -Options $options -Default 1
 }
 
-# Configure model. Only ask for the API key; model name and base default to
-# sensible values and can be changed later in the web console.
 function Configure-Model {
-    # Reset model-related state
-    $script:ModelName    = ""
-    $script:ModelField   = ""
-    $script:ApiKey       = ""
-    $script:ApiBase      = ""
-    $script:ApiBaseField = ""
-    $script:UseLinkai    = $false
+    $script:ModelName = ""
+    $script:LitellmApiBase = ""
+    $script:LitellmApiKey = ""
 
-    if ($script:ModelChoice -eq 12) {
-        # Skip: leave model unset, will be configured in the web console.
-        Write-Warn (T "已跳过模型配置，稍后可在 Web 控制台填写" "Model configuration skipped, you can set it later in the web console")
+    if ($script:ModelChoice -eq 2) {
+        Write-Warn "Model configuration skipped, you can set it later in the web console"
         return
     }
 
-    $m = $ModelChoices[$script:ModelChoice]
-    Write-Cow ((T "正在配置" "Configuring") + " $($m.Provider)...")
-    # Show where to obtain a LinkAI key.
-    if ($m.Linkai) {
-        Write-Info ((T "获取 LinkAI Key" "Get your LinkAI Key") + ": https://link-ai.tech/console/interface")
-    }
-    $hint = T "回车跳过，稍后在 Web 控制台填写" "press Enter to skip, set later in web console"
-    $script:ApiKey     = Read-Host ((T "请输入" "Enter") + " $($m.Provider) API Key ($hint)")
-    $script:ModelName  = $m.Default
-    $script:ModelField = $m.Field
-    if ($m.BaseField) { $script:ApiBaseField = $m.BaseField }
-    if ($m.Linkai)    { $script:UseLinkai = $true }
+    Write-Maia "Configuring LiteLLM..."
+    $base = Read-Host "LiteLLM API base (must end with /v1) [http://127.0.0.1:4000/v1]"
+    if (-not $base) { $base = "http://127.0.0.1:4000/v1" }
+    $script:LitellmApiBase = $base
+    $script:LitellmApiKey = Read-Host "LiteLLM API key (optional)"
+    $script:ModelName = Read-Host "Model id (as listed by the proxy, optional)"
 }
 
 # ── channel selection ────────────────────────────────────────────
-# Channel label by stable key (independent of menu order).
-function Get-ChannelLabel {
-    param([string]$Key)
-    switch ($Key) {
-        "web"           { return (T "Web 网页控制台（推荐，开箱即用）" "Web Console (recommended, ready to use)") }
-        "weixin"        { return (T "微信 Weixin" "Wechat") }
-        "feishu"        { return (T "飞书 Feishu" "Feishu") }
-        "dingtalk"      { return (T "钉钉 DingTalk" "DingTalk") }
-        "wecom_bot"     { return (T "企微智能机器人 WeCom Bot" "WeCom Bot") }
-        "qq"            { return "QQ" }
-        "wechatcom_app" { return (T "企微自建应用 WeCom App" "WeCom App") }
-        "telegram"      { return "Telegram" }
-        "slack"         { return "Slack" }
-        "discord"       { return "Discord" }
-        "skip"          { return (T "⏭  跳过（稍后在 Web 控制台配置）" "⏭  Skip (configure later in the web console)") }
-    }
-}
-
-# Select channel. The display order depends on the install language:
-#   - English: Web first, then the global IM channels (Telegram/Discord/Slack),
-#     then the China-focused channels.
-#   - Chinese: Web first, then China-focused channels, then global ones.
-# A stable key list decouples the menu order from the config logic.
+# Chat is the web console. The local terminal stays available separately.
 function Select-Channel {
-    Write-Host ""
-    $title = T "选择接入渠道" "Select Communication Channel"
-    if ($script:UiLang -eq "en") {
-        $script:ChannelKeys = @("web", "telegram", "discord", "slack", "weixin", "feishu", "dingtalk", "wecom_bot", "qq", "wechatcom_app", "skip")
-    } else {
-        $script:ChannelKeys = @("web", "weixin", "feishu", "dingtalk", "wecom_bot", "qq", "wechatcom_app", "telegram", "slack", "discord", "skip")
-    }
-    $options = @($script:ChannelKeys | ForEach-Object { Get-ChannelLabel $_ })
-    $idx = Select-Menu -Title $title -Options $options -Default 1
-    # Map the 1-based menu position back to the stable channel key.
-    $script:ChannelChoice = $script:ChannelKeys[$idx - 1]
+    $script:ChannelChoice = "web"
 }
 
-# Configure channel, dispatched by stable channel key (not menu position).
 function Configure-Channel {
     $script:ChannelExtra = @{}
-    $script:AccessInfo = ""
-
-    switch ($script:ChannelChoice) {
-        { $_ -eq "web" -or $_ -eq "skip" } {
-            # Web (also the default when skipped). Default port, no prompt.
-            $script:ChannelType = "web"
-            $script:ChannelExtra["web_port"] = 9899
-            $script:AccessInfo = (T "Web 控制台地址" "Web console") + " : http://localhost:9899/"
-        }
-        "weixin" {
-            $script:ChannelType = "weixin"
-            $script:AccessInfo = T "微信渠道已配置，请在终端或 Web 控制台扫码登录" "Weixin channel configured. Scan QR code in terminal or web console to login."
-        }
-        "feishu" {
-            $script:ChannelType = "feishu"
-            Write-Cow (T "配置飞书（WebSocket 模式）..." "Configure Feishu (WebSocket mode)...")
-            $script:ChannelExtra["feishu_app_id"]     = Read-Host (T "请输入飞书 App ID" "Enter Feishu App ID")
-            $script:ChannelExtra["feishu_app_secret"] = Read-Host (T "请输入飞书 App Secret" "Enter Feishu App Secret")
-            $script:ChannelExtra["feishu_event_mode"] = "websocket"
-            $script:AccessInfo = T "飞书渠道已配置（WebSocket 模式）" "Feishu channel configured (WebSocket mode)"
-        }
-        "dingtalk" {
-            $script:ChannelType = "dingtalk"
-            Write-Cow (T "配置钉钉..." "Configure DingTalk...")
-            $script:ChannelExtra["dingtalk_client_id"]     = Read-Host (T "请输入钉钉 Client ID" "Enter DingTalk Client ID")
-            $script:ChannelExtra["dingtalk_client_secret"] = Read-Host (T "请输入钉钉 Client Secret" "Enter DingTalk Client Secret")
-            $script:AccessInfo = T "钉钉渠道已配置" "DingTalk channel configured"
-        }
-        "wecom_bot" {
-            $script:ChannelType = "wecom_bot"
-            Write-Cow (T "配置企微智能机器人..." "Configure WeCom Bot...")
-            $script:ChannelExtra["wecom_bot_id"]     = Read-Host (T "请输入 WeCom Bot ID" "Enter WeCom Bot ID")
-            $script:ChannelExtra["wecom_bot_secret"] = Read-Host (T "请输入 WeCom Bot Secret" "Enter WeCom Bot Secret")
-            $script:AccessInfo = T "企微智能机器人渠道已配置" "WeCom Bot channel configured"
-        }
-        "qq" {
-            $script:ChannelType = "qq"
-            Write-Cow (T "配置 QQ 机器人..." "Configure QQ Bot...")
-            $script:ChannelExtra["qq_app_id"]     = Read-Host (T "请输入 QQ App ID" "Enter QQ App ID")
-            $script:ChannelExtra["qq_app_secret"] = Read-Host (T "请输入 QQ App Secret" "Enter QQ App Secret")
-            $script:AccessInfo = T "QQ 机器人渠道已配置" "QQ Bot channel configured"
-        }
-        "wechatcom_app" {
-            $script:ChannelType = "wechatcom_app"
-            Write-Cow (T "配置企微自建应用..." "Configure WeCom App...")
-            $script:ChannelExtra["wechatcom_corp_id"]     = Read-Host (T "请输入企业 Corp ID" "Enter WeChat Corp ID")
-            $script:ChannelExtra["wechatcomapp_token"]    = Read-Host (T "请输入应用 Token" "Enter WeChat Com App Token")
-            $script:ChannelExtra["wechatcomapp_secret"]   = Read-Host (T "请输入应用 Secret" "Enter WeChat Com App Secret")
-            $script:ChannelExtra["wechatcomapp_agent_id"] = Read-Host (T "请输入应用 Agent ID" "Enter WeChat Com App Agent ID")
-            $script:ChannelExtra["wechatcomapp_aes_key"]  = Read-Host (T "请输入应用 AES Key" "Enter WeChat Com App AES Key")
-            $port = Read-Host ((T "请输入应用端口" "Enter port") + " [" + (T "默认" "default") + ": 9898]")
-            if (-not ($port -match '^\d+$')) { $port = "9898" }
-            $script:ChannelExtra["wechatcomapp_port"] = [int]$port
-            $script:AccessInfo = (T "企微自建应用渠道已配置，端口" "WeCom App channel configured on port") + " $port"
-        }
-        "telegram" {
-            $script:ChannelType = "telegram"
-            Write-Cow (T "配置 Telegram..." "Configure Telegram...")
-            $script:ChannelExtra["telegram_token"] = Read-Host (T "请输入 Telegram Bot Token" "Enter Telegram Bot Token")
-            $script:AccessInfo = T "Telegram 渠道已配置" "Telegram channel configured"
-        }
-        "slack" {
-            $script:ChannelType = "slack"
-            Write-Cow (T "配置 Slack..." "Configure Slack...")
-            $script:ChannelExtra["slack_bot_token"] = Read-Host ((T "请输入 Slack Bot Token" "Enter Slack Bot Token") + " (xoxb-...)")
-            $script:ChannelExtra["slack_app_token"] = Read-Host ((T "请输入 Slack App Token" "Enter Slack App Token") + " (xapp-...)")
-            $script:AccessInfo = T "Slack 渠道已配置" "Slack channel configured"
-        }
-        "discord" {
-            $script:ChannelType = "discord"
-            Write-Cow (T "配置 Discord..." "Configure Discord...")
-            $script:ChannelExtra["discord_token"] = Read-Host (T "请输入 Discord Bot Token" "Enter Discord Bot Token")
-            $script:AccessInfo = T "Discord 渠道已配置" "Discord channel configured"
-        }
-    }
+    $script:ChannelType = "web"
+    $script:ChannelExtra["web_port"] = 9899
+    $script:AccessInfo = "Web console" + " : http://localhost:9899/"
 }
 
 # ── generate config.json ─────────────────────────────────────────
 function New-ConfigFile {
-    Write-Cow (T "正在生成 config.json..." "Generating config.json...")
+    Write-Maia "Generating config.json..."
 
     $config = [ordered]@{
-        channel_type              = if ($script:ChannelType) { $script:ChannelType } else { "web" }
-        model                     = if ($script:ModelName)  { $script:ModelName }  else { "" }
-        cow_lang                  = if ($script:InstallLang) { $script:InstallLang } else { "auto" }
-        open_ai_api_key           = ""
-        open_ai_api_base          = "https://api.openai.com/v1"
-        claude_api_key            = ""
-        claude_api_base           = "https://api.anthropic.com/v1"
-        gemini_api_key            = ""
-        gemini_api_base           = "https://generativelanguage.googleapis.com"
-        zhipu_ai_api_key          = ""
-        moonshot_api_key          = ""
-        ark_api_key               = ""
-        dashscope_api_key         = ""
-        minimax_api_key           = ""
-        mimo_api_key              = ""
-        deepseek_api_key          = ""
-        deepseek_api_base         = "https://api.deepseek.com/v1"
-        # Leave ASR/TTS provider empty so the web console auto-suggests the
-        # vendor whose API key is actually configured (e.g. LinkAI), instead
-        # of always defaulting to OpenAI.
-        voice_to_text             = ""
-        text_to_voice             = ""
+        channel_type              = "web"
+        bot_type                  = "litellm"
+        model                     = if ($script:ModelName) { $script:ModelName } else { "" }
+        maia_lang                  = "en"
+        litellm_api_base          = if ($script:LitellmApiBase) { $script:LitellmApiBase } else { "" }
+        litellm_api_key           = if ($script:LitellmApiKey) { $script:LitellmApiKey } else { "" }
+        embedding_model           = ""
+        vision_model              = ""
+        image_model               = ""
+        asr_model                 = ""
+        tts_model                 = ""
+        tts_voice                 = "alloy"
+        agent_fallback_models     = @()
+        voice_to_text             = "litellm"
+        text_to_voice             = "litellm"
         voice_reply_voice         = $false
         speech_recognition        = $true
         group_speech_recognition  = $false
-        use_linkai                = [bool]$script:UseLinkai
-        linkai_api_key            = ""
-        linkai_app_code           = ""
         agent                     = $true
         agent_max_context_tokens  = 200000
         agent_max_context_turns   = 30
         agent_max_steps           = 100
-        # New installs opt into self-evolution (matches run.sh).
         self_evolution_enabled    = $true
-    }
-
-    # Set the API key into the right field (skipped models leave it empty).
-    if ($script:ModelField -and $config.Contains($script:ModelField)) {
-        $config[$script:ModelField] = $script:ApiKey
-    }
-    # Set API base if the model has a configurable base and the user changed it.
-    if ($script:ApiBase -and $script:ApiBaseField -and $config.Contains($script:ApiBaseField)) {
-        $config[$script:ApiBaseField] = $script:ApiBase
     }
 
     # Merge channel-specific fields
@@ -769,53 +516,53 @@ function New-ConfigFile {
 
     $jsonText = $config | ConvertTo-Json -Depth 5
     [System.IO.File]::WriteAllText("$BaseDir\config.json", $jsonText, (New-Object System.Text.UTF8Encoding $false))
-    Write-Cow (T "配置文件创建成功。" "Configuration file created.")
+    Write-Maia "Configuration file created."
 }
 
-# Resolve the `cow` command, self-healing PATH if needed. When `cow` is missing
+# Resolve the `maia` command, self-healing PATH if needed. When `maia` is missing
 # (e.g. an older install whose PATH was never persisted), locate the Scripts dir,
 # re-add it to PATH (session + persistent), and retry. Returns $true if callable.
-function Resolve-CowCommand {
-    if (Get-Command cow -ErrorAction SilentlyContinue) { return $true }
+function Resolve-MaiaCommand {
+    if (Get-Command maia -ErrorAction SilentlyContinue) { return $true }
 
     $py = if ($PythonCmd) { $PythonCmd } else { Find-Python }
     if ($py) {
         $scriptsDir = & $py -c "import sysconfig; print(sysconfig.get_path('scripts'))" 2>$null
-        if ($scriptsDir -and (Test-Path "$scriptsDir\cow.exe")) {
+        if ($scriptsDir -and (Test-Path "$scriptsDir\maia.exe")) {
             Add-ScriptsDirToPath $scriptsDir
-            if (Get-Command cow -ErrorAction SilentlyContinue) { return $true }
+            if (Get-Command maia -ErrorAction SilentlyContinue) { return $true }
         }
     }
     return $false
 }
 
-# ── start via cow CLI ─────────────────────────────────────────────
-function Start-CowAgent {
-    Write-Cow (T "正在启动 CowAgent..." "Starting CowAgent...")
-    if (Resolve-CowCommand) {
-        & cow start
+# ── start via maia CLI ─────────────────────────────────────────────
+function Start-Maia {
+    Write-Maia "Starting Maia..."
+    if (Resolve-MaiaCommand) {
+        & maia start
     } else {
-        Write-Warn (T "未找到 cow CLI，直接启动..." "cow CLI not found, starting directly...")
+        Write-Warn "maia CLI not found, starting directly..."
         & $PythonCmd "$BaseDir\app.py"
     }
 }
 
-# ── delegate management commands to cow CLI ──────────────────────
-function Invoke-CowCommand {
+# ── delegate management commands to maia CLI ──────────────────────
+function Invoke-MaiaCommand {
     param([string]$Cmd)
-    if (Resolve-CowCommand) {
-        & cow $Cmd
+    if (Resolve-MaiaCommand) {
+        & maia $Cmd
     } else {
         # Fall back to the module entrypoint so management commands still work
-        # even when cow.exe isn't on PATH (e.g. right after a fresh reboot on
+        # even when maia.exe isn't on PATH (e.g. right after a fresh reboot on
         # an older install).
         $py = if ($PythonCmd) { $PythonCmd } else { Find-Python }
         if ($py -and (Test-Path "$BaseDir\app.py")) {
-            Write-Warn (T "未找到 cow 命令，使用 python -m cli.cli 兜底运行..." "cow command not found, falling back to python -m cli.cli...")
+            Write-Warn "maia command not found, falling back to python -m cli.cli..."
             Push-Location $BaseDir
             try { & $py -m cli.cli $Cmd } finally { Pop-Location }
         } else {
-            Write-Err (T "未找到 cow CLI，请先不带参数运行本脚本进行安装。" "cow CLI not found. Run this script without arguments first to install.")
+            Write-Err "maia CLI not found. Run this script without arguments first to install."
             exit 1
         }
     }
@@ -824,22 +571,22 @@ function Invoke-CowCommand {
 # ── usage ─────────────────────────────────────────────────────────
 function Show-Usage {
     Write-Info "========================================="
-    Write-Info "   CowAgent Management Script (Windows)"
+    Write-Info "   Maia Management Script (Windows)"
     Write-Info "========================================="
     Write-Host ""
-    Write-Host (T "用法:" "Usage:")
-    Write-Host ("  .\run.ps1               # " + (T "安装 / 配置" "Install / Configure"))
-    Write-Host ("  .\run.ps1 <command>     # " + (T "管理命令" "Management command"))
+    Write-Host "Usage:"
+    Write-Host ("  .\run.ps1               # " + "Install / Configure")
+    Write-Host ("  .\run.ps1 <command>     # " + "Management command")
     Write-Host ""
-    Write-Host (T "命令:" "Commands:")
-    Write-Host ("  start      " + (T "启动服务" "Start the service"))
-    Write-Host ("  stop       " + (T "停止服务" "Stop the service"))
-    Write-Host ("  restart    " + (T "重启服务" "Restart the service"))
-    Write-Host ("  status     " + (T "查看状态" "Check service status"))
-    Write-Host ("  logs       " + (T "查看日志" "View logs"))
-    Write-Host ("  config     " + (T "重新配置项目" "Reconfigure project"))
-    Write-Host ("  update     " + (T "更新并重启" "Update and restart"))
-    Write-Host ("  help       " + (T "显示本帮助" "Show this message"))
+    Write-Host "Commands:"
+    Write-Host ("  start      " + "Start the service")
+    Write-Host ("  stop       " + "Stop the service")
+    Write-Host ("  restart    " + "Restart the service")
+    Write-Host ("  status     " + "Check service status")
+    Write-Host ("  logs       " + "View logs")
+    Write-Host ("  config     " + "Reconfigure project")
+    Write-Host ("  update     " + "Update and restart")
+    Write-Host ("  help       " + "Show this message")
     Write-Host ""
 }
 
@@ -847,23 +594,19 @@ function Show-Usage {
 function Install-Mode {
     Clear-Host
     Write-Info "========================================="
-    Write-Info "   CowAgent Installation (Windows)"
+    Write-Info "   Maia Installation (Windows)"
     Write-Info "========================================="
     Write-Host ""
 
-    # Step 0: choose the install/UI language. Everything after this is localized.
-    Select-Language
-    Write-Host ""
-
     if ($IsProjectDir) {
-        Write-Cow (T "检测到已有项目目录。" "Detected existing project directory.")
+        Write-Maia "Detected existing project directory."
         if (Test-Path "$BaseDir\config.json") {
-            Write-Cow (T "项目已配置。" "Project already configured.")
+            Write-Maia "Project already configured."
             Write-Host ""
             Show-Usage
             return
         }
-        Write-Warn (T "未找到 config.json，开始配置项目！" "No config.json found. Let's configure your project!")
+        Write-Warn "No config.json found. Let's configure your project!"
         Write-Host ""
         Assert-Python
     } else {
@@ -880,60 +623,56 @@ function Install-Mode {
 
     # Auto-start after configuration for a true out-of-the-box experience.
     Write-Host ""
-    if ($script:AccessInfo) { Write-Cow $script:AccessInfo }
-    Write-Warn (T "提示：需要让 Agent 浏览网页时，运行 cow install-browser 安装浏览器工具" "Tip: to let the Agent browse the web, run 'cow install-browser' to install the browser tool")
-    Start-CowAgent
+    if ($script:AccessInfo) { Write-Maia $script:AccessInfo }
+    Write-Warn "Tip: to let the Agent browse the web, run 'maia install-browser' to install the browser tool"
+    Start-Maia
 }
 
 # ── update ────────────────────────────────────────────────────────
 function Update-Project {
-    Write-Cow (T "正在更新 CowAgent..." "Updating CowAgent...")
+    Write-Maia "Updating Maia..."
     Set-Location $BaseDir
 
     # Stop if running
-    $cowBin = Get-Command cow -ErrorAction SilentlyContinue
+    $cowBin = Get-Command maia -ErrorAction SilentlyContinue
     if ($cowBin) {
         $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
-        & cow stop 2>&1 | Out-Null
+        & maia stop 2>&1 | Out-Null
         $ErrorActionPreference = $prevEAP
     }
 
     if (Test-Path "$BaseDir\.git") {
-        Write-Cow (T "正在拉取最新代码..." "Pulling latest code...")
+        Write-Maia "Pulling latest code..."
         $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
         git pull 2>&1 | Out-Null
         $pullExit = $LASTEXITCODE
         $ErrorActionPreference = $prevEAP
         if ($pullExit -ne 0) {
-            Write-Warn (T "GitHub 拉取失败，尝试 Gitee..." "GitHub failed, trying Gitee...")
-            $ErrorActionPreference = "Continue"
-            git remote set-url origin https://gitee.com/zhayujie/CowAgent.git 2>&1 | Out-Null
-            git pull 2>&1 | Out-Null
-            $ErrorActionPreference = $prevEAP
+            Write-Err "Failed to pull code. Update aborted. origin was left unchanged."
+            Read-Host "Press Enter to exit"
+            exit 1
         }
     } else {
-        Write-Warn (T "非 git 仓库，跳过代码更新。" "Not a git repository, skipping code update.")
+        Write-Warn "Not a git repository, skipping code update."
     }
 
     Assert-Python
     Install-Dependencies
 
-    # Start via python -m cli.cli instead of cow.exe, because the exe may
+    # Start via python -m cli.cli instead of maia.exe, because the exe may
     # still be cached/locked from the previous installation on Windows.
-    Write-Cow (T "正在启动 CowAgent..." "Starting CowAgent...")
+    Write-Maia "Starting Maia..."
     & $PythonCmd -m cli.cli start
 }
 
 # ── main ──────────────────────────────────────────────────────────
-Initialize-UiLang
-
 switch ($Command.ToLower()) {
     ""        { Install-Mode }
-    "start"   { Invoke-CowCommand "start" }
-    "stop"    { Invoke-CowCommand "stop" }
-    "restart" { Invoke-CowCommand "restart" }
-    "status"  { Invoke-CowCommand "status" }
-    "logs"    { Invoke-CowCommand "logs" }
+    "start"   { Invoke-MaiaCommand "start" }
+    "stop"    { Invoke-MaiaCommand "stop" }
+    "restart" { Invoke-MaiaCommand "restart" }
+    "status"  { Invoke-MaiaCommand "status" }
+    "logs"    { Invoke-MaiaCommand "logs" }
     "config"  {
         Assert-Python
         Install-Dependencies
@@ -942,13 +681,13 @@ switch ($Command.ToLower()) {
         Select-Channel
         Configure-Channel
         New-ConfigFile
-        $r = Read-Host (T "现在重启服务吗？[Y/n]" "Restart service now? [Y/n]")
-        if ($r -ne "n" -and $r -ne "N") { Invoke-CowCommand "restart" }
+        $r = Read-Host "Restart service now? [Y/n]"
+        if ($r -ne "n" -and $r -ne "N") { Invoke-MaiaCommand "restart" }
     }
     "update"  { Update-Project }
     "help"    { Show-Usage }
     default   {
-        Write-Err ((T "未知命令" "Unknown command") + ": $Command")
+        Write-Err ("Unknown command" + ": $Command")
         Show-Usage
         exit 1
     }

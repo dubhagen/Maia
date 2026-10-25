@@ -1,5 +1,5 @@
 """
-Agent Bridge - Integrates Agent system with existing COW bridge
+Agent Bridge - Integrates Agent system with existing MAIA bridge
 """
 
 import os
@@ -53,10 +53,16 @@ def add_openai_compatible_support(bot_instance):
             """
             from config import conf
 
+            from models.litellm.endpoint import litellm_api_base, litellm_api_key
+
+            try:
+                api_base = litellm_api_base()
+            except Exception:
+                api_base = ""
             return {
-                'api_key': conf().get("open_ai_api_key"),
-                'api_base': conf().get("open_ai_api_base"),
-                'model': conf().get("model") or const.DEFAULT_MODEL,
+                'api_key': litellm_api_key(),
+                'api_base': api_base,
+                'model': conf().get("model") or "",
                 'default_temperature': conf().get("temperature", 0.9),
                 'default_top_p': conf().get("top_p", 1.0),
                 'default_frequency_penalty': conf().get("frequency_penalty", 0.0),
@@ -73,23 +79,8 @@ def add_openai_compatible_support(bot_instance):
 
 class AgentLLMModel(LLMModel):
     """
-    LLM Model adapter that uses COW's existing bot infrastructure
+    LLM Model adapter that uses MAIA's existing bot infrastructure
     """
-
-    _MODEL_BOT_TYPE_MAP = {
-        "wenxin": const.BAIDU, "wenxin-4": const.BAIDU,
-        "xunfei": const.XUNFEI, const.QWEN: const.QWEN_DASHSCOPE,
-        const.QIANFAN: const.QIANFAN,
-        const.MODELSCOPE: const.MODELSCOPE,
-    }
-    _MODEL_PREFIX_MAP = [
-        ("qwen", const.QWEN_DASHSCOPE), ("qwq", const.QWEN_DASHSCOPE), ("qvq", const.QWEN_DASHSCOPE),
-        ("gemini", const.GEMINI), ("glm", const.ZHIPU_AI), ("claude", const.CLAUDEAPI),
-        ("moonshot", const.MOONSHOT), ("kimi", const.MOONSHOT),
-        ("doubao", const.DOUBAO), ("deepseek", const.DEEPSEEK),
-        ("ernie", const.QIANFAN),
-        ("mimo-", const.MIMO),
-    ]
 
     # Which model answers, most specific first. All default to None, meaning
     # "follow the next one down" and ultimately the global config. Declared on
@@ -119,7 +110,7 @@ class AgentLLMModel(LLMModel):
     _fallback_depth = 0
 
     def __init__(self, bridge: Bridge, bot_type: str = "chat"):
-        super().__init__(model=conf().get("model") or const.DEFAULT_MODEL)
+        super().__init__(model=conf().get("model") or "")
         self.bridge = bridge
         self.bot_type = bot_type
         self._bot = None
@@ -136,7 +127,7 @@ class AgentLLMModel(LLMModel):
             self._session_model
             or self._agent_model
             or conf().get("model")
-            or const.DEFAULT_MODEL
+            or ""
         )
 
     @model.setter
@@ -144,71 +135,40 @@ class AgentLLMModel(LLMModel):
         pass
 
     def fallback_config(self) -> dict:
-        """Return the configured fallback chain, normalized.
+        """Return fallback model ids on the same LiteLLM endpoint.
 
-        A non-dict or disabled entry yields an empty chain so callers can treat
-        "not usable" as a single check. Links missing a provider or a model are
-        dropped — half a link could route the turn nowhere — as are duplicates
-        of an earlier link, which would only re-probe a model the run has
-        already proven is down. So is a link naming the primary's own route,
-        matched on provider *and* model: the same model name behind another
-        provider — a second account or endpoint of it — is a legitimate
-        backup, not a duplicate.
-
-        The chain is unbounded: however many links the user configured is how
-        many switches a turn gets. There is no separate cap.
+        ``agent_fallback_models`` is a list of model id strings. The legacy
+        ``chat_fallback.chain`` shape is read only for its model ids.
         """
-        raw = conf().get("chat_fallback")
-        empty = {"chain": []}
-        if not isinstance(raw, dict) or not raw.get("enabled"):
-            return empty
-        raw_chain = raw.get("chain")
-        if not isinstance(raw_chain, list):
-            # Pre-chain shape ({provider, model}): config._migrate_chat_fallback
-            # normally upgrades it at load time, so reaching here means a
-            # caller handed us the raw dict. Honor it rather than dropping the
-            # user's backup model.
-            raw_chain = [raw]
-        primary = (self._session_model or self._agent_model
-                   or conf().get("model") or const.DEFAULT_MODEL)
+        primary = (
+            self._session_model
+            or self._agent_model
+            or conf().get("model")
+            or ""
+        )
+        primary = (primary or "").strip()
+        raw = conf().get("agent_fallback_models")
+        if not isinstance(raw, list):
+            legacy = conf().get("chat_fallback")
+            raw = []
+            if isinstance(legacy, dict) and legacy.get("enabled"):
+                chain = legacy.get("chain")
+                if isinstance(chain, list):
+                    raw = chain
         chain = []
-        # Seed the dedup with the primary's own route: its provider is
-        # resolved first (the global model config carries none), so a link
-        # is matched on the (provider, model) pair — not the model name
-        # alone, which would drop same-model links behind other providers.
-        seen = {(self._primary_provider_id(primary), (primary or "").strip())}
-        for item in raw_chain:
-            if not isinstance(item, dict):
+        seen = {primary} if primary else set()
+        for item in raw:
+            if isinstance(item, str):
+                model = item.strip()
+            elif isinstance(item, dict):
+                model = (item.get("model") or "").strip()
+            else:
                 continue
-            provider = (item.get("provider") or "").strip()
-            model = (item.get("model") or "").strip()
-            if not provider or not model:
+            if not model or model in seen:
                 continue
-            key = (provider, model)
-            if key in seen:
-                continue
-            seen.add(key)
-            chain.append({"provider": provider, "model": model})
+            seen.add(model)
+            chain.append({"provider": "litellm", "model": model})
         return {"chain": chain}
-
-    def _primary_provider_id(self, primary_model: str) -> str:
-        """The provider the primary model routes through, as a provider id.
-
-        Resolved in the id space the fallback chain's links are written in
-        ("openai", "custom:<id>", ...), so the chain's dedup seed compares a
-        link against the route the primary actually takes rather than against
-        a provider-less model name. Follows the routing precedence — a session
-        or Agent pin, then use_linkai, the configured bot_type, and finally
-        the model-name inference _primary_bot_type applies when nothing is
-        configured ("chatGPT", the persisted spelling of "openai", maps back
-        onto it).
-        """
-        if self._session_provider:
-            return self._session_provider
-        if self._agent_provider:
-            return self._agent_provider
-        bot_type = self._primary_bot_type(primary_model)
-        return "openai" if bot_type == const.CHATGPT else bot_type
 
     # How many times one turn may walk the whole chain before the failure is
     # reported. Two passes rather than one because a pass takes real time: by
@@ -317,79 +277,22 @@ class AgentLLMModel(LLMModel):
         self._bot_type = None
 
     def catalog_model_meta(self) -> dict:
-        """Model-catalog metadata for the effective provider+model, or {}.
-
-        The provider mirrors ``_resolve_bot_type`` precedence (session
-        override, then use_linkai, then the configured bot type), mapped back
-        onto the UI provider ids the catalog is keyed by."""
+        """Model-catalog metadata for the active model id, or {}."""
         from models import model_catalog
-        if self._session_provider:
-            provider = self._session_provider
-        elif conf().get("use_linkai", False) and conf().get("linkai_api_key"):
-            provider = "linkai"
-        else:
-            bot_type = conf().get("bot_type") or ""
-            provider = "openai" if bot_type == const.CHATGPT else bot_type
-        return model_catalog.resolve_model_meta(provider, self.model)
+        return model_catalog.resolve_model_meta("litellm", self.model)
 
     @staticmethod
     def provider_to_bot_type(provider_id: str) -> str:
-        """Map a UI provider id onto a bot type, as the models console does."""
-        if not provider_id:
-            return ""
-        # Same mapping the models console persists: "openai" routes through the
-        # OpenAI-compatible bot, not the legacy completion one.
-        if provider_id == "openai":
-            return const.CHATGPT
-        return provider_id
+        del provider_id
+        return "litellm"
 
     def _resolve_bot_type(self, model_name: str) -> str:
-        """Resolve bot type from model name, matching Bridge.__init__ logic."""
-        # An engaged fallback outranks every normal choice: the whole point of
-        # the fallback is to leave whichever provider just failed, and the
-        # model being requested (`self.model`) is already the fallback's own.
-        if self._fallback_provider:
-            return self.provider_to_bot_type(self._fallback_provider)
-        return self._primary_bot_type(model_name)
+        del model_name
+        return "litellm"
 
     def _primary_bot_type(self, model_name: str) -> str:
-        """Bot type the primary model routes through, ignoring any engaged fallback.
-
-        The tail _resolve_bot_type delegates to; split out so the fallback
-        chain can seed its dedup with the primary's route without an engaged
-        fallback's provider leaking in.
-        """
-        # A session override wins over every global routing switch, including
-        # use_linkai: the user picked this provider for this conversation.
-        if self._session_provider:
-            return self.provider_to_bot_type(self._session_provider)
-        if self._agent_provider:
-            return self.provider_to_bot_type(self._agent_provider)
-
-        if conf().get("use_linkai", False) and conf().get("linkai_api_key"):
-            return const.LINKAI
-        # Support custom bot type configuration
-        configured_bot_type = conf().get("bot_type")
-        if configured_bot_type:
-            return configured_bot_type
-
-        if not model_name or not isinstance(model_name, str):
-            return const.OPENAI
-        if model_name in self._MODEL_BOT_TYPE_MAP:
-            return self._MODEL_BOT_TYPE_MAP[model_name]
-        if model_name.lower().startswith("minimax") or model_name in ["abab6.5-chat"]:
-            return const.MiniMax
-        if model_name in [const.QWEN_TURBO, const.QWEN_PLUS, const.QWEN_MAX]:
-            return const.QWEN_DASHSCOPE
-        if model_name in [const.MOONSHOT, "moonshot-v1-8k", "moonshot-v1-32k", "moonshot-v1-128k"]:
-            return const.MOONSHOT
-        if conf().get("bot_type") == "modelscope":
-            return const.MODELSCOPE
-        lowered_model = model_name.lower()
-        for prefix, btype in self._MODEL_PREFIX_MAP:
-            if lowered_model.startswith(prefix):
-                return btype
-        return const.OPENAI
+        del model_name
+        return "litellm"
 
     def _normalized_reasoning_effort(self):
         """Return the active model's effort value after config resolution."""
@@ -432,7 +335,7 @@ class AgentLLMModel(LLMModel):
 
     def call(self, request: LLMRequest):
         """
-        Call the model using COW's bot infrastructure
+        Call the model using MAIA's bot infrastructure
         """
         try:
             # For non-streaming calls, we'll use the existing reply method
@@ -502,7 +405,7 @@ class AgentLLMModel(LLMModel):
     
     def call_stream(self, request: LLMRequest):
         """
-        Call the model with streaming using COW's bot infrastructure
+        Call the model with streaming using MAIA's bot infrastructure
         """
         try:
             if hasattr(self.bot, 'call_with_tools'):
@@ -586,7 +489,7 @@ class AgentLLMModel(LLMModel):
 
 class AgentBridge:
     """
-    Bridge class that integrates super Agent with COW
+    Bridge class that integrates super Agent with MAIA
     Manages multiple agent instances per session for conversation isolation
     """
     
@@ -633,7 +536,7 @@ class AgentBridge:
 
     def create_agent(self, system_prompt: str, tools: List = None, **kwargs) -> Agent:
         """
-        Create the super agent with COW integration
+        Create the super agent with MAIA integration
         
         Args:
             system_prompt: System prompt
@@ -643,7 +546,7 @@ class AgentBridge:
         Returns:
             Agent instance
         """
-        # Create LLM model that uses COW's bot infrastructure
+        # Create LLM model that uses MAIA's bot infrastructure
         model = AgentLLMModel(self.bridge)
         
         # Default tools if none provided
@@ -1514,7 +1417,7 @@ class AgentBridge:
         
         Args:
             query: User query
-            context: COW context (optional, contains session_id for user isolation)
+            context: MAIA context (optional, contains session_id for user isolation)
             on_event: Event callback (optional)
             clear_history: Whether to clear conversation history
             
@@ -1847,7 +1750,7 @@ class AgentBridge:
                 except Exception:
                     pass
 
-            # Post-message hot-reload: detect edits to ~/cow/mcp.json and
+            # Post-message hot-reload: detect edits to ~/maia/mcp.json and
             # sync any new/removed MCP tools into the live agent in the
             # background. Off the critical path so user latency is unaffected;
             # changes take effect on the user's next message.
@@ -2008,14 +1911,24 @@ class AgentBridge:
         import os
         
         key_mapping = {
-            "open_ai_api_key": "OPENAI_API_KEY",
-            "open_ai_api_base": "OPENAI_API_BASE",
-            "gemini_api_key": "GEMINI_API_KEY",
-            "claude_api_key": "CLAUDE_API_KEY",
-            "linkai_api_key": "LINKAI_API_KEY",
+            "litellm_api_key": "LITELLM_API_KEY",
+            "litellm_api_base": "LITELLM_API_BASE",
+            "model": "LITELLM_MODEL",
+            "image_model": "LITELLM_IMAGE_MODEL",
+            "vision_model": "LITELLM_VISION_MODEL",
+            "embedding_model": "LITELLM_EMBEDDING_MODEL",
+            "asr_model": "LITELLM_ASR_MODEL",
+            "tts_model": "LITELLM_TTS_MODEL",
         }
+        # Drop vendor credentials a previous version wrote into ~/.maia/.env.
+        _drop_env = (
+            "OPENAI_API_KEY", "OPENAI_API_BASE", "GEMINI_API_KEY", "CLAUDE_API_KEY",
+            "ANTHROPIC_API_KEY", "LINKAI_API_KEY", "DEEPSEEK_API_KEY", "DEEPSEEK_API_BASE",
+            "DASHSCOPE_API_KEY", "ARK_API_KEY", "MOONSHOT_API_KEY", "ZHIPU_API_KEY",
+            "MINIMAX_API_KEY", "MIMO_API_KEY", "QIANFAN_API_KEY",
+        )
         
-        env_file = expand_path("~/.cow/.env")
+        env_file = expand_path("~/.maia/.env")
         
         # Read existing env vars (key -> value)
         existing_env_vars = {}
@@ -2032,6 +1945,11 @@ class AgentBridge:
         
         # Sync config.json values into .env (add/update/remove)
         updated = False
+        for env_key in _drop_env:
+            if env_key in existing_env_vars:
+                existing_env_vars.pop(env_key, None)
+                os.environ.pop(env_key, None)
+                updated = True
         for config_key, env_key in key_mapping.items():
             raw = conf().get(config_key, "")
             value = raw.strip() if raw else ""
@@ -2506,8 +2424,7 @@ class AgentBridge:
     def _refresh_conditional_tools(agent):
         """
         Add or remove conditional tools based on current environment variables.
-        For example, web_search should only be present when BOCHA_API_KEY or
-        LINKAI_API_KEY is set.
+        For example, web_search is present only when a search endpoint is configured.
         """
         try:
             from agent.tools.web_search.web_search import WebSearch

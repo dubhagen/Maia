@@ -12,18 +12,18 @@ def test_text_write_replaces_the_file(tmp_path):
     path = tmp_path / "MEMORY.md"
     path.write_text("old", encoding="utf-8")
 
-    write_text_atomic(path, "新内容\n")
+    write_text_atomic(path, "caf\u00e9\n")
 
-    assert path.read_text(encoding="utf-8") == "新内容\n"
+    assert path.read_text(encoding="utf-8") == "caf\u00e9\n"
     assert [p.name for p in tmp_path.iterdir()] == ["MEMORY.md"]
 
 
 def test_json_write_creates_the_file(tmp_path):
     path = tmp_path / "config.json"
 
-    write_json_atomic(str(path), {"name": "小牛"})
+    write_json_atomic(str(path), {"name": "na\u00efve"})
 
-    assert path.read_text(encoding="utf-8") == '{\n    "name": "小牛"\n}'
+    assert path.read_text(encoding="utf-8") == '{\n    "name": "na\u00efve"\n}'
 
 
 def test_a_failed_write_keeps_the_old_file_and_no_temp(tmp_path):

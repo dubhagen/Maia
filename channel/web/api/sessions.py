@@ -20,7 +20,7 @@ from agent.permission import (
     global_mode as permission_global_mode,
     normalize_mode as permission_normalize_mode,
 )
-from channel.web.api.models import ModelsHandler
+from channel.web.api.models import ModelsHandler, configured_litellm_models
 from channel.web.core._common import (
     _agent_badge,
     _build_artifact_payload,
@@ -31,8 +31,6 @@ from channel.web.core._common import (
     _roster_from_members,
 )
 from channel.web.core.channel import WebChannel
-from channel.web.core.providers import PROVIDER_MODELS
-from common import const
 from common.log import logger
 from config import conf
 from models import model_catalog
@@ -188,7 +186,7 @@ def _annotate_sessions_with_projects(store, result: dict, agent_id: Optional[str
     only ever holds one page: whether more than one space is in play is a fact
     about all sessions, not about the fifty currently on screen.
 
-    - ``time``    one space in use (the common case) - group by 今天/昨天/更早,
+    - ``time``    one space in use (the common case) - group by today/yesterday/earlier,
                   exactly as before projects existed.
     - ``project`` several spaces in use - group by project, so multi-project
                   users can find a conversation by where it belongs.
@@ -504,97 +502,23 @@ class SessionDetailHandler:
 
 
 def _session_model_catalog() -> List[dict]:
-    """Providers a session may switch to, newest-first within each provider.
+    """The LiteLLM models a session may switch to.
 
-    Only providers with a credential on file are offered: listing one without an
-    API key would let the user pick a model that fails on the next message.
-    The globally active provider is always included, even if its key lives in
-    the environment rather than in config.json.
+    Text-tagged catalog entries, plus the current chat model when it is not
+    already in the overlay. An empty catalog still offers the current model.
     """
     local_config = conf()
-    active_bot_type = local_config.get("bot_type") or ""
-    active_provider = "openai" if active_bot_type == const.CHATGPT else active_bot_type
-    if local_config.get("use_linkai") and local_config.get("linkai_api_key"):
-        active_provider = "linkai"
     active_model = str(local_config.get("model") or "").strip()
     catalog_map = model_catalog.get_catalog_map()
     hidden_map = model_catalog.get_hidden_map()
-
-    catalog: List[dict] = []
-    for pid, pinfo in PROVIDER_MODELS.items():
-        if pid == "custom" or not pinfo.get("models"):
-            continue
-        key_field = pinfo.get("api_key_field")
-        has_key = bool(key_field and str(local_config.get(key_field) or "").strip())
-        if not has_key and pid != active_provider:
-            continue
-        # Overlay onto the presets, then keep only text-tagged entries — only
-        # those belong in the conversation switcher. Without an overlay this is
-        # just the preset model list.
-        if catalog_map.get(pid) or hidden_map.get(pid):
-            effective = ModelsHandler._merged_catalog(
-                pid, ModelsHandler._preset_seed(pid), catalog_map, hidden_map)
-            models = [e["name"] for e in effective if "text" in (e.get("capabilities") or [])]
-        else:
-            models = list(pinfo["models"])
-        if not models:
-            continue
-        # The user can pin a custom model name to a built-in provider (via the
-        # global config / capability "custom model" field). That model won't be
-        # in the preset list, so surface it here for the active provider so the
-        # chat picker can both display and re-select it.
-        if pid == active_provider and active_model and active_model not in models:
-            models.insert(0, active_model)
-        catalog.append({
-            "id": pid,
-            "label": pinfo["label"],
-            "models": models,
-        })
-
-    # User-defined OpenAI-compatible providers carry their own credentials, so
-    # offer any that have a key on file (or are the active provider). Their model
-    # list combines the provider's configured default with the globally active
-    # model when this custom provider is the one in use — otherwise a custom
-    # provider added without a preset model would be unselectable in chat.
-    try:
-        from models.custom_provider import get_custom_providers
-        for cp in get_custom_providers():
-            cid = cp.get("id")
-            if not cid:
-                continue
-            pid = f"custom:{cid}"
-            is_active = pid == active_provider
-            # Mirror the config page's "configured" test (_custom_provider_cards):
-            # a keyless-but-based endpoint (self-hosted / gateway) is valid, so
-            # having an api_base counts just like having a key.
-            configured = bool(str(cp.get("api_base") or "").strip()) \
-                or bool(str(cp.get("api_key") or "").strip())
-            if not configured and not is_active:
-                continue
-            entries = catalog_map.get(pid)
-            if entries:
-                models = [e["name"] for e in entries if "text" in (e.get("capabilities") or [])]
-            else:
-                models = []
-                cp_model = str(cp.get("model") or "").strip()
-                if cp_model:
-                    models.append(cp_model)
-            if is_active and active_model and active_model not in models:
-                models.insert(0, active_model)
-            if not models:
-                # Nothing concrete to select yet (no default model and not the
-                # active provider) — skip rather than render an empty group.
-                continue
-            name = cp.get("name") or cid
-            catalog.append({
-                "id": pid,
-                "label": {"zh": name, "en": name},
-                "models": models,
-            })
-    except Exception as e:
-        logger.debug(f"[WebChannel] custom providers unavailable: {e}")
-
-    return catalog
+    effective = ModelsHandler._merged_catalog(
+        "litellm", None, catalog_map, hidden_map)
+    models = [e["name"] for e in effective if "text" in (e.get("capabilities") or [])]
+    if active_model and active_model not in models:
+        models.insert(0, active_model)
+    if not models:
+        return []
+    return [{"id": "litellm", "label": "LiteLLM", "models": models}]
 
 
 def _session_settings_state(session_id: str, agent_id: Optional[str]) -> dict:
@@ -618,10 +542,7 @@ def _session_settings_state(session_id: str, agent_id: Optional[str]) -> dict:
     local_config = conf()
     prefs = session_prefs.get_prefs(session_id, agent_id)
 
-    global_bot_type = local_config.get("bot_type") or ""
-    global_provider = "openai" if global_bot_type == const.CHATGPT else global_bot_type
-    if local_config.get("use_linkai") and local_config.get("linkai_api_key"):
-        global_provider = "linkai"
+    global_provider = "litellm"
     global_model = local_config.get("model") or ""
     global_permission = permission_global_mode()
 
@@ -657,6 +578,7 @@ def _session_settings_state(session_id: str, agent_id: Optional[str]) -> dict:
             "global": {"model": global_model, "provider": global_provider},
             "agent": agent_default,
             "providers": _session_model_catalog(),
+            "discovery_error": configured_litellm_models()[1] or "",
         },
         "permission": {
             "mode": (

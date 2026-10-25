@@ -20,27 +20,20 @@ available_setting = {
     # and channel replies. Options: "auto" (detect from system locale, default),
     # "zh" (Chinese) or "en" (English). An explicit value locks the language.
     # value: auto/en/zh
-    "cow_lang": "auto",
-    # openai api config
-    "open_ai_api_key": "",  # openai api key
-    # openai api base; when use_azure_chatgpt is true, set the matching api base
-    "open_ai_api_base": "https://api.openai.com/v1",
+    "maia_lang": "auto",
+    # LiteLLM OpenAI-compatible proxy. Every model call uses this endpoint.
+    "litellm_api_base": "http://127.0.0.1:4000/v1",
+    "litellm_api_key": "",
+    # openai api config (unused; kept out of the runtime path)
     # openai api protocol: "auto" (Responses only for models that require it), "chat" (/chat/completions) or "responses" (/responses)
-    "open_ai_api_type": "auto",
-    "claude_api_base": "https://api.anthropic.com/v1",  # claude api base
     # Prompt cache TTL for the system prompt + tools in agent mode: "1h" or "5m".
     # Use "5m" if the endpoint rejects the 1h TTL; the conversation always uses 5m.
-    "claude_cache_ttl": "1h",
-    "gemini_api_base": "https://generativelanguage.googleapis.com",  # gemini api base
-    "custom_api_key": "",  # custom OpenAI-compatible provider api key (used when bot_type is "custom"); legacy single-provider field
-    "custom_api_base": "",  # custom OpenAI-compatible provider api base (used when bot_type is "custom"); legacy single-provider field
     # Multiple custom (OpenAI-compatible) providers. Activated via bot_type: "custom:<id>".
     # Each item: {"id": "3f2a9c1b", "name": "my-provider", "api_key": "sk-...", "api_base": "https://api.example.com/v1", "model": "model-name"}
-    "custom_providers": [],
     "proxy": "",  # proxy used by openai
     # chatgpt model; when use_azure_chatgpt is true, this is the Azure model deployment name
-    "model": "deepseek-flash",  # options: gpt-4o, gpt-4o-mini, gpt-4-turbo, claude-3-sonnet, wenxin, moonshot, qwen-turbo, xunfei, glm-4, minimax, gemini, etc. See common/const.py for the full list
-    "bot_type": "",  # optional; for OpenAI-compatible third-party services set "openai" or "custom" (in custom mode switching model won't auto-switch bot_type). See common/const.py for bot names; inferred from model name if left empty
+    "model": "",  # model id as advertised by the LiteLLM proxy
+    "bot_type": "litellm",
     # Fallback chat models, tried in order after the primary one has failed
     # permanently for a turn (all retries exhausted). Opt-in: an empty `chain`
     # disables the switch and the error surfaces as before.
@@ -59,9 +52,6 @@ available_setting = {
         # (e.g. "openai", "qianfan", "custom:<id>").
         "chain": [],
     },
-    "use_azure_chatgpt": False,  # whether to use Azure chatgpt
-    "azure_deployment_id": "",  # azure model deployment name
-    "azure_api_version": "",  # azure api version
     # Bot trigger config
     "single_chat_prefix": ["bot", "@bot"],  # text must contain this prefix to trigger a reply in single chat
     "single_chat_reply_prefix": "[bot] ",  # auto-reply prefix in single chat, used to distinguish from a real person
@@ -79,16 +69,7 @@ available_setting = {
     "nick_name_black_list": [],  # user nickname blacklist
     "group_welcome_msg": "",  # fixed welcome message for new group members; uses a random style when empty
     "trigger_by_self": False,  # whether the bot can be triggered by itself
-    "text_to_image": "dall-e-2",  # image generation model, options: dall-e-2, dall-e-3
-    # Azure OpenAI dall-e-3 config
-    "dalle3_image_style": "vivid", # dalle3 image style, options: vivid, natural
-    "dalle3_image_quality": "hd", # dalle3 image quality, options: standard, hd
-    # Azure OpenAI DALL-E API config; when use_azure_chatgpt is true, separates the text-reply resource from the DALL-E resource
-    "azure_openai_dalle_api_base": "", # [optional] azure openai endpoint for image replies; defaults to open_ai_api_base
-    "azure_openai_dalle_api_key": "", # [optional] azure openai key for image replies; defaults to open_ai_api_key
-    "azure_openai_dalle_deployment_id":"", # [optional] azure openai deployment id for image replies; defaults to text_to_image
-    "image_proxy": True,  # whether an image proxy is needed; required when accessing LinkAI from mainland China
-    "image_create_prefix": ["画", "看", "找"],  # prefixes that enable image replies
+    "image_create_prefix": ["draw", "paint", "sketch"],  # prefixes that enable image replies
     "concurrency_in_session": 1,  # max number of in-flight messages per session; values >1 may cause out-of-order replies
     "image_create_size": "256x256",  # image size, options: 256x256, 512x512, 1024x1024 (dall-e-3 defaults to 1024x1024)
     "group_chat_exit_group": False,
@@ -107,38 +88,9 @@ available_setting = {
     "presence_penalty": 0,
     "request_timeout": 180,  # chatgpt request timeout; the openai api defaults to 600, hard questions usually need longer
     "timeout": 120,  # chatgpt retry timeout; will auto-retry within this window
-    # Baidu Wenxin (ERNIE) params
-    "baidu_wenxin_model": "eb-instant",  # defaults to the ERNIE-Bot-turbo model
-    "baidu_wenxin_api_key": "",  # Baidu api key
-    "baidu_wenxin_secret_key": "",  # Baidu secret key
-    "baidu_wenxin_prompt_enabled": False,  # Enable prompt if you are using ernie character model
-    # Baidu Qianfan / ERNIE OpenAI-compatible API
-    "qianfan_api_key": "",  # Baidu Qianfan API key in bce-v3 format
-    "qianfan_api_base": "https://qianfan.baidubce.com/v2",  # Qianfan OpenAI-compatible API base
-    # Xunfei Spark API
-    "xunfei_app_id": "",  # Xunfei app id
-    "xunfei_api_key": "",  # Xunfei API key
-    "xunfei_api_secret": "",  # Xunfei API secret
-    "xunfei_domain": "",  # Xunfei model domain param; for Spark4.0 Ultra it is 4.0Ultra, see https://www.xfyun.cn/doc/spark/Web.html for others
-    "xunfei_spark_url": "",  # Xunfei model request url; for Spark4.0 Ultra it is wss://spark-api.xf-yun.com/v4.0/chat, see https://www.xfyun.cn/doc/spark/Web.html for others
-    # claude config
-    "claude_api_cookie": "",
-    "claude_uuid": "",
-    # claude api key
-    "claude_api_key": "",
-    # Tongyi Qianwen API, see https://help.aliyun.com/document_detail/2587494.html for how to obtain
-    "qwen_access_key_id": "",
-    "qwen_access_key_secret": "",
-    "qwen_agent_key": "",
-    "qwen_app_id": "",
-    "qwen_node_id": "",  # id used by workflow-orchestration models; keep it an empty string if qwen_node_id is unused
-    # Alibaba Lingji (Tongyi new sdk) model api key
-    "dashscope_api_key": "",
-    # Google Gemini Api Key
-    "gemini_api_key": "",
     # Embedding model config
-    "embedding_provider": "",  # explicitly set the provider: openai / linkai / dashscope / doubao / zhipu (aligned with bot_type naming)
-    "embedding_model": "",     # leave empty to use the provider's default model
+    "embedding_provider": "litellm",
+    "embedding_model": "",     # empty disables embeddings; otherwise a model id on the LiteLLM proxy
     "embedding_dimensions": 0, # leave empty/0 to use the provider's default dimension (1024 recommended for consistency)
     # Memory rerank config (optional, off by default)
     "rerank_provider": "",  # leave empty to disable; "local" runs a cross-encoder via sentence-transformers (install it yourself)
@@ -148,100 +100,25 @@ available_setting = {
     "group_speech_recognition": False,  # whether to enable group speech recognition
     "voice_reply_voice": False,  # whether to reply to voice with voice; requires the matching TTS engine api key
     "always_reply_voice": False,  # whether to always reply with voice
-    "voice_to_text": "openai",  # speech recognition engine: openai,baidu,google,azure,xunfei,ali
-    "text_to_voice": "openai",  # TTS engine: openai,baidu,google,azure,xunfei,ali,pytts(offline),elevenlabs,edge(online)
-    "text_to_voice_model": "tts-1",
+    "voice_to_text": "litellm",
+    "text_to_voice": "litellm",
+    "asr_model": "",
+    "tts_model": "",
+    "tts_voice": "alloy",
+    "vision_model": "",
+    "image_model": "",
+    "agent_fallback_models": [],
+    "text_to_voice_model": "",
     "tts_voice_id": "alloy",
-    # baidu voice api config; required when using Baidu speech recognition and TTS
-    "baidu_app_id": "",
-    "baidu_api_key": "",
-    "baidu_secret_key": "",
-    # 1536 Mandarin (with basic English) 1737 English 1637 Cantonese 1837 Sichuanese 1936 Mandarin far-field
-    "baidu_dev_pid": 1536,
-    # azure voice api config; required when using Azure speech recognition and TTS
-    "azure_voice_api_key": "",
-    "azure_voice_region": "japaneast",
-    # elevenlabs voice api config
-    "xi_api_key": "",  # see https://docs.elevenlabs.io/api-reference/quick-start/authentication for how to obtain the api key
-    "xi_voice_id": "",  # ElevenLabs offers 9 English voice ids: Adam/Antoni/Arnold/Bella/Domi/Elli/Josh/Rachel/Sam
     # service time limit
     "chat_time_module": False,  # whether to enable service-time limiting
     "chat_start_time": "00:00",  # service start time
     "chat_stop_time": "24:00",  # service stop time
-    # translation api
-    "translate": "baidu",  # translation api: baidu, youdao
-    # baidu translation api config
-    "baidu_translate_app_id": "",  # baidu translation api appid
-    "baidu_translate_app_key": "",  # baidu translation api secret key
-    # youdao translation api config
-    "youdao_translate_app_key": "",  # youdao translation api app id
-    "youdao_translate_app_secret": "",  # youdao translation api app secret
-    # wechatmp config
-    "wechatmp_token": "",  # WeChat Official Account token
-    "wechatmp_port": 8080,  # WeChat Official Account port; needs port forwarding to 80 or 443
-    "wechatmp_app_id": "",  # WeChat Official Account appID
-    "wechatmp_app_secret": "",  # WeChat Official Account appsecret
-    "wechatmp_aes_key": "",  # WeChat Official Account EncodingAESKey; required in encrypted mode
-    # wechatcom shared config
-    "wechatcom_corp_id": "",  # WeCom corp id
-    # wechatcomapp config
-    "wechatcomapp_token": "",  # WeCom app token
-    "wechatcomapp_port": 9898,  # WeCom app service port; no port forwarding needed
-    "wechatcomapp_secret": "",  # WeCom app secret
-    "wechatcomapp_agent_id": "",  # WeCom app agent_id
-    "wechatcomapp_aes_key": "",  # WeCom app aes_key
-    # WeChat Customer Service (wechat_kf) config
-    "wechat_kf_corp_id": "",  # corp_id of the company the WeChat Customer Service belongs to
-    "wechat_kf_token": "",  # WeChat Customer Service callback token
-    "wechat_kf_port": 9888,  # WeChat Customer Service callback service port
-    "wechat_kf_secret": "",  # WeChat Customer Service app secret
-    "wechat_kf_aes_key": "",  # WeChat Customer Service callback aes_key
-    "wechat_kf_cursor_path": "~/.wechat_kf_cursors.json",  # path for persisting the WeChat Customer Service sync_msg cursor
-    # Feishu config
-    "feishu_port": 80,  # Feishu bot listening port; only needed in webhook mode
-    "feishu_app_id": "",  # Feishu bot app id
-    "feishu_app_secret": "",  # Feishu bot app secret
-    "feishu_token": "",  # Feishu verification token; only needed in webhook mode
-    "feishu_event_mode": "websocket",  # Feishu event mode: webhook(HTTP server) or websocket(long connection)
-    # Feishu streaming reply (based on the official cardkit streaming-card API; requires the cardkit:card:write permission and Feishu client 7.20+)
-    "feishu_stream_reply": True,  # whether to enable streaming reply (typewriter effect); auto-downgrades to non-streaming or shows an upgrade prompt on failure/old clients
-    "feishu_detailed_card": True,  # render normal chat streaming as a detailed card (status header, thinking/tool panels, elapsed time); off keeps the plain typewriter card
-    # DingTalk config
-    "dingtalk_client_id": "",  # DingTalk bot Client ID
-    "dingtalk_client_secret": "",  # DingTalk bot Client Secret
-    "dingtalk_card_enabled": False,
-    # WeCom smart bot config (long connection mode)
-    "wecom_bot_id": "",  # WeCom smart bot BotID
-    "wecom_bot_secret": "",  # WeCom smart bot long-connection secret
-    # WeCom smart bot transport mode: "websocket" (long connection) or "webhook" (HTTP callback)
-    "wecom_bot_mode": "websocket",
-    "wecom_bot_token": "",  # webhook mode: Token configured on the bot's receive-message URL
-    "wecom_bot_encoding_aes_key": "",  # webhook mode: EncodingAESKey configured on the bot's receive-message URL
-    "wecom_bot_port": 9892,  # webhook mode: local HTTP server port for the receive-message URL
-    # Telegram config
-    "telegram_token": "",  # Bot token from @BotFather
-    "telegram_proxy": "",  # Optional HTTP/SOCKS5 proxy, e.g. http://127.0.0.1:7890 or socks5://127.0.0.1:1080 (empty falls back to env vars)
-    "telegram_group_trigger": "mention_or_reply",  # Group trigger: mention_or_reply(@ or reply, recommended) | mention_only(@ only) | all(every message)
-    "telegram_register_commands": True,  # Auto-register the BotFather command menu on startup (aligned with web slash commands)
-    # Slack config (Socket Mode, no public IP required)
-    "slack_bot_token": "",  # Bot User OAuth Token, like xoxb-...
-    "slack_app_token": "",  # App-Level Token (generated after enabling Socket Mode), like xapp-...
-    "slack_group_trigger": "mention_or_reply",  # Channel trigger: mention_or_reply(@ or reply in thread, recommended) | mention_only(@ only) | all(every message)
-    # Discord config (Gateway connection, no public IP required)
-    "discord_token": "",  # Discord Bot Token (generated on the Bot page of the Developer Portal)
-    "discord_group_trigger": "mention_or_reply",  # Channel trigger: mention_or_reply(@ or reply to bot, recommended) | mention_only(@ only) | all(every message)
-    # WeChat config
-    "weixin_token": "",  # bot_token obtained after WeChat login; leave empty to auto scan-login on startup
-    "weixin_base_url": "https://ilinkai.weixin.qq.com",  # Weixin ilink API base URL
-    "weixin_cdn_base_url": "https://novac2c.cdn.weixin.qq.com/c2c",  # CDN base URL
-    "weixin_credentials_path": "~/.weixin_cow_credentials.json",  # credentials file path
-    "weixin_proxy": "",  # optional proxy for QR login, for networks that cannot log in directly
-    # custom trigger words for chatgpt commands
-    "clear_memory_commands": ["#清除记忆"],  # session-reset command; must start with #
+    # custom trigger words for admin commands
+    "clear_memory_commands": ["#reset"],  # session-reset command; must start with #
     # channel config
-    "channel_type": "",  # channel type; supports running multiple channels at once. Single: "feishu", multiple: "feishu, dingtalk" or ["feishu", "dingtalk"]. Options: web,feishu,dingtalk,wecom_bot,weixin,wechatmp,wechatmp_service,wechatcom_app,wechat_kf,telegram,slack,discord
+    "channel_type": "web",  # web console. "terminal" is the local stdin channel. Other chat providers are not supported.
     "web_console": True,  # whether to auto-start the Web console (on by default). Set False to disable
-    "subscribe_msg": "",  # subscribe message; supported by: wechatmp, wechatmp_service, wechatcom_app
     "debug": False,  # whether to enable debug mode; prints more logs when on
     "appdata_dir": "",  # data directory
     # plugin config
@@ -250,33 +127,6 @@ available_setting = {
     "use_global_plugin_config": False,
     "max_media_send_count": 3,  # max number of media resources sent at once
     "media_send_interval": 1,  # interval between sending images, in seconds
-    # Zhipu AI platform config
-    "zhipu_ai_api_key": "",
-    "zhipu_ai_api_base": "https://open.bigmodel.cn/api/paas/v4",
-    "moonshot_api_key": "",
-    "moonshot_base_url": "https://api.moonshot.cn/v1",
-    # Doubao (Volcano Ark) platform config
-    "ark_api_key": "",
-    "ark_base_url": "https://ark.cn-beijing.volces.com/api/v3",
-    # ModelScope community platform config
-    "modelscope_api_key": "",
-    "modelscope_base_url": "https://api-inference.modelscope.cn/v1/chat/completions",
-    # LinkAI platform config
-    "use_linkai": False,
-    "linkai_api_key": "",
-    "linkai_app_code": "",
-    "linkai_api_base": "https://api.link-ai.tech",
-    "cloud_host": "client.link-ai.tech",
-    "cloud_port": None,
-    "cloud_deployment_id": "",
-    "minimax_api_key": "",
-    "Minimax_group_id": "",
-    "Minimax_base_url": "",
-    "deepseek_api_key": "",
-    "deepseek_api_base": "https://api.deepseek.com/v1",
-    # Xiaomi MiMo LLM
-    "mimo_api_key": "",
-    "mimo_api_base": "https://api.xiaomimimo.com/v1",
     "web_host": "",  # Web console bind address; empty means auto
     "web_port": 9899,
     "web_password": "",  # Web console password; empty means no authentication required
@@ -289,10 +139,10 @@ available_setting = {
     "web_file_serve_root": "~",  # Root dir the /api/file endpoint may serve; "/" allows the whole filesystem
     "mcp_oauth_redirect_base": "",  # Base URL for MCP OAuth callback (e.g. http://your-ip:9899); empty uses local web console
     "agent": True,  # whether to enable Agent mode
-    "agent_workspace": "~/cow",  # agent workspace path, used to store skills, memory, etc.
-    # Optional native multi-agent registry. When empty or omitted, CowAgent
+    "agent_workspace": "~/maia",  # agent workspace path, used to store skills, memory, etc.
+    # Optional native multi-agent registry. When empty or omitted, Maia
     # synthesizes one "default" agent from agent_workspace and behaves exactly
-    # as before. Each configured workspace is a complete CowAgent workspace.
+    # as before. Each configured workspace is a complete Maia workspace.
     "agents": [],
     # Agent handling conversations that no channel instance binds. Defaults to
     # the first configured agent when unset. When no agents list is configured,
@@ -319,7 +169,7 @@ available_setting = {
     # Default permission mode for sessions that have not picked one of their own:
     # "read-only" | "workspace-write" | "full-access". Kept at full-access so an
     # existing install behaves exactly as before an upgrade. Only a fresh desktop
-    # client (COW_DESKTOP=1 with no config.json yet) is tightened to the stricter
+    # client (MAIA_DESKTOP=1 with no config.json yet) is tightened to the stricter
     # workspace-write in load_config(); docker/source stay at full-access.
     "agent_permission_mode": "full-access",
     # In-process sub agents: the Agent hands a self-contained task to a
@@ -361,8 +211,6 @@ available_setting = {
     # Registry that installs by bare name, skill search and skill list --remote
     # use; empty means the default Skill Hub. It must speak the same API. The key,
     # if set, is sent as a bearer token to this registry only.
-    "skill_hub_url": "",
-    "skill_hub_api_key": "",
     "mcp_servers": [],  # MCP server list; each entry supports type "stdio" (local process) or "sse" (remote URL)
     # On-demand MCP tool retrieval: when many MCP tools are connected, inject
     # only the most query-relevant ones instead of all of them. Built-in tools
@@ -503,47 +351,14 @@ def _quarantine_corrupted_config(config_path):
 # Config keys mirrored into environment variables at startup so that
 # subprocesses (e.g. shell skill scripts) can read them directly.
 CONFIG_TO_ENV = {
-    "open_ai_api_key": "OPENAI_API_KEY",
-    "open_ai_api_base": "OPENAI_API_BASE",
-    "linkai_api_key": "LINKAI_API_KEY",
-    "linkai_api_base": "LINKAI_API_BASE",
-    "claude_api_key": "CLAUDE_API_KEY",
-    "claude_api_base": "CLAUDE_API_BASE",
-    "gemini_api_key": "GEMINI_API_KEY",
-    "gemini_api_base": "GEMINI_API_BASE",
-    "minimax_api_key": "MINIMAX_API_KEY",
-    "minimax_api_base": "MINIMAX_API_BASE",
-    "deepseek_api_key": "DEEPSEEK_API_KEY",
-    "deepseek_api_base": "DEEPSEEK_API_BASE",
-    "mimo_api_key": "MIMO_API_KEY",
-    "mimo_api_base": "MIMO_API_BASE",
-    "qianfan_api_key": "QIANFAN_API_KEY",
-    "qianfan_api_base": "QIANFAN_API_BASE",
-    "zhipu_ai_api_key": "ZHIPU_AI_API_KEY",
-    "zhipu_ai_api_base": "ZHIPU_AI_API_BASE",
-    "moonshot_api_key": "MOONSHOT_API_KEY",
-    "moonshot_api_base": "MOONSHOT_API_BASE",
-    "ark_api_key": "ARK_API_KEY",
-    "ark_api_base": "ARK_API_BASE",
-    "dashscope_api_key": "DASHSCOPE_API_KEY",
-    "dashscope_api_base": "DASHSCOPE_API_BASE",
-    # Channel credentials (used by skills that check env vars)
-    "feishu_app_id": "FEISHU_APP_ID",
-    "feishu_app_secret": "FEISHU_APP_SECRET",
-    "dingtalk_client_id": "DINGTALK_CLIENT_ID",
-    "dingtalk_client_secret": "DINGTALK_CLIENT_SECRET",
-    "wechatmp_app_id": "WECHATMP_APP_ID",
-    "wechatmp_app_secret": "WECHATMP_APP_SECRET",
-    "wechatcomapp_agent_id": "WECHATCOMAPP_AGENT_ID",
-    "wechatcomapp_secret": "WECHATCOMAPP_SECRET",
-    "wechatcom_corp_id": "WECHATCOM_CORP_ID",
-    "wechat_kf_corp_id": "WECHAT_KF_CORP_ID",
-    "wechat_kf_secret": "WECHAT_KF_SECRET",
-    "wechat_kf_token": "WECHAT_KF_TOKEN",
-    "wechat_kf_aes_key": "WECHAT_KF_AES_KEY",
-    "qq_app_id": "QQ_APP_ID",
-    "qq_app_secret": "QQ_APP_SECRET",
-    "weixin_token": "WEIXIN_TOKEN",
+    "litellm_api_key": "LITELLM_API_KEY",
+    "litellm_api_base": "LITELLM_API_BASE",
+    "model": "LITELLM_MODEL",
+    "image_model": "LITELLM_IMAGE_MODEL",
+    "vision_model": "LITELLM_VISION_MODEL",
+    "embedding_model": "LITELLM_EMBEDDING_MODEL",
+    "asr_model": "LITELLM_ASR_MODEL",
+    "tts_model": "LITELLM_TTS_MODEL",
 }
 
 
@@ -551,15 +366,15 @@ def load_config():
     global config
 
     # print ASCII logo
-    logger.info("  ____                _                    _   ")
-    logger.info(" / ___|_____      __ / \\   __ _  ___ _ __ | |_ ")
-    logger.info("| |   / _ \\ \\ /\\ / // _ \\ / _` |/ _ \\ '_ \\| __|")
-    logger.info("| |__| (_) \\ V  V // ___ \\ (_| |  __/ | | | |_ ")
-    logger.info(" \\____\\___/ \\_/\\_//_/   \\_\\__, |\\___|_| |_|\\__|")
-    logger.info("                          |___/                 ")
+    logger.info(" __  __       _       ")
+    logger.info("|  \\/  | __ _(_) __ _ ")
+    logger.info("| |\\/| |/ _` | |/ _` |")
+    logger.info("| |  | | (_| | | (_| |")
+    logger.info("|_|  |_|\\__,_|_|\\__,_|")
+    logger.info("")
     logger.info("")
     # User config lives in the data root: source deployments use CWD (./), while
-    # the desktop build points COW_DATA_DIR at ~/.cow so config survives updates.
+    # the desktop build points MAIA_DATA_DIR at ~/.maia so config survives updates.
     user_config_path = os.path.join(get_data_root(), "config.json")
     config_path = user_config_path
     if not os.path.exists(config_path):
@@ -575,14 +390,14 @@ def load_config():
     # otherwise silently drop all but the last occurrence.
     #
     # Self-heal a corrupted user config.json instead of crashing on startup —
-    # but ONLY for the packaged desktop client (COW_DESKTOP=1). A truncated or
+    # but ONLY for the packaged desktop client (MAIA_DESKTOP=1). A truncated or
     # invalid file (e.g. a bad write during a previous update) would otherwise
     # make json.loads raise and strand the desktop app on "Initialization
     # Failed" forever, with no way for an end user to recover short of manually
     # deleting the file. Source deployments deliberately keep the original
     # behavior (raise): a developer editing config.json wants a clear error to
     # fix, not to have their file silently backed up and replaced by defaults.
-    desktop_mode = os.environ.get("COW_DESKTOP") == "1"
+    desktop_mode = os.environ.get("MAIA_DESKTOP") == "1"
     try:
         config = Config(json.loads(config_str, object_pairs_hook=_merge_duplicate_keys))
     except ValueError as parse_err:
@@ -625,7 +440,7 @@ def load_config():
     # never silently tightened by an upgrade. Non-desktop (docker, source) is
     # untouched. Placed before the env override so AGENT_PERMISSION_MODE still
     # wins if explicitly set.
-    if os.environ.get("COW_DESKTOP") == "1" and config_path != user_config_path:
+    if os.environ.get("MAIA_DESKTOP") == "1" and config_path != user_config_path:
         config["agent_permission_mode"] = "workspace-write"
 
     # override config with environment variables.
@@ -679,7 +494,7 @@ def load_config():
 
     # Resolve the global UI language as early as possible so that every
     # downstream layer (logs, CLI, agent prompts, channel replies) shares it.
-    resolved_lang = i18n.resolve_language(config.get("cow_lang", "auto"))
+    resolved_lang = i18n.resolve_language(config.get("maia_lang", "auto"))
 
     logger.info("[INIT] load config: {}".format(drag_sensitive(config)))
 
@@ -690,6 +505,12 @@ def load_config():
     logger.info("[INIT] Language: {}".format(resolved_lang))
     logger.info("[INIT] Channel: {}".format(config.get("channel_type", "unknown")))
     logger.info("[INIT] Model: {}".format(config.get("model", "unknown")))
+    _base = config.get("litellm_api_base") or ""
+    if not (isinstance(_base, str) and _base.strip().rstrip("/").endswith("/v1")):
+        logger.error(
+            "[INIT] litellm_api_base is missing or does not end with /v1; "
+            "model calls will fail until it is set"
+        )
 
     # Agent mode info
     if config.get("agent", True):
@@ -847,49 +668,10 @@ def sync_image_generation_custom_provider_env(
     config_data,
     overwrite=False,
 ) -> int:
-    """Expose the selected custom image provider to the skill subprocess."""
-    env_key = "SKILL_IMAGE_GENERATION_CUSTOM_PROVIDER"
-    skills = config_data.get("skills") if isinstance(config_data, dict) else {}
-    image_config = (
-        skills.get("image-generation")
-        if isinstance(skills, dict)
-        else {}
-    )
-    provider_id = (
-        image_config.get("provider", "")
-        if isinstance(image_config, dict)
-        else ""
-    )
-
-    selected = None
-    if isinstance(provider_id, str) and provider_id.startswith("custom:"):
-        custom_id = provider_id[len("custom:"):]
-        providers = config_data.get("custom_providers", [])
-        if isinstance(providers, list):
-            selected = next(
-                (
-                    provider
-                    for provider in providers
-                    if isinstance(provider, dict)
-                    and provider.get("id") == custom_id
-                ),
-                None,
-            )
-
-    if selected is None:
-        if overwrite:
-            os.environ.pop(env_key, None)
-        return 0
-    if env_key in os.environ and not overwrite:
-        return 0
-
-    payload = {
-        key: selected.get(key)
-        for key in ("id", "name", "api_key", "api_base", "model")
-        if selected.get(key) is not None
-    }
-    os.environ[env_key] = json.dumps(payload, ensure_ascii=False)
-    return 1
+    """No custom image providers. Image generation uses the LiteLLM endpoint."""
+    del config_data, overwrite
+    os.environ.pop("SKILL_IMAGE_GENERATION_CUSTOM_PROVIDER", None)
+    return 0
 
 
 def get_root():
@@ -931,12 +713,12 @@ def read_config_template():
 def get_data_root():
     """Directory for writable user data (config.json, user_datas.pkl, run.log).
 
-    The desktop build sets COW_DATA_DIR (e.g. ~/.cow) so data lives in the
+    The desktop build sets MAIA_DATA_DIR (e.g. ~/.maia) so data lives in the
     user's home rather than inside the read-only app bundle and survives app
     updates. When unset (source deployment), it falls back to get_root(), so
     existing behavior is unchanged.
     """
-    data_dir = os.environ.get("COW_DATA_DIR")
+    data_dir = os.environ.get("MAIA_DATA_DIR")
     if data_dir:
         data_dir = os.path.expanduser(data_dir)
         os.makedirs(data_dir, exist_ok=True)
@@ -959,32 +741,6 @@ def get_appdata_dir():
         logger.info("[INIT] data path not exists, create it: {}".format(data_path))
         os.makedirs(data_path, exist_ok=True)
     return data_path
-
-
-def get_weixin_credentials_path(instance_id: str = ""):
-    """Resolve the Weixin credentials (token) file path.
-
-    Honors an explicit ``weixin_credentials_path`` from config. Otherwise the
-    packaged desktop build (COW_DATA_DIR set) keeps it under the data dir
-    (~/.cow) so all user data stays together, while source deployments retain
-    the legacy ~/.weixin_cow_credentials.json default unchanged.
-
-    ``instance_id`` isolates the credentials file when several Weixin instances
-    run in one process, each logged into a different account: their tokens must
-    not share (and overwrite) one file. Empty (the single-instance default)
-    keeps the legacy path byte-for-byte, so existing installs are untouched.
-    """
-    configured = conf().get("weixin_credentials_path")
-    if configured:
-        base = os.path.expanduser(configured)
-    elif os.environ.get("COW_DATA_DIR"):
-        base = os.path.join(get_data_root(), "weixin_credentials.json")
-    else:
-        base = os.path.expanduser("~/.weixin_cow_credentials.json")
-    if not instance_id:
-        return base
-    root, ext = os.path.splitext(base)
-    return f"{root}.{instance_id}{ext or '.json'}"
 
 
 def subscribe_msg():

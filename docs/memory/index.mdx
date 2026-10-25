@@ -1,25 +1,25 @@
 ---
 title: Long-term Memory
-description: "CowAgent's long-term memory: core memory in MEMORY.md, daily memories and dream diaries stored as workspace files, written automatically when context is trimmed and recalled with hybrid search."
+description: "Maia's long-term memory: core memory in MEMORY.md, daily memories and dream diaries stored as workspace files, written automatically when context is trimmed and recalled with hybrid search."
 ---
 
 Long-term memory is stored in workspace files, persisting across sessions. The Agent loads historical memory on demand via retrieval tools during conversation, and automatically writes conversation summaries to long-term memory when context is trimmed.
 
-<img src="https://cdn.link-ai.tech/doc/memory-architecture-en.jpg" alt="Memory Architecture" />
+<img src="/images/memory-architecture.svg" alt="Memory Architecture" />
 
 ## Memory Types
 
 ### Core Memory (MEMORY.md)
 
-Stored in `~/cow/MEMORY.md`, containing long-term user preferences, important decisions, key facts, and other information that doesn't fade over time. The Agent reads and writes this file via tools to maintain long-term knowledge.
+Stored in `~/maia/MEMORY.md`, containing long-term user preferences, important decisions, key facts, and other information that doesn't fade over time. The Agent reads and writes this file via tools to maintain long-term knowledge.
 
 ### Daily Memory (memory/YYYY-MM-DD.md)
 
-Stored in `~/cow/memory/` directory, named by date (e.g., `2026-03-08.md`), recording daily conversation summaries and key events. Files are only created on first write to avoid generating empty files.
+Stored in `~/maia/memory/` directory, named by date (e.g., `2026-03-08.md`), recording daily conversation summaries and key events. Files are only created on first write to avoid generating empty files.
 
 ### Dream Diary (memory/dreams/YYYY-MM-DD.md)
 
-A byproduct of the Deep Dream (memory distillation) process, recording discoveries, deduplication operations, and new insights from each consolidation. Stored in `~/cow/memory/dreams/` directory, named by date.
+A byproduct of the Deep Dream (memory distillation) process, recording discoveries, deduplication operations, and new insights from each consolidation. Stored in `~/maia/memory/dreams/` directory, named by date.
 
 ## Automatic Writing
 
@@ -47,7 +47,7 @@ The Agent automatically triggers memory retrieval during conversation as needed,
 
 ## Related Files
 
-Files related to memory in the workspace (default `~/cow`):
+Files related to memory in the workspace (default `~/maia`):
 
 | File | Description |
 | --- | --- |
@@ -63,14 +63,14 @@ Files related to memory in the workspace (default `~/cow`):
 The memory management page in the Web console allows browsing memory files and dream diaries, with tab switching support:
 
 <Frame>
-  <img src="https://cdn.link-ai.tech/doc/20260414171014.png" width="800" />
+  <img src="/images/screenshots/memory.png" width="800" />
 </Frame>
 
 ## Configuration
 
 | Parameter | Description | Default |
 | --- | --- | --- |
-| `agent_workspace` | Workspace path, memory files stored under this directory | `~/cow` |
+| `agent_workspace` | Workspace path, memory files stored under this directory | `~/maia` |
 | `agent_max_context_tokens` | Max context tokens; when exceeded, content is trimmed and summarized into memory | `200000` |
 | `agent_max_context_turns` | Max context turns; when exceeded, content is trimmed and summarized into memory | `30` |
 | `rerank_provider` | Rerank service for memory retrieval; empty disables it, `local` uses a local cross-encoder | `""` |

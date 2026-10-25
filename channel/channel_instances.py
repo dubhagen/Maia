@@ -8,8 +8,7 @@ world and must keep working untouched.
 A multi-Agent install opts in by adding ``channel_instances`` to ``team.json``:
 a list of records, each with its own ``instance_id``, ``channel_type``, the
 ``agent_id`` it routes to, and its own ``credentials``. Several records may
-share a ``channel_type`` (e.g. two Feishu bots), which is exactly what a team of
-independent AI employees needs.
+share a ``channel_type``, which is what a team of independent AI employees needs.
 
 ``resolve_channel_instances`` returns a uniform list of :class:`ChannelInstance`
 for both worlds, so the launcher never branch on which config style is in play. When ``channel_instances`` is absent it synthesizes one
@@ -19,14 +18,11 @@ behavior byte-for-byte.
 
 from __future__ import annotations
 
-import json
-import os
 import re
 import secrets
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Mapping, Optional
 
-from common import const
 from common.log import logger
 
 # Length of the random suffix in a generated instance id. 10 hex chars gives
@@ -38,7 +34,7 @@ _INSTANCE_ID_RANDOM_LEN = 10
 def new_instance_id(channel_type: str, taken: Iterable[str] = ()) -> str:
     """Return a stable, unique id for a freshly created channel instance.
 
-    Shape is ``{channel_type}-{random}`` (e.g. ``feishu-a3f9c2e1b7``): the
+    Shape is ``{channel_type}-{random}`` (e.g. ``terminal-a3f9c2e1b7``): the
     prefix keeps the type recognizable at a glance, the random suffix makes it
     unique and stable across restarts. Ids provided elsewhere (e.g. handed down
     by a remote controller) are honored as-is and never regenerated; this helper
@@ -72,75 +68,15 @@ def is_local_instance_id(instance_id: str, channel_type: str) -> bool:
     return re.fullmatch(rf"{re.escape(ctype)}-[0-9a-f]{{{_INSTANCE_ID_RANDOM_LEN}}}", iid) is not None
 
 
-# Per channel type, the config keys that make up its credentials. Only these
-# keys are copied into a per-instance override; everything else (ports, feature
-# flags) stays global in conf(). Keep in sync with the channel classes' cfg()
-# reads. Extend as more channel types gain multi-instance support.
-CREDENTIAL_KEYS: Dict[str, tuple] = {
-    const.FEISHU: (
-        "feishu_app_id",
-        "feishu_app_secret",
-        "feishu_token",
-        "feishu_bot_name",
-    ),
-    const.DINGTALK: (
-        "dingtalk_client_id",
-        "dingtalk_client_secret",
-        "dingtalk_robot_code",
-    ),
-    const.WECOM_BOT: (
-        "wecom_bot_id",
-        "wecom_bot_secret",
-        "wecom_bot_token",
-        "wecom_bot_encoding_aes_key",
-    ),
-    const.WEIXIN: (
-        "weixin_token",
-        "weixin_base_url",
-    ),
-    const.QQ: (
-        "qq_app_id",
-        "qq_app_secret",
-    ),
-    const.TELEGRAM: (
-        "telegram_token",
-    ),
-    const.SLACK: (
-        "slack_bot_token",
-        "slack_app_token",
-    ),
-    const.DISCORD: (
-        "discord_token",
-    ),
-}
+# Per channel type, the config keys that make up its credentials. Chat
+# providers other than the web console and the local terminal are gone, so
+# no credential keys are copied into a per-instance override.
+CREDENTIAL_KEYS: Dict[str, tuple] = {}
 
-# Short human labels used only to seed a new instance's default name (e.g.
-# "微信 2"). Purely cosmetic and easily overridden by the user, so an unknown
-# type simply falls back to its raw channel_type string.
-_CHANNEL_TYPE_LABELS: Dict[str, str] = {
-    const.FEISHU: "飞书",
-    const.DINGTALK: "钉钉",
-    const.WECOM_BOT: "企微机器人",
-    const.WEIXIN: "微信",
-    const.QQ: "QQ",
-    const.TELEGRAM: "Telegram",
-    const.SLACK: "Slack",
-    const.DISCORD: "Discord",
-}
-
-# Channel types that actually support running more than one instance today.
-# Others may appear in channel_instances but will run as a single instance
-# (their @singleton is not yet bypassed); we log and fall back gracefully.
-MULTI_INSTANCE_READY = frozenset({
-    const.FEISHU,
-    const.DINGTALK,
-    const.QQ,
-    const.TELEGRAM,
-    const.SLACK,
-    const.DISCORD,
-    const.WEIXIN,
-    const.WECOM_BOT,
-})
+# Channel types that support running more than one instance. The removed
+# IM providers are not in this set, so legacy flat credentials for them are
+# not folded into channel_instances.
+MULTI_INSTANCE_READY = frozenset()
 
 
 @dataclass(frozen=True)
@@ -150,7 +86,7 @@ class ChannelInstance:
     instance_id: str
     channel_type: str
     agent_id: str = ""
-    #: Human-friendly label the user can edit (e.g. "运营微信"). Optional: when
+    
     #: empty the UI falls back to a credential-derived name or the instance id, so
     #: an install that never sets one is unaffected.
     name: str = ""
@@ -173,8 +109,6 @@ class ChannelInstance:
 
 
 def _normalize_type(channel_type: str) -> str:
-    if channel_type in (const.WEIXIN, "wx"):
-        return const.WEIXIN
     return channel_type
 
 
@@ -343,77 +277,23 @@ def bootstrap_legacy_instances(
         if ctype not in MULTI_INSTANCE_READY or ctype in have_types:
             continue
         creds = _filtered_credentials(ctype, settings)
-        if not creds and not (ctype == const.WEIXIN and _legacy_weixin_login()):
+        if not creds:
             continue
         records.append(
             {
                 "instance_id": ctype,
                 "channel_type": ctype,
                 "agent_id": default_id,
-                "name": _CHANNEL_TYPE_LABELS.get(ctype, ctype),
+                "name": ctype,
                 "credentials": creds,
             }
         )
         have_types.add(ctype)
-        # Weixin's scan-login token lives in a credentials file, not config.json.
-        # The bootstrapped instance (instance_id == "weixin") reads a per-instance
-        # file, so carry the legacy default file over to it — otherwise the user
-        # would have to re-scan just because they added an Agent.
-        if ctype == const.WEIXIN:
-            _carry_weixin_credentials_file(ctype)
         logger.info(
             f"[ChannelInstances] bootstrapped legacy '{ctype}' credentials into a "
             f"channel_instances record bound to '{default_id or 'default'}'"
         )
     return records
-
-
-def _legacy_weixin_login() -> bool:
-    """Whether the legacy single Weixin channel holds a scan login.
-
-    Its token lives in the default credentials file, and config.json usually
-    has no weixin keys at all, so the flat keys alone would leave a logged-in
-    channel out of the roster. Not applied where channels are provisioned from
-    outside: there the roster is the provisioner's to fill, and a leftover file
-    must not bring back a channel it removed.
-    """
-    try:
-        from common.utils import is_cloud_deployment
-        from config import get_weixin_credentials_path
-
-        if is_cloud_deployment():
-            return False
-        with open(get_weixin_credentials_path(), "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return isinstance(data, dict) and bool(data.get("token"))
-    except Exception:
-        return False
-
-
-def _carry_weixin_credentials_file(instance_id: str) -> None:
-    """Copy the legacy Weixin token file to the per-instance path, once.
-
-    Best-effort and idempotent: if the legacy default file exists and the
-    per-instance file does not yet, the token (and persisted context tokens) are
-    copied so the bootstrapped instance stays logged in. Never overwrites an
-    existing per-instance file, and never raises into the write path.
-    """
-    try:
-        import shutil
-        from config import get_weixin_credentials_path
-
-        legacy = get_weixin_credentials_path()
-        target = get_weixin_credentials_path(instance_id)
-        if legacy == target:
-            return
-        if os.path.exists(legacy) and not os.path.exists(target):
-            shutil.copy2(legacy, target)
-            logger.info(
-                f"[ChannelInstances] carried Weixin credentials '{legacy}' -> "
-                f"'{target}' so the bootstrapped instance stays logged in"
-            )
-    except Exception as e:
-        logger.warning(f"[ChannelInstances] Weixin credentials carry-over skipped: {e}")
 
 
 def read_raw_instances(settings: Mapping[str, Any]) -> List[Dict[str, Any]]:
@@ -462,12 +342,12 @@ def _clean_peers(peers, owner_id: str) -> list:
 def default_instance_name(channel_type: str, records: Iterable[Mapping[str, Any]]) -> str:
     """A friendly default label for a freshly created instance of *channel_type*.
 
-    Shape is "<type label>" for the first instance of a type and "<type label> N"
-    for later ones, so a second WeChat bot reads as "微信 2" rather than a random
-    id. Only used to seed the field; the user can rename it afterwards.
+    Shape is "<type>" for the first instance of a type and "<type> N" for later
+    ones, so a second terminal reads as "terminal 2" rather than a random id.
+    Only used to seed the field; the user can rename it afterwards.
     """
     ctype = _normalize_type((channel_type or "").strip())
-    label = _CHANNEL_TYPE_LABELS.get(ctype, ctype)
+    label = ctype or "channel"
     same_type = sum(
         1
         for r in records

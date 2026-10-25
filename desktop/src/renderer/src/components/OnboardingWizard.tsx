@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Sparkles, KeyRound, Loader2, ArrowRight, ArrowLeft, ExternalLink } from 'lucide-react'
-import { t, getLang, setLang, type Lang } from '../i18n'
+import { KeyRound, Loader2, ArrowRight } from 'lucide-react'
+import { t } from '../i18n'
 import apiClient from '../api/client'
 import type { ModelsData } from '../types'
 import { Field, Dropdown, TextInput, type DropdownOption } from '../pages/settings/primitives'
@@ -12,26 +12,19 @@ interface OnboardingWizardProps {
   onDone: () => void
 }
 
-const TOTAL_STEPS = 2
+const TOTAL_STEPS = 1
 
-// Optional "where to get an API key" console link, per provider.
-const PROVIDER_KEY_CONSOLE: Record<string, string> = {
-  linkai: 'https://link-ai.tech/console/interface',
-}
-
-// First-run guided setup: language -> chat model (provider + key + model).
-// After saving the model the user goes straight into the chat (no extra
-// confirmation step). Rendered as a full-screen overlay above the main UI;
-// reuses the same models API and primitives as the settings page.
+// First-run guided setup: LiteLLM base, key, and chat model.
+// Rendered as a full-screen overlay above the main UI.
 const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onDone }) => {
   const finish = useOnboardingStore((s) => s.finish)
 
-  const [step, setStep] = useState(1)
-  const [lang, setLangState] = useState<Lang>(getLang())
+  const [step] = useState(1)
   const [models, setModels] = useState<ModelsData | null>(null)
+  const [discovered, setDiscovered] = useState<string[]>([])
 
   // Step 2 form state.
-  const [provider, setProvider] = useState('')
+  const [provider, setProvider] = useState('litellm')
   const [apiKey, setApiKey] = useState('')
   const [apiBase, setApiBase] = useState('')
   const [model, setModel] = useState('')
@@ -43,17 +36,57 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onDone }) => {
   useEffect(() => {
     apiClient
       .getModels()
-      .then(setModels)
-      .catch(() => setError(t('onboarding_save_failed')))
+      .then((data) => {
+        setModels(data)
+        const id = (data?.capabilities?.chat?.providers || [])[0] || 'litellm'
+        setProvider(id)
+        const meta = data?.providers?.find((p) => p.id === id)
+        if (meta?.api_base) setApiBase(meta.api_base)
+        else if (meta?.api_base_default) setApiBase(meta.api_base_default)
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
   }, [])
 
-  // Persist the auto-detected default language on first show so the pre-selected
-  // option (driven by OS locale) also reaches the backend, even if the user
-  // doesn't tap the language buttons.
+  // Ask the proxy for its model list as soon as a base (and optional key) is typed.
   useEffect(() => {
-    if (!localStorage.getItem('cow_lang')) switchLang(lang)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    const base = apiBase.trim().replace(/\/$/, '')
+    if (!/^https?:\/\/.+\/v1$/.test(base)) return
+    const handle = window.setTimeout(() => {
+      apiClient.modelsAction({
+        action: 'discover_models',
+        provider_id: provider || 'litellm',
+        api_base: base,
+        ...(apiKey.trim() ? { api_key: apiKey.trim() } : {}),
+      }).then((res) => {
+        if (res.status !== 'success') {
+          setDiscovered([])
+          const message = typeof res.message === 'string' ? res.message : ''
+          // An empty key against a locked proxy is expected until the user pastes one.
+          if (apiKey.trim() || !/HTTP 40[13]/.test(message)) {
+            setError(message || t('onboarding_save_failed'))
+          }
+          return
+        }
+        const rows = Array.isArray(res.models) ? res.models : []
+        const names = rows
+          .map((item) => (item && typeof item === 'object' ? item as Record<string, unknown> : null))
+          .filter((item): item is Record<string, unknown> => !!item)
+          .filter((item) => {
+            const caps = item.capabilities
+            return Array.isArray(caps) && caps.includes('text')
+          })
+          .map((item) => String(item.name || '').trim())
+          .filter(Boolean)
+        setDiscovered(names)
+        setError('')
+        setModel((current) => current || names[0] || '')
+      }).catch((err) => {
+        setDiscovered([])
+        setError(err instanceof Error ? err.message : String(err))
+      })
+    }, 400)
+    return () => window.clearTimeout(handle)
+  }, [apiKey, apiBase, provider])
 
   const providerOptions: DropdownOption[] = useMemo(() => {
     const chat = models?.capabilities?.chat
@@ -80,52 +113,45 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onDone }) => {
     setModel(first?.value || '')
   }
 
-  const switchLang = (next: Lang) => {
-    setLang(next)
-    setLangState(next)
-    // Mirror the choice to the backend so the agent/logs use the same language
-    // (matches BasicSettings). Non-blocking: the UI already switched locally.
-    apiClient.updateConfig({ cow_lang: next }).catch(() => {})
-  }
-
-  // Step 1 (language) can always advance; step 2 needs a provider, key, model.
-  const canNext = step === 1 || (!!provider && !!apiKey.trim() && !!model)
+  // A LiteLLM /v1 base and a model id. The proxy key may be empty.
+  const baseOk = /^https?:\/\/.+\/v1\/?$/.test(apiBase.trim())
+  const canNext = !!provider && baseOk && !!model.trim()
 
   const goNext = async () => {
     setError('')
-    // Step 1 (language) just advances to the model step.
-    if (step === 1) {
-      setStep(2)
-      return
-    }
     // Step 2 is the last step: persist the provider credentials, point the chat
     // capability at it, then finish straight into the chat (no extra step).
     setSaving(true)
     try {
-      await apiClient.modelsAction({
+      const saved = await apiClient.modelsAction({
         action: 'set_provider',
         provider_id: provider,
-        api_key: apiKey.trim(),
-        ...(apiBase.trim() ? { api_base: apiBase.trim() } : {}),
+        ...(apiKey.trim() ? { api_key: apiKey.trim() } : {}),
+        api_base: apiBase.trim().replace(/\/$/, ''),
       })
-      await apiClient.modelsAction({
+      if (saved.status !== 'success') {
+        setSaving(false)
+        setError(typeof saved.message === 'string' ? saved.message : t('onboarding_save_failed'))
+        return
+      }
+      const picked = await apiClient.modelsAction({
         action: 'set_capability',
         capability: 'chat',
         provider_id: provider,
         model,
       })
-    } catch {
+      if (picked.status !== 'success') {
+        setSaving(false)
+        setError(typeof picked.message === 'string' ? picked.message : t('onboarding_save_failed'))
+        return
+      }
+    } catch (err) {
       setSaving(false)
-      setError(t('onboarding_save_failed'))
+      setError(err instanceof Error ? err.message : t('onboarding_save_failed'))
       return
     }
     setSaving(false)
     complete()
-  }
-
-  const goBack = () => {
-    setError('')
-    setStep((s) => Math.max(1, s - 1))
   }
 
   const complete = () => {
@@ -151,37 +177,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onDone }) => {
         </div>
 
         {step === 1 && (
-          <div className="text-center space-y-6">
-            <div className="w-16 h-16 rounded-2xl bg-accent-soft text-accent flex items-center justify-center mx-auto">
-              <Sparkles size={30} />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold text-content">{t('onboarding_welcome_title')}</h1>
-              <p className="text-sm text-content-secondary">{t('onboarding_welcome_desc')}</p>
-            </div>
-            <div className="max-w-xs mx-auto text-left">
-              <Field label={t('onboarding_lang_label')}>
-                <div className="grid grid-cols-2 gap-2">
-                  {(['zh', 'en'] as Lang[]).map((l) => (
-                    <button
-                      key={l}
-                      onClick={() => switchLang(l)}
-                      className={`px-4 py-2.5 rounded-btn border text-sm font-medium cursor-pointer transition-colors ${
-                        lang === l
-                          ? 'border-accent bg-accent-soft text-accent'
-                          : 'border-strong text-content-secondary hover:bg-surface-2'
-                      }`}
-                    >
-                      {l === 'zh' ? '简体中文' : 'English'}
-                    </button>
-                  ))}
-                </div>
-              </Field>
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
           <div className="space-y-6">
             <div className="text-center space-y-2">
               <div className="w-16 h-16 rounded-2xl bg-accent-soft text-accent flex items-center justify-center mx-auto">
@@ -209,35 +204,31 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onDone }) => {
                       placeholder={t('onboarding_apikey_placeholder')}
                       className="font-mono"
                     />
-                    {PROVIDER_KEY_CONSOLE[provider] && (
-                      <a
-                        href={PROVIDER_KEY_CONSOLE[provider]}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-1.5 inline-flex items-center gap-1 text-xs text-accent hover:underline"
-                      >
-                        {t('onboarding_key_guide')}
-                        <ExternalLink size={11} />
-                      </a>
-                    )}
                   </Field>
-                  {providerMeta?.api_base_field && (
-                    <Field label={t('onboarding_apibase')}>
+                  <Field label={t('onboarding_apibase')}>
+                    <TextInput
+                      value={apiBase}
+                      onChange={(e) => setApiBase(e.target.value)}
+                      placeholder={apiBasePlaceholder || 'http://127.0.0.1:4000/v1'}
+                      className="font-mono"
+                    />
+                  </Field>
+                  <Field label={t('onboarding_model')}>
+                    {discovered.length ? (
+                      <Dropdown
+                        value={model}
+                        options={discovered.map((name) => ({ value: name, label: name }))}
+                        placeholder={t('onboarding_select_model')}
+                        onChange={setModel}
+                      />
+                    ) : (
                       <TextInput
-                        value={apiBase}
-                        onChange={(e) => setApiBase(e.target.value)}
-                        placeholder={apiBasePlaceholder || ''}
+                        value={model}
+                        onChange={(e) => setModel(e.target.value)}
+                        placeholder={modelOptions[0]?.value || t('onboarding_select_model')}
                         className="font-mono"
                       />
-                    </Field>
-                  )}
-                  <Field label={t('onboarding_model')}>
-                    <Dropdown
-                      value={model}
-                      options={modelOptions}
-                      placeholder={t('onboarding_select_model')}
-                      onChange={setModel}
-                    />
+                    )}
                   </Field>
                 </>
               )}
@@ -250,18 +241,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onDone }) => {
         <div className="mt-10 flex items-center justify-between">
           <div className="text-xs text-content-tertiary">{stepLabel}</div>
           <div className="flex items-center gap-2">
-            {/* Step 2: back to language. */}
-            {step === 2 && (
-              <button
-                onClick={goBack}
-                disabled={saving}
-                className="px-4 py-2 rounded-btn border border-strong text-content-secondary hover:bg-surface-2 text-sm font-medium cursor-pointer transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
-              >
-                <ArrowLeft size={15} />
-                {t('onboarding_back')}
-              </button>
-            )}
-            {/* Skip is available on every step: dismiss and go straight to chat. */}
+            {/* Skip dismisses the wizard and goes straight to chat. */}
             <button
               onClick={complete}
               disabled={saving}

@@ -2,7 +2,7 @@
 Memory service for handling memory query operations via cloud protocol.
 
 Provides a unified interface for listing and reading memory files,
-callable from the cloud client (LinkAI) or a future web console.
+callable from the local web console.
 
 Memory file layout (under workspace_root):
     MEMORY.md               -> type: global
@@ -25,7 +25,7 @@ class MemoryService:
 
     def __init__(self, workspace_root: str):
         """
-        :param workspace_root: Workspace root directory (e.g. ~/cow)
+        :param workspace_root: Workspace root directory (e.g. ~/maia)
         """
         self.workspace_root = workspace_root
         self.memory_dir = os.path.join(workspace_root, "memory")

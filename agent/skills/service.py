@@ -2,7 +2,7 @@
 Skill service for handling skill CRUD operations.
 
 This service provides a unified interface for managing skills, which can be
-called from the cloud control client (LinkAI), the local web console, or any
+called from the local web console or any
 other management entry point.
 """
 
@@ -33,7 +33,7 @@ SKILL_FILE = "SKILL.md"
 _TREE_SKIP_DIRS = {"__pycache__", "node_modules", "venv"}
 
 # A skill's name is also its directory name, the word the CLI addresses it by
-# (``cow skill uninstall <name>``) and the identifier the model sees, so it is
+# (``maia skill uninstall <name>``) and the identifier the model sees, so it is
 # held to the hyphen-case convention the skill-creator guide states.
 _SKILL_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9\-]{0,63}$")
 
@@ -676,7 +676,7 @@ class SkillService:
         Keep the title as typed, where the skill's name had to differ from it.
 
         The console lists ``display_name`` in preference to the name, so a title
-        like "Weather API 助手" still reads as itself after being reduced to the
+        like "Weather API helper" still reads as itself after being reduced to the
         ascii, hyphen-case name that a directory and the CLI need.
         """
         title = (title or "").strip()

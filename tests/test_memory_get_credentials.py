@@ -6,7 +6,7 @@ from agent.tools.read.read import Read
 def test_memory_get_uses_the_shared_credential_guard_when_workspace_is_home(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    credential = tmp_path / ".cow" / ".env"
+    credential = tmp_path / ".maia" / ".env"
     credential.parent.mkdir()
     credential.write_text("SYNTHETIC_PRIVATE_VALUE", encoding="utf-8")
     manager = SimpleNamespace(config=SimpleNamespace(get_workspace=lambda: tmp_path))

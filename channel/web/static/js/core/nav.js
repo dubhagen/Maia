@@ -89,8 +89,8 @@ function closeSidebar() {
 // Group open/closed state and the collapsed rail are remembered per browser.
 // The first paint already honours both: the <head> script sets
 // html.sidebar-collapsed and sidebar.html closes the stored groups inline.
-const SIDEBAR_COLLAPSED_KEY = 'cow_sidebar_collapsed';
-const SIDEBAR_GROUPS_KEY = 'cow_sidebar_groups';
+const SIDEBAR_COLLAPSED_KEY = 'maia_sidebar_collapsed';
+const SIDEBAR_GROUPS_KEY = 'maia_sidebar_groups';
 
 function _saveSidebarGroups() {
     // Merged into what is stored: a group the menu does not draw right now
@@ -214,7 +214,7 @@ function navigateTo(viewId, tab) {
         // Agent has since been deleted so we don't point at a ghost.
         if (memoryAgentId && agentCatalog.length && !agentCatalog.some(a => a.id === memoryAgentId)) {
             memoryAgentId = '';
-            localStorage.removeItem('cow_memory_agent');
+            localStorage.removeItem('maia_memory_agent');
         }
         if (!memoryAgentId) memoryAgentId = activeAgentId || defaultAgentId;
         renderMemoryAgentSelect();

@@ -1,23 +1,22 @@
 ---
 title: v2.2.0
-description: "CowAgent 2.2.0: a new Capabilities center, improved multi-Agent collaboration, a rebuilt Web console, higher model cache hit rates, and broad stability and security hardening"
+description: "Maia 2.2.0: a new Capabilities center, improved multi-Agent collaboration, a rebuilt Web console, higher model cache hit rates, and broad stability and security hardening"
 ---
 
-🌐 [English](https://docs.cowagent.ai/releases/v2.2.0) | [中文](https://docs.cowagent.ai/zh/releases/v2.2.0)
 
 ## 🧩 Capabilities Center
 
 The former **Skills** menu is now **Capabilities**, a single place in the Web console and desktop client to manage built-in tools, MCP tools, and skills:
 
-- **Skill installation**: install from Cow Skill Hub, GitHub, or ClawHub, or upload an archive, a `SKILL.md`, or a folder. Every skill is previewed first and only installed after you confirm.
+- **Skill installation**: install from Maia Skill Hub, GitHub, or ClawHub, or upload an archive, a `SKILL.md`, or a folder. Every skill is previewed first and only installed after you confirm.
 - **MCP configuration**: add, edit, and remove MCP servers in the UI, covering the stdio, SSE, and Streamable HTTP transports. Both form and JSON editing are available, and you can paste one or more `mcpServers` entries directly. Saving checks the connection and lists the server's tools; changes take effect on the next message without a restart. Thanks @tsumon (#3155)
 - **Tool retrieval diagnostics**: see how MCP tools were ranked and why retrieval fell back during a conversation, making it easier to find out why a tool was not picked. Thanks @zhongjunqi7657 (#3165)
 
 <Frame>
-  <img src="https://cdn.jsdelivr.net/gh/zhayujie/cowagent-assets@main/screenshots/en/capabilities-overview.png" alt="Capabilities" width="800" />
+  <img src="/images/screenshots/skills.png" alt="Capabilities" width="800" />
 </Frame>
 
-Related docs: [MCP Tools](https://docs.cowagent.ai/tools/mcp), [Installing Skills](https://docs.cowagent.ai/skills/install)
+Related docs: [MCP Tools](../tools/mcp.mdx), [Installing Skills](../skills/install.mdx)
 
 ## 🤝 Multi-Agent Collaboration
 
@@ -31,7 +30,7 @@ Related docs: [MCP Tools](https://docs.cowagent.ai/tools/mcp), [Installing Skill
   - Fixed some endpoints failing to locate the Agent when the parameter was sent only in the request body (Thanks @c020627 #3177).
 
 <Frame>
-  <img src="https://cdn.jsdelivr.net/gh/zhayujie/cowagent-assets@main/screenshots/en/agent-task-handoff.png" alt="Task handoff as separate messages" width="800" />
+  <img src="/images/screenshots/chat.png" alt="Task handoff as separate messages" width="800" />
 </Frame>
 
 ## 🖥 Console Upgrades
@@ -51,7 +50,7 @@ Related docs: [MCP Tools](https://docs.cowagent.ai/tools/mcp), [Installing Skill
 - **Document chunking**: fixed content before the first heading of a long Markdown document not being indexed, and content being indexed twice when heading levels are skipped; `/memory status` prompts you to rebuild the index (Thanks @Bdysj #3309).
 - **Session loading**: opening a session no longer triggers a memory scan and index rebuild, so the first message in a new session responds faster.
 
-Related docs: [Memory](https://docs.cowagent.ai/memory/index)
+Related docs: [Memory](../memory/index.mdx)
 
 ## 📐 Context & Token Cost
 
@@ -109,7 +108,7 @@ This release makes task execution more reliable and systematically hardens exter
 - **Backup**: backups can be written to a different file system (Thanks @zyc2022 #3200, @chen1070109514 #3246); restoring a multi-Agent backup keeps this machine's existing Agent workspace paths (Thanks @Lesereingrape #3319).
 - **Plugins**: plugins start normally when their config is empty or incomplete (Thanks @c020627 #3224); Midjourney reports an invalid image index (Thanks @Lesereingrape #3291); the role plugin returns help when a custom role has no description (Thanks @Lesereingrape #3296); admin commands report invalid arguments when setting plugin priority or switching models (Thanks @Lesereingrape #3303, #3305); a missing or malformed entry in `plugins.json` is filled with defaults instead of breaking every plugin (Thanks @Lesereingrape #3314); fixed file naming and unclosed handles in the summary plugin (Thanks @c020627 #3215).
 - **Agent management**: deleting an Agent also removes its project data (Thanks @c020627 #3216).
-- **Agent Mail**: Docker Compose adds an optional Agent Mail setup that lets the Agent send, receive, search, and manage email. See [Agent Mail](https://docs.cowagent.ai/extensions/agent-mail) (Thanks @tsumon #3236).
+- **Agent Mail**: Docker Compose adds an optional Agent Mail setup that lets the Agent send, receive, search, and manage email. See [Agent Mail](../extensions/agent-mail.mdx) (Thanks @tsumon #3236).
 - **Message handling**: fixed message context parameters being shared across sessions (Thanks @c020627 #3222); file cache expiry is measured from the most recent file (Thanks @c020627 #3218); fixed the rate limiter blocking process exit and failing at a rate of 0 (Thanks @aniruddhaadak80 #3285); unsupported reply types show the original type in the error message, and voice sessions no longer error after a plugin drops the reply (Thanks @Bdysj #3306, #3307); fixed `#reset`, Feishu message recall, and session deletion failing to clear queued messages under non-default Agents (Thanks @Lesereingrape #3316).
 - **Browser tool**: recovers automatically after the browser driver disconnects instead of erroring repeatedly.
 - **Desktop client**: fixed the microphone permission prompt not appearing on macOS (Thanks @cowagent #3181); fixed a startup crash caused by Windows shortcuts and duplicated backend log lines.
@@ -120,7 +119,7 @@ This release makes task execution more reliable and systematically hardens exter
 
 ## 📦 How to Upgrade
 
-- **Source deployment**: run `cow update` for a one-click upgrade, update from the version menu in the Web console sidebar, or pull the latest code and restart. See the [upgrade guide](https://docs.cowagent.ai/guide/upgrade).
-- **Desktop client**: check for updates and update with one click inside the client, or get the latest version from the [download page](https://cowagent.ai/download/).
+- **Source deployment**: run `maia update` for a one-click upgrade, update from the version menu in the Web console sidebar, or pull the latest code and restart. See the [upgrade guide](../guide/upgrade.mdx).
+- **Desktop client**: check for updates and update with one click inside the client, or get the latest version from the [download page](../guide/desktop.mdx).
 
 **Release date**: 2026.09.30 | [Full Changelog](https://github.com/zhayujie/CowAgent/compare/2.1.9...2.2.0)

@@ -1,5 +1,4 @@
 #!/bin/bash
-#打开日志
 
 cd `dirname $0`/..
 export BASE_DIR=`pwd`

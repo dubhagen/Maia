@@ -44,7 +44,7 @@ def _vendor_raises(*args):
 
 
 def _vendor_answers_error(*args):
-    return Reply(ReplyType.ERROR, "遇到了一点小问题，请稍后再问我吧")  # CustomVoice.textToVoice
+    return Reply(ReplyType.ERROR, "Something went wrong, please try again later")  # CustomVoice.textToVoice
 
 
 @pytest.mark.parametrize("text_to_voice", [_vendor_raises, _vendor_answers_error],
@@ -56,7 +56,7 @@ def test_failed_tts_keeps_the_text_reply(channel, monkeypatch, text_to_voice):
 
     assert reply.type == ReplyType.TEXT
     assert reply.content == "the answer"
-    assert "遇到了一点小问题" not in reply.content
+    assert "Something went wrong" not in reply.content
 
 
 def test_successful_tts_still_returns_the_voice_reply(channel, monkeypatch):

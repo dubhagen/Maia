@@ -7,7 +7,7 @@ export interface ElectronAPI {
   getBackendStatus: () => Promise<string>
   /** The last backend failure, queryable so it can't be missed by timing. */
   getBackendError: () => Promise<BackendFailure | null>
-  /** Data dir holding config.json and run.log (~/.cow in packaged builds). */
+  /** Data dir holding config.json and run.log (~/.maia in packaged builds). */
   getDataDir: () => Promise<string>
   /** Per-launch secret shared with the spawned backend (desktop-only requests). */
   getDesktopToken?: () => Promise<string>
@@ -39,7 +39,7 @@ export interface ElectronAPI {
   setLoginItemEnabled?: (
     enabled: boolean
   ) => Promise<{ ok: boolean; enabled: boolean; error: string }>
-  // Themes (bundled + user themes from ~/.cow/themes), images inlined.
+  // Themes (bundled + user themes from ~/.maia/themes), images inlined.
   listThemes?: () => Promise<Record<string, unknown>[]>
   getThemesDir?: () => Promise<string>
   // Optional app config: first-run default theme + display name. Null when
@@ -302,7 +302,7 @@ export interface ProjectRef {
 
 /** Project picker state for a session (from /api/projects). */
 export interface ProjectState {
-  /** null when the session uses the default workspace (~/cow). */
+  /** null when the session uses the default workspace (~/maia). */
   current: ProjectRef | null
   default_workspace: string
   projects_root?: string
@@ -663,7 +663,6 @@ export interface ConfigData {
   title: string
   model: string
   bot_type: string
-  use_linkai: boolean
   channel_type: string
   /** Optional manual override for the input budget; 0 = derive from the model. */
   agent_max_context_tokens: number
@@ -774,7 +773,7 @@ export interface CapabilityState {
   providers?: string[]
   // provider_models entries are string | {value,hint}
   provider_models?: Record<string, ModelEntry[]>
-  // tts only: voices keyed by provider; linkai keyed further by model id
+  // tts only: voices for the selected provider
   provider_voices?: Record<string, ModelEntry[] | Record<string, ModelEntry[]>>
   // vision/image
   strategy?: string
@@ -783,7 +782,6 @@ export interface CapabilityState {
   fallback_model?: string
   // tts
   reply_mode?: 'off' | 'voice_if_voice' | 'always'
-  use_linkai?: boolean
   // image
   runtime_active?: boolean
   note?: string
@@ -891,7 +889,6 @@ export interface ChannelInfo {
   channel_type?: string
   agent_id?: string
   members?: string[]
-  // User-editable display name for this instance (e.g. "微信2"); empty falls back
   // to the instance id. Present only on per-instance cards (multi-Agent mode).
   instance_name?: string
 }
@@ -1027,7 +1024,7 @@ export interface McpTestResult {
   message?: string
 }
 
-export type SkillMarketSource = 'hub' | 'github' | 'clawhub'
+export type SkillMarketSource = 'hub' | 'github'
 
 /** One skill found in a staged fetch or upload, shown for review before installing. */
 export interface SkillPreviewItem {
@@ -1293,7 +1290,6 @@ export interface SchedulerInstance {
   channel_type: string
   // User-friendly instance name (falls back to a bot name / type label / id).
   name: string
-  // Friendly channel-type label (e.g. "微信"), shown on the right of the picker.
   channel_label: string
   // The Agent this instance is bound to (""/absent -> default Agent).
   agent_id?: string

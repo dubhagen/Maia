@@ -1,9 +1,9 @@
 ---
 title: MCP Tools
-description: "CowAgent supports the Model Context Protocol (MCP). Add servers in mcp.json or the console and the agent can call thousands of community MCP tools just like built-in ones."
+description: "Maia supports the Model Context Protocol (MCP). Add servers in mcp.json or the console and the agent can call thousands of community MCP tools just like built-in ones."
 ---
 
-CowAgent supports the [Model Context Protocol (MCP)](https://modelcontextprotocol.io), allowing the Agent to directly invoke tens of thousands of community MCP tools. Configure `mcp.json` once and the tools are exposed to the LLM in exactly the same way as built-in tools — automatically selected and invoked.
+Maia supports the [Model Context Protocol (MCP)](https://modelcontextprotocol.io), allowing the Agent to directly invoke tens of thousands of community MCP tools. Configure `mcp.json` once and the tools are exposed to the LLM in exactly the same way as built-in tools — automatically selected and invoked.
 
 ## Web and Desktop Console
 
@@ -17,14 +17,14 @@ The **MCP Tools** section of the Capabilities page in the **web console** and **
 stdio, SSE, and streamable HTTP transports are all supported. A disabled server stays in the file but is not booted.
 
 <Frame>
-  <img src="https://cdn.jsdelivr.net/gh/zhayujie/cowagent-assets@main/screenshots/en/mcp-config.png" alt="Add an MCP tool" width="800" />
+  <img src="/images/screenshots/skills.png" alt="Add an MCP tool" width="800" />
 </Frame>
 
 ## Configuration File
 
-CowAgent reads `~/cow/mcp.json`. If the file does not exist, no MCP tools are loaded — and no error is raised.
+Maia reads `~/maia/mcp.json`. If the file does not exist, no MCP tools are loaded — and no error is raised.
 
-For Docker deployments, the official `docker-compose.yml` already mounts the host's `./cow` directory to `/home/agent/cow` inside the container (i.e. the container user's `~/cow`). Just drop `mcp.json` into the host's `./cow/` directory and it will take effect.
+For Docker deployments, the official `docker-compose.yml` already mounts the host's `./maia` directory to `/home/agent/maia` inside the container (i.e. the container user's `~/maia`). Just drop `mcp.json` into the host's `./maia/` directory and it will take effect.
 
 ### Standard Format
 
@@ -53,7 +53,7 @@ Fully compatible with the MCP community standard, identical to Claude Desktop / 
 | `type` | Remote | Remote transport type: `sse` or `streamable-http` (defaults to `sse`) |
 | `headers` | No | Extra HTTP headers for remote requests (e.g. `Authorization`); Streamable HTTP only |
 | `scope` | No | OAuth scope, only for remote servers that require OAuth authorization (optional) |
-| `tool_name_prefix` | No | String prepended to this server's tool names in CowAgent, e.g. `myserver_`. Defaults to an empty string. Include any separator in the prefix. Use a unique prefix to avoid collisions with built-in tools or other servers. |
+| `tool_name_prefix` | No | String prepended to this server's tool names in Maia, e.g. `myserver_`. Defaults to an empty string. Include any separator in the prefix. Use a unique prefix to avoid collisions with built-in tools or other servers. |
 | `disabled` | No | When `true`, this server is skipped — handy for temporary disabling |
 
 ### Full Example
@@ -103,12 +103,12 @@ For a remote server that authenticates with a static API key, set `type` explici
 
 ## Let the Agent Configure It for You
 
-CowAgent ships with `read` / `write` / `edit` tools, so **you can simply send the MCP config to the Agent and ask it to write the file**:
+Maia ships with `read` / `write` / `edit` tools, so **you can simply send the MCP config to the Agent and ask it to write the file**:
 
 For example:
 
 ```markdown
-Add this MCP to ~/cow/mcp.json:
+Add this MCP to ~/maia/mcp.json:
 
 {"mcpServers":{"fetch":{"command":"uvx","args":["mcp-server-fetch"]}}}
 ```
@@ -124,7 +124,7 @@ Commands in `mcp.json` start with the Agent process's privileges, so the Agent m
 
 ## Web Authorization (OAuth)
 
-Some remote MCP servers require OAuth web authorization, and connecting to them directly returns `401`. CowAgent has a built-in standard OAuth flow, so **no manual token is needed** — just configure the server normally, for example:
+Some remote MCP servers require OAuth web authorization, and connecting to them directly returns `401`. Maia has a built-in standard OAuth flow, so **no manual token is needed** — just configure the server normally, for example:
 
 ```json
 {
@@ -140,13 +140,13 @@ Some remote MCP servers require OAuth web authorization, and connecting to them 
 When a server returns `401` on its first load, authorization starts automatically: running locally **opens the browser automatically**, while server deployments **print the authorization link to the log** for you to open in a browser. Once you approve, the server comes online immediately; tokens are refreshed automatically on expiry, so you never have to re-authorize.
 
 - **Requires the web service**: The authorization callback is received by the web console (default port `9899`), so the Web channel must be running.
-- **Credential storage**: Tokens are persisted in `~/.cow/mcp_oauth.json` and reused across restarts.
+- **Credential storage**: Tokens are persisted in `~/.maia/mcp_oauth.json` and reused across restarts.
 - **Callback URL**: Defaults to `http://127.0.0.1:9899/mcp/oauth/callback`. If deployed on a server with the authorizing browser on another device, set `mcp_oauth_redirect_base` in `config.json` (e.g. `http://YOUR_IP:9899`).
 
 ## How It Works
 
 - **Async loading at startup**: All servers configured in `mcp.json` are loaded asynchronously in the background, never blocking the main loop — chat is usable immediately.
-- **Hot reload**: When you or the Agent modifies `mcp.json`, changed servers are automatically reloaded after the current message — no need to restart cow.
+- **Hot reload**: When you or the Agent modifies `mcp.json`, changed servers are automatically reloaded after the current message — no need to restart maia.
 - **Flat exposure**: Each method exposed by an MCP server appears as an individual tool. The LLM picks one directly without a second-stage decision.
 
 ## Supported Transports
@@ -161,10 +161,10 @@ When a server returns `401` on its first load, authorization starts automaticall
 
 | Symptom | What to Check |
 | --- | --- |
-| Agent has no MCP tools after startup | Verify that `~/cow/mcp.json` exists and contains valid JSON |
+| Agent has no MCP tools after startup | Verify that `~/maia/mcp.json` exists and contains valid JSON |
 | A specific server fails to load | Look for `[MCP] Server 'xxx' load failed` in startup logs — usually missing dependencies or API keys |
 | Changes to `mcp.json` aren't applied | Changes take effect on **the next message**. If the server config didn't actually change (e.g. only comments edited), no restart is triggered |
-| Docker deployment | Make sure host's `./cow` is mounted to `/home/agent/cow` in the container, then just drop `mcp.json` into host's `./cow/`. Or just ask the Agent to do it |
+| Docker deployment | Make sure host's `./maia` is mounted to `/home/agent/maia` in the container, then just drop `mcp.json` into host's `./maia/`. Or just ask the Agent to do it |
 
 ## Recommended MCP Marketplaces
 
@@ -173,4 +173,4 @@ You can browse third-party MCP marketplaces and copy a JSON config to use direct
 - [mcp.so](https://mcp.so) — Global MCP service index
 - [ModelScope MCP Hub](https://modelscope.cn/mcp) — ModelScope's MCP hub, more reliable from mainland China
 
-Any MCP server that follows the standard protocol (stdio / SSE / Streamable HTTP) integrates with CowAgent out of the box.
+Any MCP server that follows the standard protocol (stdio / SSE / Streamable HTTP) integrates with Maia out of the box.

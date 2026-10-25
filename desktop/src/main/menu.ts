@@ -3,8 +3,7 @@ import type { MenuItemConstructorOptions } from 'electron'
 import { loadAppConfig } from './themes'
 
 const isMac = process.platform === 'darwin'
-const SKILL_HUB_URL = 'https://skills.cowagent.ai/'
-const DEFAULT_DOCS_URL = 'https://docs.cowagent.ai'
+const DEFAULT_DOCS_URL = ''
 
 // Send a menu-triggered action to the renderer (e.g. new chat, open settings).
 function emit(win: BrowserWindow | null, action: string) {
@@ -94,9 +93,6 @@ export function buildAppMenu(getWindow: () => BrowserWindow | null) {
   const docsUrl = typeof appConfig?.docsUrl === 'string' ? appConfig.docsUrl.trim() : DEFAULT_DOCS_URL
   const linkItems: MenuItemConstructorOptions[] = [
     ...(docsUrl ? [{ label: 'Documentation', click: () => shell.openExternal(docsUrl) }] : []),
-    ...(appConfig?.skillHub !== false
-      ? [{ label: 'Skill Hub', click: () => shell.openExternal(SKILL_HUB_URL) }]
-      : []),
   ]
   const helpMenu: MenuItemConstructorOptions = {
     label: 'Help',

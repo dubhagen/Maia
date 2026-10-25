@@ -1,68 +1,23 @@
 ---
 title: Install Skills
-description: "Install skills with one command from the Skill Hub, GitHub, ClawHub or any URL (zip or SKILL.md), or add them from the market or by local upload with a preview in the web console and desktop app."
+description: "Install a skill from a git URL you type, or from a directory on disk."
 ---
 
-CowAgent supports installing skills from [Cow Skill Hub](https://skills.cowagent.ai/), GitHub, ClawHub, LinkAI, and any URL via a unified `install` command. Use `/skill install` in chat or `cow skill install` in the terminal.
+There is no bundled skill marketplace. Use `/skill install` in chat or `maia skill install` in the terminal.
 
-You can also add skills from the Capabilities page in the web console and desktop app. Click **Add skill**, then either:
+You can also add a skill from the web console. Click **Add skill** and enter a GitHub repository or folder URL, or upload a `.zip`, a `SKILL.md`, or a skill folder.
 
-- **From a market**: pick Cow Skill Hub or ClawHub and enter the skill name, or pick GitHub and enter a repository or folder URL.
-- **Upload**: drop in a `.zip` / `.tar.gz` archive, a `SKILL.md`, or a whole skill folder.
+The skill is fetched first and shown for review. Nothing is installed until you confirm.
 
-The skill is fetched first and shown for review (its `SKILL.md`, file list, and whether it would replace an installed skill). Nothing is installed until you confirm.
-
-## From the Skill Hub
-
-Browse all available skills at [skills.cowagent.ai](https://skills.cowagent.ai/) and install by name:
+## From Git
 
 ```text
-/skill list --remote
-/skill install pptx
+/skill install https://github.com/owner/repo
+/skill install https://github.com/owner/repo/tree/main/skills/one-skill
+/skill install ./my-local-skill
 ```
 
-## From GitHub
-
-Any GitHub-hosted skill can be installed directly. Supports both repository-level batch install and subdirectory-level single install:
-
-```text
-/skill install larksuite/cli
-/skill install https://github.com/larksuite/cli/tree/main/skills/lark-im
-```
-
-## From ClawHub
-
-All [ClawHub](https://clawhub.ai/) skills (40k+) can be installed with a single command:
-
-```text
-/skill install clawhub:<name>
-```
-
-ClawHub skill names are only unique per publisher. When several publishers share a name, include the publisher or use the skill's page URL:
-
-```text
-/skill install clawhub:steipete/gog
-/skill install https://clawhub.ai/steipete/skills/gog
-```
-
-## From LinkAI
-
-All public resources on [LinkAI](https://link-ai.tech/console?utm_source=cowagent&utm_medium=docs&utm_campaign=skills-install) (10k+ apps / workflows / plugins), as well as your own resources (apps, workflows, knowledge bases, databases, plugins), can be installed via:
-
-```text
-/skill install linkai:<code>
-```
-
-> Every resource created on the LinkAI platform has a unique `code`. Find it on each resource's page in the [console](https://link-ai.tech/console?utm_source=cowagent&utm_medium=docs&utm_campaign=skills-install).
-
-## From URL
-
-Supports zip archives and SKILL.md file links:
-
-```text
-/skill install https://cdn.link-ai.tech/skills/pptx.zip
-/skill install https://example.com/path/to/SKILL.md
-```
+`clawhub:` and `linkai:` prefixes are not installed. A `skill_hub_url` is used only when you set one in `config.json`.
 
 ## Manage Skills
 
@@ -75,5 +30,5 @@ Supports zip archives and SKILL.md file links:
 ```
 
 <Tip>
-  All commands above work in the terminal by replacing `/skill` with `cow skill`. See [Skill Management Commands](/cli/skill) for full documentation.
+  All commands above work in the terminal by replacing `/skill` with `maia skill`. See [Skill Management Commands](/cli/skill) for full documentation.
 </Tip>

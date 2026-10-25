@@ -27,7 +27,7 @@ class SubagentRunRecordTest(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.workspace = self._tmp.name
         # runner resolves the store from the parent's workspace; point that at
-        # a temporary one so nothing touches a real ~/cow database.
+        # a temporary one so nothing touches a real ~/maia database.
         self.store = ConversationStore(
             Path(self.workspace) / "memory" / "long-term" / "index.db"
         )

@@ -15,11 +15,8 @@ CHATGPT_ON_WECHAT_EXEC=${CHATGPT_ON_WECHAT_EXEC:-""}
 # export SINGLE_CHAT_PREFIX=${SINGLE_CHAT_PREFIX:-'["bot", "@bot"]'}
 # export SINGLE_CHAT_REPLY_PREFIX=${SINGLE_CHAT_REPLY_PREFIX:-'"[bot] "'}
 # export GROUP_CHAT_PREFIX=${GROUP_CHAT_PREFIX:-'["@bot"]'}
-# export GROUP_NAME_WHITE_LIST=${GROUP_NAME_WHITE_LIST:-'["ChatGPT测试群", "ChatGPT测试群2"]'}
-# export IMAGE_CREATE_PREFIX=${IMAGE_CREATE_PREFIX:-'["画", "看", "找"]'}
 # export CONVERSATION_MAX_TOKENS=${CONVERSATION_MAX_TOKENS:-"1000"}
 # export SPEECH_RECOGNITION=${SPEECH_RECOGNITION:-"False"}
-# export CHARACTER_DESC=${CHARACTER_DESC:-"你是ChatGPT, 一个由OpenAI训练的大型语言模型, 你旨在回答并解决人们的任何问题，并且可以使用多种语言与人交流。"}
 # export EXPIRES_IN_SECONDS=${EXPIRES_IN_SECONDS:-"3600"}
 
 # CHATGPT_ON_WECHAT_PREFIX is empty, use /app
@@ -51,8 +48,8 @@ fi
 
 # fix ownership of mounted volumes then drop to non-root user
 if [ "$(id -u)" = "0" ]; then
-    mkdir -p /home/agent/cow "${COW_DATA_DIR:-/home/agent/.cow}"
-    chown agent:agent /home/agent/cow "${COW_DATA_DIR:-/home/agent/.cow}"
+    mkdir -p /home/agent/maia "${MAIA_DATA_DIR:-/home/agent/.maia}"
+    chown agent:agent /home/agent/maia "${MAIA_DATA_DIR:-/home/agent/.maia}"
     exec su agent -s /bin/bash -c "cd $CHATGPT_ON_WECHAT_PREFIX && $CHATGPT_ON_WECHAT_EXEC"
 fi
 

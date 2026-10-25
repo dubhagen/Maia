@@ -137,8 +137,7 @@ Two rules for includes:
 | `modals/confirm-dialog.html` | Static confirm dialog |
 | `modals/rename-dialog.html` | Channel instance rename |
 | `modals/folder-picker.html` | Project folder picker |
-| `modals/vendor.html` | Vendor credentials and model catalog editor |
-| `modals/custom-provider.html` | Custom OpenAI-compatible provider |
+| `modals/vendor.html` | LiteLLM endpoint credentials and model catalog editor |
 | `modals/task-edit.html` | Scheduled task create/edit |
 | `modals/run-detail.html` | Run record detail |
 | `modals/menu-editor.html` | Menu editor frame |
@@ -249,7 +248,7 @@ collide with a view name either.
 **Asset references in the page must be absolute** (`/assets/js/...`). Path
 routing depends on it: a relative reference under `/settings/models` would
 resolve to `/settings/assets/...` and 404 the whole page. This gives up nothing
-for reverse-proxy subpath mounts (say `https://host/cow/`): the console could
+for reverse-proxy subpath mounts (say `https://host/maia/`): the console could
 never be mounted that way, since every API call it makes is already an absolute
 `/api/...` path. Supporting a subpath would mean prefixing all of them, not
 making asset references relative again.
@@ -330,12 +329,8 @@ auth), see `tests/test_web_console_routing.py`.
 | `views/sessions.js` | Session history panel: list, pin, rename, project grouping |
 | `views/agents.js` | Agent list, detail drawer, avatars, core files |
 | `views/config.js` | Basic settings tab |
-| `views/models.js` | Models tab: vendors, capability cards, fallback chain, model catalog |
-| `views/models-custom-provider.js` | Add/edit dialog for custom OpenAI-compatible providers |
-| `views/channels.js` | Channel list, binding and configuration |
-| `views/channels-weixin.js` | WeChat QR login |
-| `views/channels-wecom.js` | WeCom bot QR authorisation |
-| `views/channels-feishu.js` | Feishu one-click app registration |
+| `views/models.js` | Models tab: LiteLLM endpoint, capability cards, fallback chain |
+| `views/channels.js` | States that the web console is the only chat channel |
 | `views/tasks.js` | Scheduled tasks and run records |
 | `views/tasks-modal.js` | Scheduled task create/edit dialog |
 | `views/skills.js` | Built-in tools, installed skills, the viewer for a skill's files, and creating a skill from a form or an upload |

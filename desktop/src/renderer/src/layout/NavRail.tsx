@@ -7,12 +7,9 @@ import {
   Moon,
   ScrollText,
   MoreHorizontal,
-  Languages,
   Download,
   Loader2,
-  Globe,
   FileText,
-  Store,
   MessageSquareWarning,
   Palette,
   Check,
@@ -23,13 +20,12 @@ import type { Theme } from '../theme/themes'
 import type { MenuGroup, MenuItem } from '../types'
 // The desktop app's own brand icon (transparent PNG), bundled by Vite.
 import brandLogo from '../assets/logo.png'
-import { t, getLang, setLang, Lang } from '../i18n'
+import { t } from '../i18n'
 import { useUIStore } from '../store/uiStore'
 import { guardDocEditors } from '../store/docEditorStore'
 import { useTheme } from '../hooks/useTheme'
 import { usePlatform } from '../hooks/usePlatform'
 import { useUpdateStore, hasPendingUpdate, hasAvailableUpdate } from '../store/updateStore'
-import UpdateBanner from '../components/UpdateBanner'
 import Tooltip from '../components/Tooltip'
 import { useMenuStore } from '../store/menuStore'
 import { groupLabel, itemIcon, itemLabel, itemRoute, itemShows } from '../lib/menu'
@@ -38,28 +34,27 @@ import { product } from '@product'
 // Fallback shown when app.getVersion() is unavailable (dev/web preview). Keep
 // in sync with desktop/package.json "version"; the packaged app overrides this
 // with the real value via IPC, so it only matters outside a packaged build.
-const FALLBACK_VERSION = '2.2.1'
+const FALLBACK_VERSION = '0.99.0'
 
 // External links opened in the user's default browser. The window-open handler
 // in the main process routes window.open() through shell.openExternal.
 // English is the default (no suffix); Chinese gets a /zh suffix. Skill hub is
 // language-agnostic.
-const SKILL_HUB_URL = 'https://skills.cowagent.ai/'
+const SKILL_HUB_URL = ''
 // GitHub issues — where users report bugs / request features.
-const FEEDBACK_URL = 'https://github.com/zhayujie/CowAgent/issues'
+const FEEDBACK_URL = 'https://github.com/dubhagen/Maia/issues'
 
-const websiteUrl = () => (getLang() === 'zh' ? 'https://cowagent.ai/zh' : 'https://cowagent.ai')
-const docsUrl = () => (getLang() === 'zh' ? 'https://docs.cowagent.ai/zh' : 'https://docs.cowagent.ai')
+const docsUrl = () => 'https://github.com/dubhagen/Maia/tree/master/docs'
 
 const openExternal = (url: string) => {
   window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 interface NavRailProps {
-  onLangChange: () => void
+  onLangChange?: () => void
 }
 
-const NavRail: React.FC<NavRailProps> = ({ onLangChange }) => {
+const NavRail: React.FC<NavRailProps> = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const { navCollapsed, toggleNav } = useUIStore()
@@ -133,12 +128,6 @@ const NavRail: React.FC<NavRailProps> = ({ onLangChange }) => {
       document.removeEventListener('keydown', onKey)
     }
   }, [menuOpen])
-
-  const toggleLanguage = () => {
-    const next: Lang = getLang() === 'zh' ? 'en' : 'zh'
-    setLang(next)
-    onLangChange()
-  }
 
   // Track a user-initiated check so we can show "up to date" feedback in the
   // menu when the result comes back as not-available (the auto poll stays
@@ -257,11 +246,6 @@ const NavRail: React.FC<NavRailProps> = ({ onLangChange }) => {
         ))}
       </nav>
 
-      {/* Update banner floats above the footer when a new version is pending */}
-      <div className="relative">
-        {!collapsed && <UpdateBanner />}
-      </div>
-
       {/* Footer actions: a single "more" entry (with version + update dot) that
           opens an upward popover, plus the always-visible collapse toggle. An
           optional '@product' slot sits on the left (e.g. an account avatar),
@@ -285,7 +269,6 @@ const NavRail: React.FC<NavRailProps> = ({ onLangChange }) => {
             themeId={themeId}
             themes={themes}
             onThemeId={setThemeId}
-            onLanguage={toggleLanguage}
             onCheckUpdate={checkUpdate}
             onOpenLink={(url) => {
               setMenuOpen(false)
@@ -349,7 +332,7 @@ const NavRail: React.FC<NavRailProps> = ({ onLangChange }) => {
 const BrandLogo: React.FC = () => (
   <img
     src={brandLogo}
-    alt="CowAgent"
+    alt="Maia"
     draggable={false}
     className="flex-shrink-0 w-7 h-7 object-contain"
   />
@@ -389,10 +372,9 @@ const FooterMenu: React.FC<{
   onLogs: () => void
   onEditMenu: () => void
   onTheme: () => void
-  onLanguage: () => void
   onCheckUpdate: () => void
   onOpenLink: (url: string) => void
-}> = ({ theme, checking, pendingUpdate, upToDate, themeId, themes, onThemeId, onLogs, onEditMenu, onTheme, onLanguage, onCheckUpdate, onOpenLink }) => {
+}> = ({ theme, checking, pendingUpdate, upToDate, themeId, themes, onThemeId, onLogs, onEditMenu, onTheme, onCheckUpdate, onOpenLink }) => {
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const updateLabel = checking
     ? t('update_checking')
@@ -405,9 +387,10 @@ const FooterMenu: React.FC<{
         extension may hide this group to keep the menu to app actions only. */}
     {!product.nav?.hideExternalLinks && (
       <>
-        <MenuItem icon={<Store size={16} />} label={t('menu_skill_hub')} onClick={() => onOpenLink(SKILL_HUB_URL)} />
+        {SKILL_HUB_URL ? (
+          <MenuItem icon={<FileText size={16} />} label={t('menu_skill_hub')} onClick={() => onOpenLink(SKILL_HUB_URL)} />
+        ) : null}
         <MenuItem icon={<FileText size={16} />} label={t('menu_docs')} onClick={() => onOpenLink(docsUrl())} />
-        <MenuItem icon={<Globe size={16} />} label={t('menu_website')} onClick={() => onOpenLink(websiteUrl())} />
         <MenuItem
           icon={<MessageSquareWarning size={16} />}
           label={t('menu_feedback')}
@@ -443,17 +426,11 @@ const FooterMenu: React.FC<{
           onClick={() => onThemeId(th.id)}
           className="w-full flex items-center gap-2.5 pl-8 pr-3 h-9 text-[13px] text-content-secondary hover:bg-surface-2 hover:text-content cursor-pointer transition-colors"
         >
-          <ThemeSwatch preview={th.preview ?? { accent: '#4abe6e', bg: '#111', surface: '#1c1c1f' }} />
+          <ThemeSwatch preview={th.preview ?? { accent: '#6B8EF0', bg: '#111', surface: '#1c1c1f' }} />
           <span className="flex-1 text-left truncate">{th.name}</span>
           {themeId === th.id && <Check size={14} className="flex-shrink-0 text-accent" />}
         </button>
       ))}
-    <MenuItem
-      icon={<Languages size={16} />}
-      label={t('menu_language')}
-      trailing={getLang() === 'zh' ? 'EN' : '中'}
-      onClick={onLanguage}
-    />
     <MenuItem icon={<SquarePen size={16} />} label={t('menu_edit')} onClick={onEditMenu} />
     <MenuItem icon={<ScrollText size={16} />} label={t('menu_logs')} onClick={onLogs} />
   </div>

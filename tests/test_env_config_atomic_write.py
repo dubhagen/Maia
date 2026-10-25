@@ -1,6 +1,6 @@
 """A failed env_config save must not take the stored credentials with it.
 
-``~/.cow/.env`` is where the agent keeps its API keys, and ``_write_env_file``
+``~/.maia/.env`` is where the agent keeps its API keys, and ``_write_env_file``
 rebuilds the whole file from an in-memory dict on every ``set``/``delete``.
 Writing straight into the file truncates it first, so anything that goes wrong
 after that point -- a value the codec cannot encode, a full disk, the process
@@ -35,7 +35,7 @@ HEADER = (
 
 @pytest.fixture()
 def tool(tmp_path):
-    """An EnvConfig pinned to a temp dir; the developer's ~/.cow is never used."""
+    """An EnvConfig pinned to a temp dir; the developer's ~/.maia is never used."""
     instance = EnvConfig(config={})
     instance.env_dir = str(tmp_path)
     instance.env_path = str(tmp_path / ".env")

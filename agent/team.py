@@ -39,7 +39,7 @@ FILE_NAME = "team.json"
 
 
 def instance_root(settings: Mapping[str, Any]) -> Path:
-    return Path(expand_path((settings.get("agent_workspace") or "~/cow")))
+    return Path(expand_path((settings.get("agent_workspace") or "~/maia")))
 
 
 def team_file(settings: Mapping[str, Any]) -> Path:

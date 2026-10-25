@@ -10,7 +10,7 @@ from agent.skills.loader import SkillLoader
 
 
 def _install(entry_yaml):
-    meta = parse_metadata(yaml.safe_load("metadata:\n  cowagent:\n    install:\n" + entry_yaml))
+    meta = parse_metadata(yaml.safe_load("metadata:\n  maia:\n    install:\n" + entry_yaml))
     return [(spec.kind, spec.id) for spec in meta.install]
 
 
@@ -28,8 +28,17 @@ def test_valid_kind_parses(raw, expected):
     assert _install(f"      - {raw}\n") == expected
 
 
+@pytest.mark.parametrize("namespace", ["maia", "cow", "cowagent", "openclaw"])
+def test_legacy_metadata_namespace_still_parses(namespace):
+    meta = parse_metadata(yaml.safe_load(
+        f"metadata:\n  {namespace}:\n    emoji: \"*\"\n    requires:\n      bins: [curl]\n"
+    ))
+    assert meta.emoji == "*"
+    assert meta.requires["bins"] == ["curl"]
+
+
 def test_bad_skill_does_not_hide_the_others(tmp_path: Path):
-    for name, extra in (("good", ""), ("bad", "\nmetadata:\n  cowagent:\n    install:\n      - kind:")):
+    for name, extra in (("good", ""), ("bad", "\nmetadata:\n  maia:\n    install:\n      - kind:")):
         (tmp_path / name).mkdir()
         (tmp_path / name / "SKILL.md").write_text(
             f"---\nname: {name}\ndescription: d{extra}\n---\nbody\n", encoding="utf-8")

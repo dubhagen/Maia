@@ -1,6 +1,6 @@
 """``env_config`` must not write an entry that reads back as two.
 
-``~/.cow/.env`` is line-oriented, and that assumption is made independently in
+``~/.maia/.env`` is line-oriented, and that assumption is made independently in
 three places: this tool's own ``_read_env_file``, and python-dotenv through
 ``bridge/agent_initializer.py`` (``load_dotenv``) and ``agent/tools/bash/bash.py``
 (``dotenv_values``, whose values are also what ``_redact_progress`` scrubs out of
@@ -23,7 +23,7 @@ from agent.tools.env_config.env_config import EnvConfig
 
 @pytest.fixture()
 def tool(tmp_path):
-    """An EnvConfig pinned to a temp dir; the developer's ~/.cow is never used."""
+    """An EnvConfig pinned to a temp dir; the developer's ~/.maia is never used."""
     instance = EnvConfig(config={})
     instance.env_dir = str(tmp_path)
     instance.env_path = str(tmp_path / ".env")
@@ -70,13 +70,13 @@ def test_the_split_never_reaches_the_readers(tool):
 
 
 def test_a_refused_value_does_not_disturb_the_keys_already_stored(tool):
-    assert _set(tool, "LINKAI_API_KEY", "linkai-live-key").status == "success"
+    assert _set(tool, "EXAMPLE_API_KEY", "example-live-key").status == "success"
 
     assert _set(tool, "OPENAI_API_KEY", "one\ntwo").status == "error"
 
-    assert tool._read_env_file() == {"LINKAI_API_KEY": "linkai-live-key"}
+    assert tool._read_env_file() == {"EXAMPLE_API_KEY": "example-live-key"}
     listed = tool.execute({"action": "list"})
-    assert list(listed.result["variables"]) == ["LINKAI_API_KEY"]
+    assert list(listed.result["variables"]) == ["EXAMPLE_API_KEY"]
 
 
 def test_a_key_that_is_not_one_field_is_refused(tool):

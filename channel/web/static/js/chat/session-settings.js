@@ -226,6 +226,11 @@ function renderModelMenu() {
     const activeProvider = state.provider || (state.global && state.global.provider) || '';
 
     const parts = [`<div class="composer-menu-title">${escapeHtml(t('model_menu_title'))}</div>`];
+    const listed = providers.some(p => (p.models || []).length);
+    if (!listed) {
+        const why = state.discovery_error || 'No chat models were loaded from the LiteLLM endpoint.';
+        parts.push(`<div class="composer-menu-item"><span class="composer-menu-body"><span class="composer-menu-name">${escapeHtml(why)}</span></span></div>`);
+    }
     providers.forEach((p, idx) => {
         if (idx > 0) parts.push('<div class="composer-menu-divider"></div>');
         parts.push(`<div class="composer-menu-title">${escapeHtml(localizedLabel(p.label))}</div>`);

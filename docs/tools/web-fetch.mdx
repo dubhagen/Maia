@@ -34,22 +34,10 @@ to `"deepseek"` to fetch through [DeepSeek's official Fetch API](https://api-doc
 instead, which returns the page as Markdown — handy for pages the direct
 backend cannot render (e.g. JavaScript-heavy sites).
 
-```json
-{
-  "tools": {
-    "web_fetch": {
-      "provider": "deepseek"
-    }
-  }
-}
-```
-
-The backend uses the `deepseek_api_key` model credential (or the
-`DEEPSEEK_API_KEY` environment variable). Calls are billed per
-successful request ($0.75 per 1,000), so the backend stays opt-in; `"direct"`
-(the default) is free. The SSRF guard still applies: private, loopback, and
-cloud-metadata URLs are rejected before any request is issued. Document
-URLs (PDF, Word, etc.) are always downloaded and parsed locally.
+`web_fetch` downloads the URL itself. It does not call a hosted fetch API.
+The SSRF guard still applies: private, loopback, and cloud-metadata URLs
+are rejected before any request is issued. Document URLs (PDF, Word, etc.)
+are downloaded and parsed locally.
 
 <Note>
   `web_fetch` only retrieves static HTML. For pages that require JavaScript rendering (such as SPAs), use the `browser` tool instead.

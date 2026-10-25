@@ -1,9 +1,8 @@
 """Shared source-update helpers for the CLI and the Web console.
 
-`cow update` and the console one-click updater must not drift: git pull,
+`maia update` and the console one-click updater must not drift: git pull,
 dependency install, and the restart contract live here so both callers run
-the same steps. GitHub is contacted only from `check_for_updates()`, never
-from version/status reads or page load.
+the same steps. Release lookup is disabled. Update with git pull of origin.
 """
 
 from __future__ import annotations
@@ -23,8 +22,6 @@ from cli.utils import get_project_root
 
 logger = logging.getLogger(__name__)
 
-GITHUB_REPO = "zhayujie/CowAgent"
-GITHUB_RELEASES_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
 STATUS_RELATIVE = Path("tmp") / "web-update-status.json"
 
 ProgressCb = Callable[[str, str], None]
@@ -74,7 +71,7 @@ def compare_versions(left: str, right: str) -> int:
 
 
 def _is_docker_install() -> bool:
-    if os.environ.get("COW_DOCKER") == "1":
+    if os.environ.get("MAIA_DOCKER") == "1":
         return True
     try:
         return Path("/.dockerenv").exists()
@@ -87,7 +84,7 @@ def detect_install_kind(root: Optional[str] = None) -> InstallKind:
     root = root or get_project_root()
     platform = sys.platform
 
-    if os.environ.get("COW_DESKTOP") == "1" or getattr(sys, "frozen", False):
+    if os.environ.get("MAIA_DESKTOP") == "1" or getattr(sys, "frozen", False):
         return InstallKind(
             kind="packaged",
             update_supported=False,
@@ -124,7 +121,7 @@ def detect_install_kind(root: Optional[str] = None) -> InstallKind:
                 update_supported=False,
                 unsupported_reason=(
                     "Web one-click update cannot restart the Windows process "
-                    "from inside itself. Run `cow update` in a terminal instead."
+                    "from inside itself. Run `maia update` in a terminal instead."
                 ),
                 platform=platform,
             )
@@ -163,19 +160,9 @@ def _github_headers() -> Dict[str, str]:
 
 
 def fetch_github_releases(timeout: int = 20) -> List[Dict[str, Any]]:
-    import requests
-
-    response = requests.get(
-        GITHUB_RELEASES_URL,
-        params={"per_page": 20},
-        timeout=timeout,
-        headers=_github_headers(),
-    )
-    response.raise_for_status()
-    data = response.json()
-    if not isinstance(data, list):
-        raise UpdateError("check", "GitHub releases response was not a list")
-    return data
+    """Release lookup is disabled. Update with git pull of origin."""
+    del timeout
+    return []
 
 
 def _release_brief(item: Dict[str, Any]) -> Dict[str, Any]:
@@ -192,37 +179,18 @@ def _release_brief(item: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def check_for_updates(current_version: Optional[str] = None) -> Dict[str, Any]:
-    """Hit GitHub releases. Call only from an explicit user action."""
+    """Do not contact GitHub. Updates are an explicit git pull of origin."""
     from cli import __version__
 
     current = current_version or __version__
-    releases = []
-    for item in fetch_github_releases():
-        if item.get("draft"):
-            continue
-        brief = _release_brief(item)
-        if not brief["tag"]:
-            continue
-        releases.append(brief)
-
-    newer = [
-        item
-        for item in releases
-        if not item["prerelease"] and compare_versions(item["tag"], current) > 0
-    ]
-    newer.sort(key=lambda item: parse_version(item["tag"]), reverse=True)
-    current_notes = next(
-        (item for item in releases if compare_versions(item["tag"], current) == 0),
-        None,
-    )
-    latest = newer[0] if newer else (releases[0] if releases else None)
     return {
         "status": "success",
         "current_version": current,
-        "up_to_date": not newer,
-        "latest": latest,
-        "newer_releases": newer,
-        "current_release": current_notes,
+        "up_to_date": True,
+        "latest": None,
+        "newer_releases": [],
+        "current_release": None,
+        "message": "Release lookup is disabled. Update with git pull of origin.",
     }
 
 
@@ -267,7 +235,7 @@ def ensure_clean_checkout(root: str) -> None:
         raise UpdateError(
             "git_pull",
             "The checkout has local changes to tracked files; commit or stash "
-            "them, or run `cow update` in a terminal",
+            "them, or run `maia update` in a terminal",
             changes,
         )
 
@@ -351,7 +319,7 @@ def apply_source_update(
                 "Dependency install failed",
                 deps.stdout or "",
             )
-        _emit(progress, "install_cli", "Reinstalling the cow CLI")
+        _emit(progress, "install_cli", "Reinstalling the maia CLI")
         cli = install_editable(root, python, quiet=quiet)
         if cli.returncode != 0:
             raise UpdateError(
@@ -469,16 +437,16 @@ def _configure_worker_logging(log_file: str) -> None:
 def run_web_update_worker() -> None:
     """Detached entry point: git pull + pip, self-check, then restart.
 
-    No backup step: like `cow update` / `cow restart`, this only touches the
+    No backup step: like `maia update` / `maia restart`, this only touches the
     git checkout. User data lives outside the repo (agent_workspace, default
-    ~/cow) and config.json is git-ignored, so `git pull` never overwrites them.
+    ~/maia) and config.json is git-ignored, so `git pull` never overwrites them.
     """
     root = get_project_root()
     status = read_update_status(root)
     python = status.get("python") or sys.executable
     old_pid = int(status.get("old_pid") or 0)
     log_file = status.get("log_file") or os.path.join(root, "nohup.out")
-    pid_file = status.get("pid_file") or os.path.join(root, ".cow.pid")
+    pid_file = status.get("pid_file") or os.path.join(root, ".maia.pid")
 
     _configure_worker_logging(log_file)
     previous_sha = git_rev_parse(root)

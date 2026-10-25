@@ -69,21 +69,13 @@ def _conf_str(value, default: str = "") -> str:
 
 
 def _fetch_provider() -> str:
-    """The fetch backend: "direct" (default, fetch and parse locally) or
-    "deepseek" (DeepSeek's official Fetch API, returns the page as Markdown).
-    Unknown values fail loudly so a typo never silently changes backends."""
+    """Pages are fetched with a direct HTTP request. No hosted reader is used."""
     provider = _conf_str(_tools_web_fetch_conf().get("provider"), "direct").lower()
-    if provider not in ("direct", "deepseek"):
+    if provider not in ("direct", ""):
         raise ValueError(
-            f"Unknown tools.web_fetch.provider {provider!r}; expected 'direct' or 'deepseek'"
+            f"Unknown tools.web_fetch.provider {provider!r}; only 'direct' is supported"
         )
-    return provider
-
-
-def _deepseek_api_key() -> str:
-    """The DeepSeek model key, which the Fetch API also accepts."""
-    key = _conf_str(conf().get("deepseek_api_key"), "")
-    return key or os.environ.get("DEEPSEEK_API_KEY", "").strip()
+    return "direct"
 
 
 def _extract_charset_from_content_type(content_type: str) -> Optional[str]:
@@ -211,68 +203,7 @@ class WebFetch(BaseTool):
         if _is_document_url(url):
             return self._fetch_document(url)
 
-        if provider == "deepseek":
-            return self._fetch_deepseek(url)
-
         return self._fetch_webpage(url)
-
-    # ---- DeepSeek Fetch backend ----
-
-    def _fetch_deepseek(self, url: str) -> ToolResult:
-        """Fetch a page as Markdown through DeepSeek's official Fetch API.
-
-        Useful for pages the direct backend cannot render (JS-heavy sites);
-        billed per successful request, so it stays opt-in.
-        """
-        api_key = _deepseek_api_key()
-        if not api_key:
-            return ToolResult.fail(
-                "Error: tools.web_fetch.provider is 'deepseek' but no DeepSeek API key is configured. "
-                "Set deepseek_api_key or the DEEPSEEK_API_KEY environment variable."
-            )
-
-        from agent.tools.web_search.web_search import deepseek_tools_url
-        endpoint = deepseek_tools_url(conf().get("deepseek_api_base"), "fetch")
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
-        logger.debug(f"[WebFetch] deepseek: url='{url}'")
-        try:
-            resp = requests.post(endpoint, headers=headers, json={"url": url}, timeout=DEFAULT_TIMEOUT)
-        except requests.Timeout:
-            return ToolResult.fail(f"Error: DeepSeek Fetch request timed out after {DEFAULT_TIMEOUT}s")
-        except requests.ConnectionError:
-            return ToolResult.fail("Error: Failed to connect to DeepSeek Fetch API")
-        except Exception as e:
-            logger.error(f"[WebFetch] DeepSeek Fetch unexpected error: {e}", exc_info=True)
-            return ToolResult.fail(f"Error: DeepSeek Fetch failed - {str(e)}")
-
-        if resp.status_code == 401:
-            return ToolResult.fail("Error: Invalid DeepSeek API key.")
-        if resp.status_code == 402:
-            return ToolResult.fail("Error: DeepSeek API — insufficient balance. Top up at https://platform.deepseek.com")
-        if resp.status_code == 403:
-            return ToolResult.fail("Error: DeepSeek Fetch rejected the URL (security policy).")
-        if resp.status_code == 404:
-            return ToolResult.fail(f"Error: DeepSeek Fetch could not retrieve usable content for URL: {url}")
-        if resp.status_code == 429:
-            return ToolResult.fail("Error: DeepSeek Fetch API rate limit reached (5 QPS per account).")
-        if resp.status_code != 200:
-            return ToolResult.fail(f"Error: DeepSeek Fetch API returned HTTP {resp.status_code}: {resp.text[:200]}")
-
-        data = resp.json()
-        # Business-level errors use the OpenAI-compatible {"error": {...}}
-        # envelope, with param always null.
-        if isinstance(data, dict) and data.get("error"):
-            err = data["error"] or {}
-            return ToolResult.fail(f"Error: DeepSeek Fetch returned {err.get('code')}: {err.get('message', '')}")
-
-        title = data.get("title") or "Untitled"
-        content = data.get("content") or ""
-        if not content.strip():
-            return ToolResult.fail(f"Error: DeepSeek Fetch returned no content for URL: {url}")
-        return ToolResult.success(f"Title: {title}\n\nContent:\n{content}")
 
     # ---- Safe request helper ----
 

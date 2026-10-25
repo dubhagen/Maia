@@ -20,13 +20,13 @@ try:
 except Exception:
     pass
 
-handler_pool = ThreadPoolExecutor(max_workers=8)  # 处理消息的线程池
+handler_pool = ThreadPoolExecutor(max_workers=8)  
 
 
-# 抽象类, 它包含了与消息通道无关的通用处理逻辑
+
 class ChatChannel(Channel):
-    name = None  # 登录的用户名
-    user_id = None  # 登录的用户id
+    name = None  
+    user_id = None  
 
     def __init__(self):
         super().__init__()
@@ -42,7 +42,7 @@ class ChatChannel(Channel):
         _thread.setDaemon(True)
         _thread.start()
 
-    # 根据消息构造context，消息内容相关的触发项写在这里
+    
     def _compose_context(self, ctype: ContextType, content, **kwargs):
         context = Context(ctype, content)
         context.kwargs = kwargs
@@ -54,10 +54,10 @@ class ChatChannel(Channel):
         self.stamp_instance_context(context)
         if "origin_ctype" not in context:
             context["origin_ctype"] = ctype
-        # context首次传入时，receiver是None，根据类型设置receiver
+        
         first_in = "receiver" not in context
-        # 群名匹配过程，设置session_id和receiver
-        if first_in:  # context首次传入时，receiver是None，根据类型设置receiver
+        
+        if first_in:  
             config = conf()
             cmsg = context["msg"]
             user_data = conf().get_user_data(cmsg.from_user_id)
@@ -108,16 +108,16 @@ class ChatChannel(Channel):
                 logger.debug("[chat_channel]self message skipped")
                 return None
 
-        # 消息内容匹配过程，并处理content
+        
         if ctype == ContextType.TEXT:
-            if first_in and "」\n- - - - - - -" in content:  # 初次匹配 过滤引用消息
+            if first_in and "」\n- - - - - - -" in content:  
                 logger.debug(content)
                 logger.debug("[chat_channel]reference query skipped")
                 return None
 
             nick_name_black_list = conf().get("nick_name_black_list", [])
-            if context.get("isgroup", False):  # 群聊
-                # 校验关键字
+            if context.get("isgroup", False):  
+                
                 match_prefix = check_prefix(content, conf().get("group_chat_prefix"))
                 match_contain = check_contain(content, conf().get("group_chat_keyword"))
                 flag = False
@@ -129,14 +129,14 @@ class ChatChannel(Channel):
                     if context["msg"].is_at:
                         nick_name = context["msg"].actual_user_nickname
                         if nick_name and nick_name in nick_name_black_list:
-                            # 黑名单过滤
+                            
                             logger.warning(f"[chat_channel] Nickname {nick_name} in blacklist, ignore")
                             return None
 
                         logger.info("[chat_channel]receive group at")
                         if not conf().get("group_at_off", False):
                             flag = True
-                        self.name = self.name if self.name is not None else ""  # 部分渠道self.name可能没有赋值
+                        self.name = self.name if self.name is not None else ""  
                         pattern = f"@{re.escape(self.name)}(\u2005|\u0020)"
                         subtract_res = re.sub(pattern, r"", content)
                         if isinstance(context["msg"].at_list, list):
@@ -144,7 +144,7 @@ class ChatChannel(Channel):
                                 pattern = f"@{re.escape(at)}(\u2005|\u0020)"
                                 subtract_res = re.sub(pattern, r"", subtract_res)
                         if subtract_res == content and context["msg"].self_display_name:
-                            # 前缀移除后没有变化，使用群昵称再次移除
+                            
                             pattern = f"@{re.escape(context['msg'].self_display_name)}(\u2005|\u0020)"
                             subtract_res = re.sub(pattern, r"", content)
                         content = subtract_res
@@ -152,17 +152,17 @@ class ChatChannel(Channel):
                     if context["origin_ctype"] == ContextType.VOICE:
                         logger.info("[chat_channel]receive group voice, but checkprefix didn't match")
                     return None
-            else:  # 单聊
+            else:  
                 nick_name = context["msg"].from_user_nickname
                 if nick_name and nick_name in nick_name_black_list:
-                    # 黑名单过滤
+                    
                     logger.warning(f"[chat_channel] Nickname '{nick_name}' in blacklist, ignore")
                     return None
 
                 match_prefix = check_prefix(content, conf().get("single_chat_prefix", [""]))
-                if match_prefix is not None:  # 判断如果匹配到自定义前缀，则返回过滤掉前缀+空格后的内容
+                if match_prefix is not None:  
                     content = content.replace(match_prefix, "", 1).strip()
-                elif context["origin_ctype"] == ContextType.VOICE:  # 如果源消息是私聊的语音消息，允许不匹配前缀，放宽条件
+                elif context["origin_ctype"] == ContextType.VOICE:  
                     pass
                 else:
                     logger.info("[chat_channel]receive single chat msg, but checkprefix didn't match")
@@ -196,16 +196,16 @@ class ChatChannel(Channel):
         # handed a workspace path.
         with use_identity(self._identity_for(context)):
             logger.debug("[chat_channel] handling context: {}".format(context))
-            # reply的构建步骤
+            
             reply = self._generate_reply(context)
 
             logger.debug("[chat_channel] decorating reply: {}".format(reply))
 
-            # reply的包装步骤
+            
             if reply and reply.content:
                 reply = self._decorate_reply(context, reply)
 
-                # reply的发送步骤
+                
                 self._send_reply(context, reply)
 
     def _identity_for(self, context: Context) -> RuntimeIdentity:
@@ -230,24 +230,24 @@ class ChatChannel(Channel):
         reply = e_context["reply"]
         if not e_context.is_pass():
             logger.debug("[chat_channel] type={}, content={}".format(context.type, context.content))
-            if context.type == ContextType.TEXT or context.type == ContextType.IMAGE_CREATE:  # 文字和图片消息
+            if context.type == ContextType.TEXT or context.type == ContextType.IMAGE_CREATE:  
                 context["channel"] = e_context["channel"]
                 reply = super().build_reply_content(context.content, context)
-            elif context.type == ContextType.VOICE:  # 语音消息
+            elif context.type == ContextType.VOICE:  
                 cmsg = context["msg"]
                 cmsg.prepare()
                 file_path = context.content
                 wav_path = os.path.splitext(file_path)[0] + ".wav"
                 try:
                     any_to_wav(file_path, wav_path)
-                except Exception as e:  # 转换失败，直接使用mp3，对于某些api，mp3也可以识别
+                except Exception as e:  
                     logger.warning("[chat_channel]any to wav error, use raw path. " + str(e))
                     wav_path = file_path
-                # 语音识别
+                
                 reply = self._safe_voice_to_text(wav_path)
                 if reply is None:
-                    reply = Reply(ReplyType.ERROR, "语音识别失败，请重试或发送文字消息")
-                # 删除临时文件
+                    reply = Reply(ReplyType.ERROR, "Speech recognition failed. Please retry or send a text message.")
+                
                 try:
                     os.remove(file_path)
                     if wav_path != file_path:
@@ -262,14 +262,14 @@ class ChatChannel(Channel):
                         reply = self._generate_reply(new_context)
                     else:
                         return
-            elif context.type == ContextType.IMAGE:  # 图片消息，当前仅做下载保存到本地的逻辑
+            elif context.type == ContextType.IMAGE:  
                 memory.USER_IMAGE_CACHE[context["session_id"]] = {
                     "path": context.content,
                     "msg": context.get("msg")
                 }
-            elif context.type == ContextType.SHARING:  # 分享信息，当前无默认逻辑
+            elif context.type == ContextType.SHARING:  
                 pass
-            elif context.type == ContextType.FUNCTION or context.type == ContextType.FILE:  # 文件消息及函数调用等，当前无默认逻辑
+            elif context.type == ContextType.FUNCTION or context.type == ContextType.FILE:  
                 pass
             else:
                 logger.warning("[chat_channel] unknown context type: {}".format(context.type))
@@ -334,7 +334,7 @@ class ChatChannel(Channel):
                     unsupported_type = reply.type
                     logger.error("[chat_channel]reply type not support: " + str(unsupported_type))
                     reply.type = ReplyType.ERROR
-                    reply.content = _t("不支持发送的消息类型: ", "Unsupported message type: ") + str(unsupported_type)
+                    reply.content = _t("Unsupported message type: ") + str(unsupported_type)
 
                 if reply.type == ReplyType.TEXT:
                     reply_text = reply.content
@@ -376,21 +376,21 @@ class ChatChannel(Channel):
             if not e_context.is_pass() and reply and reply.type:
                 logger.debug("[chat_channel] sending reply: {}, context: {}".format(reply, context))
                 
-                # 如果是文本回复，尝试提取并发送图片
+                
                 # Web channel renders images/videos inline via renderMarkdown,
                 # so skip the extract-and-send step to avoid duplicate media.
                 if reply.type == ReplyType.TEXT and context.get("channel_type") != "web":
                     self._extract_and_send_images(reply, context)
                 elif reply.type == ReplyType.TEXT:
                     self._send(reply, context)
-                # 如果是图片回复但带有文本内容，先发文本再发图片
+                
                 elif reply.type == ReplyType.IMAGE_URL and hasattr(reply, 'text_content') and reply.text_content:
-                    # 先发送文本
+                    
                     text_reply = Reply(ReplyType.TEXT, reply.text_content)
                     self._send(text_reply, context)
-                    # 短暂延迟后发送图片
+                    
                     time.sleep(0.3)
-                    # The caption is already out; DingTalk and QQ would send it again.
+                    # The caption is already out as its own text bubble.
                     image_reply = copy.copy(reply)
                     image_reply.text_content = None
                     self._send(image_reply, context)
@@ -416,22 +416,22 @@ class ChatChannel(Channel):
 
     def _extract_and_send_images(self, reply: Reply, context: Context):
         """
-        从文本回复中提取图片/视频URL并单独发送
-        支持格式：[图片: /path/to/image.png], [视频: /path/to/video.mp4], ![](url), <img src="url">
-        最多发送5个媒体文件
+        Extract image and video URLs from a text reply and send them separately.
+        Supported forms: [image: /path/to/image.png], [video: /path/to/video.mp4], ![](url), <img src="url">
+        At most 5 media files are sent.
         """
         content = reply.content
         media_items = []  # [(url, type), ...]
         
-        # 正则提取各种格式的媒体URL
+        
         patterns = [
-            (r'\[图片:\s*([^\]]+)\]', 'image'),   # [图片: /path/to/image.png]
-            (r'\[视频:\s*([^\]]+)\]', 'video'),   # [视频: /path/to/video.mp4]
-            (r'!\[.*?\]\(([^\)]+)\)', 'image'),   # ![alt](url) - 默认图片
+            (r'\[image:\s*([^\]]+)\]', 'image'),
+            (r'\[video:\s*([^\]]+)\]', 'video'), 
+            (r'!\[.*?\]\(([^\)]+)\)', 'image'),   
             (r'<img[^>]+src=["\']([^"\']+)["\']', 'image'),  # <img src="url">
             (r'<video[^>]+src=["\']([^"\']+)["\']', 'video'),  # <video src="url">
-            (r'https?://[^\s]+\.(?:jpg|jpeg|png|gif|webp)', 'image'),  # 直接的图片URL
-            (r'https?://[^\s]+\.(?:mp4|avi|mov|wmv|flv)', 'video'),  # 直接的视频URL
+            (r'https?://[^\s]+\.(?:jpg|jpeg|png|gif|webp)', 'image'),  
+            (r'https?://[^\s]+\.(?:mp4|avi|mov|wmv|flv)', 'video'),  
         ]
         
         for pattern, media_type in patterns:
@@ -439,7 +439,7 @@ class ChatChannel(Channel):
             for match in matches:
                 media_items.append((match, media_type))
         
-        # 去重（保持顺序）并限制最多5个
+        
         seen = set()
         unique_items = []
         for url, mtype in media_items:
@@ -483,7 +483,7 @@ class ChatChannel(Channel):
                 except Exception as e:
                     logger.error(f"[chat_channel] Failed to send {media_type} {url}: {e}")
         else:
-            # 没有媒体文件，正常发送文本
+            
                 self._send(reply, context)
 
     def _send(self, reply: Reply, context: Context, retry_cnt=0):
@@ -498,7 +498,7 @@ class ChatChannel(Channel):
                 time.sleep(3 + 3 * retry_cnt)
                 self._send(reply, context, retry_cnt + 1)
 
-    def _success_callback(self, session_id, **kwargs):  # 线程正常结束时的回调函数
+    def _success_callback(self, session_id, **kwargs):  
         logger.debug("Worker return success, session_id = {}".format(session_id))
 
     def _release_claim(self, context: Context, session_id: str) -> None:
@@ -513,7 +513,7 @@ class ChatChannel(Channel):
         if callable(release):
             release(context, session_id)
 
-    def _fail_callback(self, session_id, exception, **kwargs):  # 线程异常结束时的回调函数
+    def _fail_callback(self, session_id, exception, **kwargs):  
         logger.exception("Worker return exception: {}".format(exception))
 
     def _thread_pool_callback(self, session_id, **kwargs):
@@ -535,7 +535,7 @@ class ChatChannel(Channel):
 
     # Chat commands that must bypass the per-session serial queue,
     # otherwise /cancel would queue behind the task it tries to cancel.
-    # Use /cancel (not /stop) to avoid colliding with `cow stop` CLI.
+    # Use /cancel (not /stop) to avoid colliding with `maia stop` CLI.
     _BYPASS_QUEUE_COMMANDS = ("/cancel",)
 
     def produce(self, context: Context):
@@ -554,8 +554,7 @@ class ChatChannel(Channel):
             logger.warning(f"[chat_channel] {e}")
             self._send_reply(context, Reply(
                 ReplyType.TEXT,
-                _t("该助手当前已停用，请联系管理员。",
-                   "This assistant is currently disabled. Please contact an administrator."),
+                _t("This assistant is currently disabled. Please contact an administrator."),
             ))
             self._release_claim(context, session_id)
             return
@@ -584,7 +583,7 @@ class ChatChannel(Channel):
                     threading.BoundedSemaphore(conf().get("concurrency_in_session", 1)),
                 ]
             if context.type == ContextType.TEXT and context.content.startswith("#"):
-                self.sessions[queue_key][0].putleft(context)  # 优先处理管理命令
+                self.sessions[queue_key][0].putleft(context)  
             else:
                 self.sessions[queue_key][0].put(context)
 
@@ -606,9 +605,9 @@ class ChatChannel(Channel):
             )
             cancelled = get_cancel_registry().cancel_session(scoped_session_id)
             text = (
-                _t("🛑 已中止", "🛑 Cancelled")
+                _t("🛑 Cancelled")
                 if cancelled > 0
-                else _t("当前没有可中止的任务。", "Nothing to cancel.")
+                else _t("Nothing to cancel.")
             )
             logger.info(
                 f"[chat_channel] /cancel fast-path: session={session_id}, cancelled={cancelled}"
@@ -633,25 +632,17 @@ class ChatChannel(Channel):
                 session_id, instruction, agent_bridge.route_context(context)
             )
             messages = {
-                SteerStatus.ACCEPTED: _t(
-                    "↪️ 已引导当前任务。", "↪️ Active task redirected."
+                SteerStatus.ACCEPTED: _t("↪️ Active task redirected."
                 ),
-                SteerStatus.INACTIVE: _t(
-                    "当前没有可引导的任务。", "No active task to steer."
+                SteerStatus.INACTIVE: _t("No active task to steer."
                 ),
-                SteerStatus.CLOSING: _t(
-                    "当前任务已结束，无法再引导。", "The active task is already finishing."
+                SteerStatus.CLOSING: _t("The active task is already finishing."
                 ),
-                SteerStatus.AMBIGUOUS: _t(
-                    "当前会话有多个任务在运行，无法确定引导目标。",
-                    "Multiple tasks are active in this session; the steering target is ambiguous.",
+                SteerStatus.AMBIGUOUS: _t("Multiple tasks are active in this session; the steering target is ambiguous.",
                 ),
-                SteerStatus.FULL: _t(
-                    "引导指令过多，请等待当前任务处理后再试。",
-                    "Too many steering updates are pending; try again after the agent processes them.",
+                SteerStatus.FULL: _t("Too many steering updates are pending; try again after the agent processes them.",
                 ),
-                SteerStatus.INVALID: _t(
-                    "用法：/steer <引导指令>", "Usage: /steer <instruction>"
+                SteerStatus.INVALID: _t("Usage: /steer <instruction>"
                 ),
             }
             text = messages[result.status]
@@ -663,7 +654,7 @@ class ChatChannel(Channel):
         except Exception as e:
             logger.warning(f"[chat_channel] /steer fast-path failed: {e}")
 
-    # 消费者函数，单独线程，用于从消息队列中取出消息并处理
+    
     def consume(self):
         while True:
             with self.lock:
@@ -684,7 +675,7 @@ class ChatChannel(Channel):
         """Dispatch one pending context of *session_id*, or retire the session."""
         with self.lock:
             context_queue, semaphore = self.sessions[session_id]
-        if not semaphore.acquire(blocking=False):  # 等线程处理完毕才能删除
+        if not semaphore.acquire(blocking=False):  
             return
         if not context_queue.empty():
             context = context_queue.get()
@@ -700,7 +691,7 @@ class ChatChannel(Channel):
                 if session_id not in self.futures:
                     self.futures[session_id] = []
                 self.futures[session_id].append(future)
-        elif semaphore._initial_value == semaphore._value + 1:  # 除了当前，没有任务再申请到信号量，说明所有任务都处理完毕
+        elif semaphore._initial_value == semaphore._value + 1:  
             with self.lock:
                 # futures[session_id] only exists once a context was submitted,
                 # so a session that never got one has no entry here.
@@ -783,7 +774,7 @@ class ChatChannel(Channel):
         for future in futures:
             future.cancel()
 
-    # 取消session_id对应的所有任务，只能取消排队的消息和已提交线程池但未执行的任务
+    
     def cancel_session(self, session_id, agent_id: str = None):
         queue_key = self._queue_key(session_id, agent_id)
         pending = []

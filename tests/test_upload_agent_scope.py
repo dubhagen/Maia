@@ -37,7 +37,7 @@ class _QuietHandler(WSGIRequestHandler):
 @pytest.fixture
 def console(tmp_path, monkeypatch):
     """A running console whose Agents own separate workspaces under tmp_path."""
-    monkeypatch.setenv("COW_DESKTOP_TOKEN", DESKTOP_TOKEN)
+    monkeypatch.setenv("MAIA_DESKTOP_TOKEN", DESKTOP_TOKEN)
 
     workspaces = {
         None: tmp_path / "default",
@@ -98,7 +98,7 @@ def _upload_local_path(console, agent_id, tmp_path):
         json.dumps({"local_path": str(source)}).encode(),
         {
             "Content-Type": "application/json",
-            "X-Cow-Desktop-Token": DESKTOP_TOKEN,
+            "X-Maia-Desktop-Token": DESKTOP_TOKEN,
         },
     )
 

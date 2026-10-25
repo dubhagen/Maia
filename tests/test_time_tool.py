@@ -13,7 +13,7 @@ from agent.tools.current_time.current_time import TimeTool, current_time_info
 
 
 def _fixed_time_info():
-    return {"date": "2026-09-26", "time": "12:34:56", "weekday": "星期六", "timezone": "UTC+08"}
+    return {"date": "2026-09-26", "time": "12:34:56", "weekday": "Saturday", "timezone": "UTC+08"}
 
 
 def test_tool_returns_precise_local_time():
@@ -34,12 +34,12 @@ def test_time_info_shape():
 
 
 def test_runtime_section_renders_date_without_clock():
-    lines = _build_runtime_section({"_get_current_time": _fixed_time_info, "model": "test-model"}, "zh")
+    lines = _build_runtime_section({"_get_current_time": _fixed_time_info, "model": "test-model"}, "en")
     joined = "\n".join(lines)
 
-    assert "当前日期: 2026-09-26 星期六 (UTC+08)" in joined
+    assert "Current date: 2026-09-26 Saturday (UTC+08)" in joined
     assert "12:34" not in joined
-    assert "当前时间" not in joined
+    assert "Current time" not in joined
     assert "test-model" in joined
 
 
@@ -52,13 +52,13 @@ def test_runtime_section_en_label():
 
 def test_runtime_section_is_stable_within_a_day():
     runtime_info = {"_get_current_time": _fixed_time_info, "model": "m"}
-    first = _build_runtime_section(runtime_info, "zh")
+    first = _build_runtime_section(runtime_info, "en")
     runtime_info["_get_current_time"] = lambda: {**_fixed_time_info(), "time": "23:59:59"}
 
-    assert _build_runtime_section(runtime_info, "zh") == first
+    assert _build_runtime_section(runtime_info, "en") == first
 
 
 def test_tool_is_listed_with_summary():
-    joined = "\n".join(_build_tooling_section([TimeTool()], "zh"))
+    joined = "\n".join(_build_tooling_section([TimeTool()], "en"))
 
-    assert "- time: 获取当前日期和时间" in joined
+    assert "- time: get the current date and time" in joined

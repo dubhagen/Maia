@@ -699,20 +699,18 @@ function deleteMcpServer(name) {
 // ---------------------------------------------------------------------
 
 const SKILL_SOURCES = {
-    hub: { labelKey: 'skill_value_hub', placeholder: 'skill-name', hintKey: 'skill_hint_hub', link: 'https://skills.cowagent.ai/' },
     github: { labelKey: 'skill_value_github', placeholder: 'https://github.com/owner/repo/tree/main/skills/my-skill', hintKey: 'skill_hint_github' },
-    clawhub: { labelKey: 'skill_value_clawhub', placeholder: 'skill-name', hintKey: 'skill_hint_clawhub', link: 'https://clawhub.ai/skills' },
 };
 
 const SKILL_SOURCE_LABELS = {
-    cowhub: 'Cow Skill Hub', github: 'GitHub', clawhub: 'ClawHub', url: 'URL',
+    maiahub: 'Maia Skill Hub', github: 'GitHub', url: 'URL', local: 'Local',
 };
 
 const SKILL_UPLOAD_MAX_BYTES = 50 * 1024 * 1024;
 
 const skillAdd = {
     tab: 'market',
-    source: 'hub',
+    source: 'github',
     step: 'input',
     token: null,
     skills: [],
@@ -788,7 +786,7 @@ function openSkillAdd() {
     resetSkillCreateForm();
     initSkillAttachMenu();
     switchSkillTab('market');
-    setSkillSource('hub');
+    setSkillSource('github');
     showSkillStep('input');
     document.getElementById('skill-add-overlay').classList.remove('hidden');
     setTimeout(() => document.getElementById('skill-value-input')?.focus(), 30);
@@ -1364,7 +1362,7 @@ let _skillReadSeq = 0;
 // Whether the file list is showing at all. Remembered across sessions: someone
 // who reads skills on a narrow window should not have to fold it away again on
 // every visit.
-const SKILL_FILES_PANEL_KEY = 'cow_skill_files_panel';
+const SKILL_FILES_PANEL_KEY = 'maia_skill_files_panel';
 let _skillFilesPanelOpen = localStorage.getItem(SKILL_FILES_PANEL_KEY) !== '0';
 
 /**
@@ -1425,7 +1423,7 @@ function yamlScalar(raw) {
  * as-is it turns into a giant bold heading and a horizontal rule. Pull it out
  * so the viewer can present name/description as a proper header instead.
  *
- * Frontmatter nests: `metadata.cowagent.requires.anyEnv` is a list four levels
+ * Frontmatter nests: `metadata.maia.requires.anyEnv` is a list four levels
  * down. Read line by line with no regard for indentation, each container key
  * showed up as an empty row and the list under it vanished. So this walks the
  * indentation instead: a nested map becomes one row per leaf, keyed by its

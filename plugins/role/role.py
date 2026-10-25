@@ -17,7 +17,7 @@ class RolePlay:
     def __init__(self, bot, sessionid, desc, wrapper=None):
         self.bot = bot
         self.sessionid = sessionid
-        self.wrapper = wrapper or "%s"  # 用于包装用户输入
+        self.wrapper = wrapper or "%s"  
         self.desc = desc
         self.bot.sessions.build_session(self.sessionid, system_prompt=self.desc)
 
@@ -26,7 +26,7 @@ class RolePlay:
 
     def action(self, user_action):
         session = self.bot.sessions.build_session(self.sessionid)
-        if session.system_prompt != self.desc:  # 目前没有触发session过期事件，这里先简单判断，然后重置
+        if session.system_prompt != self.desc:  
             session.set_system_prompt(self.desc)
         prompt = self.wrapper % user_action
         return prompt
@@ -35,8 +35,8 @@ class RolePlay:
 @plugins.register(
     name="Role",
     desire_priority=0,
-    namecn="角色扮演",
-    desc="为你的Bot设置预设角色",
+    namecn="Role",
+    desc="Set a preset role for the bot",
     version="1.0",
     author="lanvent",
 )
@@ -58,7 +58,7 @@ class Role(Plugin):
                             self.tags[tag] = (tag, [])
                         self.tags[tag][1].append(role)
 
-                # 扫描 roles/ 目录，加载可选的扩展/覆盖角色文件
+                
                 roles_dir = os.path.join(curdir, "roles")
                 if os.path.isdir(roles_dir):
                     for fname in sorted(os.listdir(roles_dir)):
@@ -77,13 +77,13 @@ class Role(Plugin):
             logger.debug("[Role] inited")
         except Exception as e:
             if isinstance(e, FileNotFoundError):
-                logger.warn(f"[Role] init failed, {config_path} not found, ignore or see https://github.com/zhayujie/chatgpt-on-wechat/tree/master/plugins/role .")
+                logger.warn(f"[Role] init failed, {config_path} not found. See plugins/role.")
             else:
-                logger.warn("[Role] init failed, ignore or see https://github.com/zhayujie/chatgpt-on-wechat/tree/master/plugins/role .")
+                logger.warn("[Role] init failed. See plugins/role.")
             raise e
 
     def _load_role_file(self, filepath):
-        """从roles/目录加载单个角色文件，同title则覆盖内置角色，否则追加"""
+        """Load one role file from roles/. A matching title replaces a built-in role."""
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 role = json.load(f)
@@ -132,116 +132,110 @@ class Role(Plugin):
         if e_context["context"].type != ContextType.TEXT:
             return
         btype = Bridge().get_bot_type("chat")
-        if btype not in [const.OPEN_AI, const.OPENAI, const.CHATGPT, const.CHATGPTONAZURE, const.QWEN_DASHSCOPE, const.XUNFEI, const.BAIDU, const.QIANFAN, const.ZHIPU_AI, const.MOONSHOT, const.MiniMax, const.LINKAI, const.MODELSCOPE]:
-            logger.debug(f'不支持的bot: {btype}')
+        if btype not in [const.LITELLM, const.OPEN_AI, const.OPENAI, const.CHATGPT, const.CHATGPTONAZURE, const.QWEN_DASHSCOPE, const.XUNFEI, const.BAIDU, const.QIANFAN, const.ZHIPU_AI, const.MOONSHOT, const.MiniMax, const.MODELSCOPE]:
+            logger.debug(f"Unsupported bot: {btype}")
             return
         bot = Bridge().get_bot("chat")
         content = e_context["context"].content[:]
         if not content.strip():
             return
         clist = e_context["context"].content.split(maxsplit=1)
-        desckey = None
-        customize = False
         sessionid = e_context["context"]["session_id"]
         trigger_prefix = conf().get("plugin_trigger_prefix", "$")
-        if clist[0] == f"{trigger_prefix}停止扮演":
-            if sessionid in self.roleplays:
-                self.roleplays[sessionid].reset()
-                del self.roleplays[sessionid]
-            reply = Reply(ReplyType.INFO, "角色扮演结束!")
-            e_context["reply"] = reply
-            e_context.action = EventAction.BREAK_PASS
-            return
-        elif clist[0] == f"{trigger_prefix}角色":
-            desckey = "descn"
-        elif clist[0].lower() == f"{trigger_prefix}role":
-            desckey = "description"
-        elif clist[0] == f"{trigger_prefix}设定扮演":
-            customize = True
-        elif clist[0] == f"{trigger_prefix}角色类型":
-            if len(clist) > 1:
-                tag = clist[1].strip()
-                help_text = "角色列表：\n"
-                for key, value in self.tags.items():
-                    if value[0] == tag:
-                        tag = key
-                        break
-                if tag == "所有":
-                    for role in self.roles.values():
-                        help_text += f"{role['title']}: {role['remark']}\n"
-                elif tag in self.tags:
-                    for role in self.tags[tag][1]:
-                        help_text += f"{role['title']}: {role['remark']}\n"
+        trigger = f"{trigger_prefix}role"
+        if clist[0].lower() == trigger:
+            argument = clist[1].strip() if len(clist) > 1 else ""
+            lowered = argument.lower()
+            if argument == "" or lowered == "help":
+                reply = Reply(ReplyType.INFO, self.get_help_text(verbose=True))
+                e_context["reply"] = reply
+                e_context.action = EventAction.BREAK_PASS
+                return
+            if lowered == "stop":
+                if sessionid in self.roleplays:
+                    self.roleplays[sessionid].reset()
+                    del self.roleplays[sessionid]
+                reply = Reply(ReplyType.INFO, "Role play ended.")
+                e_context["reply"] = reply
+                e_context.action = EventAction.BREAK_PASS
+                return
+            if lowered == "custom" or lowered.startswith("custom "):
+                # An empty description used to raise IndexError and produce no reply.
+                description = argument[len("custom"):].strip()
+                if not description:
+                    reply = Reply(ReplyType.INFO, self.get_help_text(verbose=True))
+                    e_context["reply"] = reply
+                    e_context.action = EventAction.BREAK_PASS
+                    return
+                self.roleplays[sessionid] = RolePlay(bot, sessionid, description, "%s")
+                reply = Reply(ReplyType.INFO, f"Role set to:\n{description}")
+                e_context["reply"] = reply
+                e_context.action = EventAction.BREAK_PASS
+                return
+            if lowered == "tags" or lowered.startswith("tags "):
+                tag = argument[len("tags"):].strip()
+                tag_labels = ", ".join(self.tags[item][0] for item in self.tags)
+                if not tag:
+                    help_text = "Enter a role tag.\nTags: " + tag_labels + "\n"
                 else:
-                    help_text = "未知角色类型。\n"
-                    help_text += "目前的角色类型有: \n"
-                    help_text += "，".join([self.tags[tag][0] for tag in self.tags]) + "\n"
-            else:
-                help_text = "请输入角色类型。\n"
-                help_text += "目前的角色类型有: \n"
-                help_text += "，".join([self.tags[tag][0] for tag in self.tags]) + "\n"
-            reply = Reply(ReplyType.INFO, help_text)
+                    matched = None
+                    for key, value in self.tags.items():
+                        if value[0].lower() == tag.lower() or key.lower() == tag.lower():
+                            matched = key
+                            break
+                    if tag.lower() == "all":
+                        help_text = "Roles:\n"
+                        for role in self.roles.values():
+                            help_text += f"{role['title']}: {role['remark']}\n"
+                    elif matched in self.tags:
+                        help_text = "Roles:\n"
+                        for role in self.tags[matched][1]:
+                            help_text += f"{role['title']}: {role['remark']}\n"
+                    else:
+                        help_text = "Unknown role tag.\nTags: " + tag_labels + "\n"
+                reply = Reply(ReplyType.INFO, help_text)
+                e_context["reply"] = reply
+                e_context.action = EventAction.BREAK_PASS
+                return
+            role = self.get_role(argument)
+            if role is None:
+                reply = Reply(ReplyType.ERROR, "Role does not exist")
+                e_context["reply"] = reply
+                e_context.action = EventAction.BREAK_PASS
+                return
+            self.roleplays[sessionid] = RolePlay(
+                bot,
+                sessionid,
+                self.roles[role]["description"],
+                self.roles[role].get("wrapper", "%s"),
+            )
+            reply = Reply(ReplyType.INFO, f"Role set to {role}:\n" + self.roles[role]["description"])
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS
             return
-        elif sessionid not in self.roleplays:
+        if sessionid not in self.roleplays:
             return
         logger.debug("[Role] on_handle_context. content: %s" % content)
-        if desckey is not None:
-            if len(clist) == 1 or (len(clist) > 1 and clist[1].lower() in ["help", "帮助"]):
-                reply = Reply(ReplyType.INFO, self.get_help_text(verbose=True))
-                e_context["reply"] = reply
-                e_context.action = EventAction.BREAK_PASS
-                return
-            role = self.get_role(clist[1])
-            if role is None:
-                reply = Reply(ReplyType.ERROR, "角色不存在")
-                e_context["reply"] = reply
-                e_context.action = EventAction.BREAK_PASS
-                return
-            else:
-                self.roleplays[sessionid] = RolePlay(
-                    bot,
-                    sessionid,
-                    self.roles[role][desckey],
-                    self.roles[role].get("wrapper", "%s"),
-                )
-                reply = Reply(ReplyType.INFO, f"预设角色为 {role}:\n" + self.roles[role][desckey])
-                e_context["reply"] = reply
-                e_context.action = EventAction.BREAK_PASS
-        elif customize == True:
-            # The description is the whole point of this command, so an empty
-            # one is answered the way "$角色" answers a missing name (above).
-            # Reading clist[1] here would raise IndexError out of the handler,
-            # which the worker only logs, and the user would get no reply.
-            if len(clist) == 1:
-                reply = Reply(ReplyType.INFO, self.get_help_text(verbose=True))
-                e_context["reply"] = reply
-                e_context.action = EventAction.BREAK_PASS
-                return
-            self.roleplays[sessionid] = RolePlay(bot, sessionid, clist[1], "%s")
-            reply = Reply(ReplyType.INFO, f"角色设定为:\n{clist[1]}")
-            e_context["reply"] = reply
-            e_context.action = EventAction.BREAK_PASS
-        else:
-            e_context["context"]["generate_breaked_by"] = EventAction.BREAK
-            prompt = self.roleplays[sessionid].action(content)
-            e_context["context"].type = ContextType.TEXT
-            e_context["context"].content = prompt
-            e_context.action = EventAction.BREAK
+        e_context["context"]["generate_breaked_by"] = EventAction.BREAK
+        prompt = self.roleplays[sessionid].action(content)
+        e_context["context"].type = ContextType.TEXT
+        e_context["context"].content = prompt
+        e_context.action = EventAction.BREAK
 
     def get_help_text(self, verbose=False, **kwargs):
-        help_text = "让机器人扮演不同的角色。\n"
         if not verbose:
-            return help_text
+            return "Play as a different role.\n"
         trigger_prefix = conf().get("plugin_trigger_prefix", "$")
-        help_text = f"使用方法:\n{trigger_prefix}角色" + " 预设角色名: 设定角色为{预设角色名}。\n" + f"{trigger_prefix}role" + " 预设角色名: 同上，但使用英文设定。\n"
-        help_text += f"{trigger_prefix}设定扮演" + " 角色设定: 设定自定义角色人设为{角色设定}。\n"
-        help_text += f"{trigger_prefix}停止扮演: 清除设定的角色。\n"
-        help_text += f"{trigger_prefix}角色类型" + " 角色类型: 查看某类{角色类型}的所有预设角色，为所有时输出所有预设角色。\n"
-        help_text += "\n目前的角色类型有: \n"
-        help_text += "，".join([self.tags[tag][0] for tag in self.tags]) + "。\n"
-        help_text += f"\n命令例子: \n{trigger_prefix}角色 写作助理\n"
-        help_text += f"{trigger_prefix}角色类型 所有\n"
-        help_text += f"{trigger_prefix}停止扮演\n"
-        return help_text
+        trigger = f"{trigger_prefix}role"
+        tags = ", ".join(self.tags[tag][0] for tag in self.tags)
+        return (
+            "Usage:\n"
+            f"{trigger} <name>: set a preset role.\n"
+            f"{trigger} custom <description>: set a custom role.\n"
+            f"{trigger} stop: clear the role.\n"
+            f"{trigger} tags <tag>: list preset roles for a tag. Use all to list every role.\n"
+            f"\nTags: {tags}.\n"
+            f"\nExamples:\n{trigger} Writing assistant\n"
+            f"{trigger} tags all\n"
+            f"{trigger} stop\n"
+        )

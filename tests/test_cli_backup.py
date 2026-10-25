@@ -1,4 +1,4 @@
-"""Tests for portable CowAgent backup archives."""
+"""Tests for portable Maia backup archives."""
 
 import errno
 import json
@@ -77,7 +77,7 @@ def test_backup_restore_round_trip(tmp_path):
     (source_workspace / "tmp").mkdir()
     (source_workspace / "tmp" / "scratch.txt").write_text("skip", encoding="utf-8")
 
-    archive = tmp_path / "cow-backup.zip"
+    archive = tmp_path / "maia-backup.zip"
     summary = create_backup_archive(archive, source_data, source_workspace)
     assert summary["contents"]["workspace_files"] == 5
     assert archive.exists()
@@ -101,7 +101,7 @@ def test_backup_output_on_another_filesystem(tmp_path, monkeypatch):
     source_workspace.mkdir()
     (source_workspace / "MEMORY.md").write_bytes(b"portable\n")
     output_dir = source_workspace / "backups"
-    archive = output_dir / "cow-backup.zip"
+    archive = output_dir / "maia-backup.zip"
     real_replace = os.replace
 
     def replace_on_same_filesystem(source, destination):
@@ -126,7 +126,7 @@ def test_backup_falls_back_to_move_on_cross_device_replace(tmp_path, monkeypatch
     (source_workspace / "MEMORY.md").write_bytes(b"portable\n")
     output_dir = tmp_path / "backups"
     output_dir.mkdir()
-    archive = output_dir / "cow-backup.zip"
+    archive = output_dir / "maia-backup.zip"
     archive.write_bytes(b"previous backup")
 
     def replace_raising_exdev(source, destination):
@@ -143,7 +143,7 @@ def test_backup_falls_back_to_move_on_cross_device_replace(tmp_path, monkeypatch
 def test_backup_replace_failure_preserves_existing_archive(tmp_path, monkeypatch):
     output_dir = tmp_path / "backups"
     output_dir.mkdir()
-    archive = output_dir / "cow-backup.zip"
+    archive = output_dir / "maia-backup.zip"
     archive.write_bytes(b"previous backup")
 
     def fail_replace(source, destination):
@@ -163,7 +163,7 @@ def test_restore_merges_without_deleting_unrelated_files(tmp_path):
     _write_json(source_data / "config.json", {"agent_workspace": str(source_workspace)})
     source_workspace.mkdir()
     (source_workspace / "MEMORY.md").write_text("new\n", encoding="utf-8")
-    archive = tmp_path / "cow-backup.zip"
+    archive = tmp_path / "maia-backup.zip"
     create_backup_archive(archive, source_data, source_workspace)
 
     target_workspace = tmp_path / "target-workspace"
@@ -178,7 +178,7 @@ def test_restore_merges_without_deleting_unrelated_files(tmp_path):
 
 def test_restore_rejects_path_traversal(tmp_path):
     archive = tmp_path / "malicious.zip"
-    manifest = {"format": "cowagent-backup", "version": 1}
+    manifest = {"format": "maia-backup", "version": 1}
     with zipfile.ZipFile(str(archive), "w") as output:
         output.writestr("manifest.json", json.dumps(manifest))
         output.writestr("workspace/../../escape.txt", "nope")
@@ -189,7 +189,7 @@ def test_restore_rejects_path_traversal(tmp_path):
 
 def test_restore_accepts_legacy_version_one_archive(tmp_path):
     archive = tmp_path / "legacy.zip"
-    manifest = {"format": "cowagent-backup", "version": 1}
+    manifest = {"format": "maia-backup", "version": 1}
     with zipfile.ZipFile(archive, "w") as output:
         output.writestr("manifest.json", json.dumps(manifest))
         output.writestr(
@@ -220,7 +220,7 @@ def test_fresh_restore_ignores_archive_controlled_destinations(tmp_path, monkeyp
     (source_workspace / "MEMORY.md").write_text("portable\n", encoding="utf-8")
     outside_appdata.mkdir()
     (outside_appdata / "user_datas.pkl").write_bytes(b"legacy")
-    archive = tmp_path / "cow-backup.zip"
+    archive = tmp_path / "maia-backup.zip"
     create_backup_archive(archive, source_data, source_workspace)
 
     fake_home = tmp_path / "home"
@@ -228,8 +228,8 @@ def test_fresh_restore_ignores_archive_controlled_destinations(tmp_path, monkeyp
     target_data = tmp_path / "target-data"
     result = restore_backup_archive(archive, target_data)
 
-    assert result["workspace"] == str((fake_home / "cow").resolve())
-    assert (fake_home / "cow" / "MEMORY.md").exists()
+    assert result["workspace"] == str((fake_home / "maia").resolve())
+    assert (fake_home / "maia" / "MEMORY.md").exists()
     assert not archive_workspace.exists()
     assert (target_data / "user_datas.pkl").read_bytes() == b"legacy"
     restored_config = json.loads((target_data / "config.json").read_text(encoding="utf-8"))
@@ -419,7 +419,7 @@ def test_multi_agent_restore_reuses_the_local_roster_file(tmp_path):
 def test_multi_agent_restore_rejects_manifest_registry_mismatch(tmp_path):
     archive = tmp_path / "mismatch.zip"
     manifest = {
-        "format": "cowagent-backup",
+        "format": "maia-backup",
         "version": 2,
         "layout": "agents",
         "agents": [
@@ -507,7 +507,7 @@ def test_manifest_reserves_the_user_dimension(tmp_path):
 
 def test_single_workspace_archive_still_declares_version_one(tmp_path):
     """A single-Agent archive is structurally what v1 produced, so it must keep
-    declaring v1 and stay restorable by an older CowAgent. Only the
+    declaring v1 and stay restorable by an older Maia. Only the
     multi-Agent layout is v2."""
     source_data = tmp_path / "source-data"
     single = tmp_path / "single"
@@ -550,7 +550,7 @@ def test_restore_rejects_archive_carrying_user_scoped_workspaces(tmp_path):
     instead of restoring an Agent workspace and silently dropping a user's."""
     archive = tmp_path / "with-users.zip"
     manifest = {
-        "format": "cowagent-backup",
+        "format": "maia-backup",
         "version": 2,
         "layout": "agents",
         "agents": [{"id": "main", "archive_root": "agents/main/workspace"}],
@@ -570,7 +570,7 @@ def test_restore_rejects_archive_carrying_user_scoped_workspaces(tmp_path):
 def test_backup_restore_preserves_canonical_agent_lists(tmp_path, monkeypatch, style):
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    monkeypatch.setenv("COW_DATA_DIR", str(tmp_path / "data"))
+    monkeypatch.setenv("MAIA_DATA_DIR", str(tmp_path / "data"))
     data = tmp_path / "data"
     a = tmp_path / "a"
     b = tmp_path / "b"
@@ -619,10 +619,10 @@ def test_backup_restore_preserves_canonical_agent_lists(tmp_path, monkeypatch, s
 def test_restore_legacy_archive_preserves_canonical_channel_lists(tmp_path, monkeypatch, body):
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    monkeypatch.setenv("COW_DATA_DIR", str(tmp_path / "data"))
+    monkeypatch.setenv("MAIA_DATA_DIR", str(tmp_path / "data"))
     archive = tmp_path / "legacy.zip"
     with zipfile.ZipFile(archive, "w") as bundle:
-        bundle.writestr("manifest.json", json.dumps({"format": "cowagent-backup", "version": 1}))
+        bundle.writestr("manifest.json", json.dumps({"format": "maia-backup", "version": 1}))
         bundle.writestr("data/config.json", body)
         bundle.writestr("workspace/MEMORY.md", "legacy memory")
     data = tmp_path / "data"

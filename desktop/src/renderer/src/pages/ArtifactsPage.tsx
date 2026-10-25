@@ -12,7 +12,7 @@ import { useConfirmStore } from '../store/confirmStore'
 import { useMenuStore } from '../store/menuStore'
 import { useArtifactStore, openSource, type ArtifactShown, type KindFilter } from '../store/artifactStore'
 
-const PREVIEW_WIDTH_KEY = 'cow_artifacts_preview_width'
+const PREVIEW_WIDTH_KEY = 'maia_artifacts_preview_width'
 const PREVIEW_MIN_WIDTH = 340
 // Room the timeline keeps beside a widened preview pane.
 const LIST_MIN_WIDTH = 360

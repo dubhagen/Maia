@@ -52,13 +52,13 @@
     color: #64748b;
     font-weight: 500;
 }
-.agent-card-badge.agent-chip-on { background: #EDFDF3; color: #17803d; }
+.agent-card-badge.agent-chip-on { background: #F2F5FE; color: #243F9A; }
 .dark .agent-card-badge { background: rgba(255,255,255,.06); color: #94a3b8; }
-.dark .agent-card-badge.agent-chip-on { background: rgba(74, 190, 110, .15); color: #86efac; }
+.dark .agent-card-badge.agent-chip-on { background: rgba(107, 142, 240, .15); color: #86efac; }
 .agent-card:hover { background: #f8fafc; }
 .dark .agent-card:hover { background: rgba(255,255,255,.04); }
-.agent-card.selected { background: #EDFDF3; border-color: transparent; }
-.dark .agent-card.selected { background: rgba(74, 190, 110, .14); }
+.agent-card.selected { background: #F2F5FE; border-color: transparent; }
+.dark .agent-card.selected { background: rgba(107, 142, 240, .14); }
 .agent-card.archived { opacity: .55; }
 .agent-card-top { display: flex; align-items: center; gap: 10px; padding-right: 44px; min-width: 0; }
 .agent-card-top .agent-avatar { flex-shrink: 0; }
@@ -88,8 +88,8 @@
     color: #64748b;
 }
 .dark .agent-chip { background: rgba(255,255,255,.06); color: #94a3b8; }
-.agent-chip-on { background: #EDFDF3; color: #17803d; }
-.dark .agent-chip-on { background: rgba(74, 190, 110, .15); color: #86efac; }
+.agent-chip-on { background: #F2F5FE; color: #243F9A; }
+.dark .agent-chip-on { background: rgba(107, 142, 240, .15); color: #86efac; }
 
 .agent-avatar {
     display: inline-flex;
@@ -100,8 +100,8 @@
     flex-shrink: 0;
     font-weight: 600;
     line-height: 1;
-    background: #edfdf3;
-    color: #17803d;
+    background: #F2F5FE;
+    color: #243F9A;
 }
 .agent-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -169,7 +169,7 @@
 .agent-detail-tab {
     padding: 10px 12px; font-size: 13px; color: #64748b; border-bottom: 2px solid transparent;
 }
-.agent-detail-tab.active { color: #17803d; border-color: #4ABE6E; font-weight: 600; }
+.agent-detail-tab.active { color: #243F9A; border-color: #6B8EF0; font-weight: 600; }
 .agent-detail-pane { flex: 1; overflow-y: auto; padding: 16px 20px; }
 .agent-core-editor {
     width: 100%; min-height: 520px; padding: 12px;
@@ -202,9 +202,9 @@
     position: relative; transition: background .12s, border-color .12s;
 }
 .dark #agent-detail-skills input[type="checkbox"] { background: #1f1f1f; border-color: rgba(255,255,255,.2); }
-#agent-detail-skills input[type="checkbox"]:hover { border-color: #4ABE6E; }
+#agent-detail-skills input[type="checkbox"]:hover { border-color: #6B8EF0; }
 #agent-detail-skills input[type="checkbox"]:checked {
-    background: #4ABE6E; border-color: #4ABE6E;
+    background: #6B8EF0; border-color: #6B8EF0;
 }
 #agent-detail-skills input[type="checkbox"]:checked::after {
     content: ""; position: absolute;
@@ -261,7 +261,7 @@
 }
 .dark .agent-field-label { color: #94a3b8; }
 .agent-field-hint { font-size: 11px; color: #94a3b8; margin-top: 6px; }
-.agent-status-ok { color: #17803d !important; }
+.agent-status-ok { color: #243F9A !important; }
 .dark .agent-status-ok { color: #86efac !important; }
 .agent-status-error { color: #dc2626 !important; }
 .dark .agent-status-error { color: #fca5a5 !important; }
@@ -274,8 +274,8 @@
 }
 .agent-input::placeholder { color: #cbd5e1; }
 .agent-input:focus {
-    outline: none; border-color: #4ABE6E;
-    box-shadow: 0 0 0 3px rgba(74, 190, 110, .12); background: #fff;
+    outline: none; border-color: #6B8EF0;
+    box-shadow: 0 0 0 3px rgba(107, 142, 240, .12); background: #fff;
 }
 /* Responsibilities is a paragraph, not a line: let it breathe and wrap. */
 .agent-textarea {
@@ -365,7 +365,7 @@
     font-size: 12px; color: #64748b; cursor: pointer;
     transition: border-color .15s ease, color .15s ease;
 }
-.agent-avatar-upload:hover { border-color: #4ABE6E; color: #17803d; }
+.agent-avatar-upload:hover { border-color: #6B8EF0; color: #243F9A; }
 .dark .agent-avatar-upload { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.1); color: #94a3b8; }
 
 /* While bytes are in flight: dim the preview and spin a ring over it, and make
@@ -374,7 +374,7 @@
 .agent-avatar-picker.is-uploading .agent-avatar-picker-preview::after {
     content: ""; position: absolute; inset: 0; margin: auto;
     width: 22px; height: 22px; border-radius: 50%;
-    border: 2px solid rgba(74,190,110,.35); border-top-color: #4ABE6E;
+    border: 2px solid rgba(107,142,240,.35); border-top-color: #6B8EF0;
     animation: agent-avatar-spin .7s linear infinite;
 }
 .agent-avatar-picker.is-uploading .agent-avatar-picker-preview .agent-avatar { opacity: .35; }
@@ -390,7 +390,7 @@
     font-size: 13px; font-weight: 500; cursor: pointer;
     transition: background .15s ease, border-color .15s ease, color .15s ease;
 }
-.agent-btn-primary { background: #4ABE6E; color: #fff; }
+.agent-btn-primary { background: #6B8EF0; color: #fff; }
 .agent-btn-primary:hover { background: #3aa85d; }
 .agent-btn-ghost { border: 1px solid #e2e8f0; color: #475569; background: #fff; }
 .agent-btn-ghost:hover { border-color: #94a3b8; }
@@ -399,9 +399,9 @@
 .agent-btn-text:hover { color: #334155; }
 .dark .agent-btn-text:hover { color: #e2e8f0; }
 .agent-btn-sm { padding: 4px 8px; font-size: 12px; }
-.agent-btn-text.agent-btn-sm { color: #4ABE6E; }
-.agent-btn-text.agent-btn-sm:hover { color: #228547; }
-.agent-btn-accent { color: #17803d; }
+.agent-btn-text.agent-btn-sm { color: #6B8EF0; }
+.agent-btn-text.agent-btn-sm:hover { color: #2F52C4; }
+.agent-btn-accent { color: #243F9A; }
 .agent-btn-danger { color: #ef4444; background: transparent; }
 .agent-btn-danger:hover { color: #dc2626; }
 
@@ -415,7 +415,7 @@
     box-shadow: 0 0 0 2px transparent;
 }
 .composer-agent-btn { position: relative; }
-.composer-agent-btn:hover { box-shadow: 0 0 0 2px #4ABE6E; }
+.composer-agent-btn:hover { box-shadow: 0 0 0 2px #6B8EF0; }
 /* Locked only means the owner can no longer be swapped; the button still opens
    its menu, so it keeps a pointer. */
 .composer-agent-btn.locked:hover { box-shadow: 0 0 0 2px #cbd5e1; }
@@ -423,7 +423,7 @@
     position: absolute; right: -4px; bottom: -4px;
     min-width: 13px; height: 13px; padding: 0 2px;
     border-radius: 999px; border: 2px solid #fff;
-    background: #4ABE6E; color: #fff;
+    background: #6B8EF0; color: #fff;
     font-size: 8px; font-weight: 600; line-height: 9px; text-align: center;
 }
 .dark .composer-agent-count { border-color: #1A1A1A; }
@@ -431,11 +431,11 @@
 /* The current Agent is marked by its trailing check, not a standing highlight:
    a permanent green fill fought the hover state, so two rows looked selected at
    once. Hover is the only fill; current just tints its text and check. */
-.composer-menu-item.current { color: #228547; }
-.composer-menu-item.current:hover { background: #EDFDF3; }
+.composer-menu-item.current { color: #2F52C4; }
+.composer-menu-item.current:hover { background: #F2F5FE; }
 .dark .composer-menu-item.current { color: #6EE7A0; }
-.dark .composer-menu-item.current:hover { background: rgba(74, 190, 110, .14); }
-.composer-menu-item.current > i.fa-check { color: #4ABE6E; }
+.dark .composer-menu-item.current:hover { background: rgba(107, 142, 240, .14); }
+.composer-menu-item.current > i.fa-check { color: #6B8EF0; }
 /* A member already in the conversation is a plain row, not a standing green
    fill (that read as "everything is selected"). A dim ✓ marks that it's in the
    chat; hovering a removable teammate swaps it for a red × (the owner row is a
@@ -457,8 +457,8 @@ button.composer-menu-item.joined:hover .joined-remove { display: inline; color: 
 .dark .composer-menu-badge { background: rgba(255,255,255,.08); color: #94a3b8; }
 /* The "main Agent" badge is the one standing marker in the roster, so it reads
    in the brand green rather than the muted grey of an ordinary badge. */
-.composer-menu-badge.owner-badge { background: #4ABE6E; color: #fff; }
-.dark .composer-menu-badge.owner-badge { background: #4ABE6E; color: #fff; }
+.composer-menu-badge.owner-badge { background: #6B8EF0; color: #fff; }
+.dark .composer-menu-badge.owner-badge { background: #6B8EF0; color: #fff; }
 .composer-menu-item .agent-avatar { flex-shrink: 0; }
 .composer-menu-sep { height: 1px; margin: 5px 6px; background: #eef2f6; }
 .dark .composer-menu-sep { background: rgba(255, 255, 255, 0.08); }
@@ -490,7 +490,7 @@ button.composer-menu-item.joined:hover .joined-remove { display: inline; color: 
 .dark .bot-speaker { color: #94a3b8; }
 
 /* A mention reads as the teammate it names: a rounded chip carrying their face
-   and name, so "@我的运营助手" looks addressed rather than typed. */
+   and name, so "@Ops" looks addressed rather than typed. */
 .mention-tag {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 1px 7px 1px 2px; border-radius: 999px;
@@ -515,8 +515,8 @@ button.composer-menu-item.joined:hover .joined-remove { display: inline; color: 
 }
 .mention-tag-name { white-space: nowrap; }
 /* In a bot bubble (white surface) the chip needs its own tint to read as a chip. */
-.bot-message-group .mention-tag { background: #EDFDF3; color: #17803d; }
-.dark .bot-message-group .mention-tag { background: rgba(74, 190, 110, .16); color: #6EE7A0; }
+.bot-message-group .mention-tag { background: #F2F5FE; color: #243F9A; }
+.dark .bot-message-group .mention-tag { background: rgba(107, 142, 240, .16); color: #6EE7A0; }
 
 .channel-agent-bind {
     display: flex; align-items: center; gap: 8px;

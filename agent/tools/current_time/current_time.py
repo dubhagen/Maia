@@ -9,12 +9,6 @@ from typing import Dict
 
 from agent.tools.base_tool import BaseTool, ToolResult
 
-_WEEKDAYS_ZH = {
-    "Monday": "星期一", "Tuesday": "星期二", "Wednesday": "星期三",
-    "Thursday": "星期四", "Friday": "星期五", "Saturday": "星期六", "Sunday": "星期日",
-}
-
-
 def current_time_info() -> Dict[str, str]:
     """Local date, time, weekday and UTC offset, formatted for the model."""
     now = datetime.datetime.now().astimezone()
@@ -25,13 +19,6 @@ def current_time_info() -> Dict[str, str]:
     timezone = f"UTC{sign}{hours:02d}:{minutes:02d}" if minutes else f"UTC{sign}{hours:02d}"
 
     weekday = now.strftime("%A")
-    try:
-        from common import i18n
-        is_en = i18n.get_language() == "en"
-    except Exception:
-        is_en = False
-    if not is_en:
-        weekday = _WEEKDAYS_ZH.get(weekday, weekday)
 
     return {
         "date": now.strftime("%Y-%m-%d"),

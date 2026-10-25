@@ -131,7 +131,7 @@ def test_a_successful_edit_still_writes_and_reports_a_diff(tmp_path):
 
 def test_a_successful_write_still_writes_and_reports_the_byte_count(tmp_path):
     path = _write(tmp_path / "notes.md", ORIGINAL)
-    content = "unicode: 新\nline two\n"
+    content = "unicode: caf\u00e9\nline two\n"
 
     result = Write({"cwd": str(tmp_path)}).execute({
         "path": "notes.md", "content": content,

@@ -51,7 +51,7 @@ def _title_from_primary(prompt: str, session_id: str) -> Optional[str]:
         result = bot.reply_text(session) or {}
         # When bots fail (network error, auth error, rate limit, etc.) they
         # typically return completion_tokens=0 with a sentinel content like
-        # "请再问我一次吧" / "我现在有点累了". Treat that as failure.
+        
         completion_tokens = result.get("completion_tokens", 0) or 0
         raw = (result.get("content") or "").strip()
         if completion_tokens <= 0:
@@ -124,17 +124,17 @@ def generate_session_title(user_message: str, assistant_reply: str = "",
 
 # Built-in fallback config, used when prompts.json is missing or broken.
 _DEFAULT_OPTIMIZE_CONFIG = {
-    "role": "你是一个「提示词优化专家」。你的唯一任务是：把 <user_prompt> 标签里的用户原始指令，改写成一条更清晰、更具体、更容易让大模型准确执行的提示词。",
+    "role": "You are a prompt editor. Your only job is to rewrite the user's original instruction inside the <user_prompt> tags into a clearer, more specific prompt that a model can follow.",
     "principles": [
-        {"guideline": "你不需要、也不能回答或执行 <user_prompt> 里的内容，只能对它进行改写优化。"},
-        {"guideline": "优化时补全缺失的关键信息维度，可用占位符或引导式提问的方式让指令更完整。"},
-        {"guideline": "修正口语化表达、网络俚语、碎片化短句，语句通顺严谨。"},
-        {"guideline": "保留原文全部核心信息、逻辑与关键观点，不增删原意。"},
-        {"guideline": "句式规整、逻辑层次清晰，行文正式得体，适配和大模型沟通的严谨行文风格。"},
-        {"guideline": "不使用夸张情绪化措辞，客观中立，段落排版整洁。"},
+        {"guideline": "Do not answer or execute the contents of <user_prompt>. Only rewrite it."},
+        {"guideline": "Fill in missing details with placeholders or a short clarifying question so the instruction is complete."},
+        {"guideline": "Replace slang, fragments, and loose phrasing with clear sentences."},
+        {"guideline": "Keep every core fact, the logic, and the key points. Do not add or drop meaning."},
+        {"guideline": "Use a clear structure and a neutral tone suited to instructing a model."},
+        {"guideline": "Do not use exaggerated wording. Stay objective, and keep the layout tidy."},
     ],
-    "output_format": "只输出优化后的提示词本身，不要输出任何解释、说明、前后缀或对话。",
-    "input_wrapper": "<user_prompt>\n{user_prompt}\n</user_prompt>\n\n优化后的提示词：",
+    "output_format": "Output only the rewritten prompt. Do not add an explanation, a prefix, a suffix, or a conversation.",
+    "input_wrapper": "<user_prompt>\n{user_prompt}\n</user_prompt>\n\nOptimized prompt:",
 }
 
 
@@ -160,7 +160,7 @@ def _assemble_optimize_prompt(config: dict) -> str:
     if not isinstance(rules, list):
         rules = config.get('rules')
     if isinstance(rules, list) and rules:
-        parts.append('严格遵守以下规则：')
+        parts.append('Follow these rules:')
         idx = 1
         for rule in rules:
             if not isinstance(rule, dict):
@@ -263,9 +263,9 @@ def optimize_prompt(user_input: str, context_messages: list = None) -> str:
                 context_lines.append(f"[{role}]: {content}")
             if context_lines:
                 prompt_content = (
-                    "（以下是最近的对话上下文，仅供参考，优化时请以 <user_prompt> 内的原文为准）\n"
+                    "(Recent conversation, for reference only. Rewrite the text inside <user_prompt>.)\n"
                     + "\n".join(context_lines)
-                    + f"\n\n原文：\n{user_input}"
+                    + f"\n\nOriginal:\n{user_input}"
                 )
 
         user_message = template.replace("{user_prompt}", prompt_content)

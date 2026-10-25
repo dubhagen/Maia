@@ -15,9 +15,9 @@ export type ThemePref = 'light' | 'dark' | 'system'
 export type ResolvedTheme = 'light' | 'dark'
 
 // Appearance preference (light/dark/system).
-const PREF_KEY = 'cow_theme'
+const PREF_KEY = 'maia_theme'
 // Selected theme id (which visual theme is active).
-const THEME_ID_KEY = 'cow_theme_id'
+const THEME_ID_KEY = 'maia_theme_id'
 
 function getSystemTheme(): ResolvedTheme {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
@@ -160,7 +160,7 @@ export function useTheme() {
     readStoredPref() === 'system' ? getSystemTheme() : (readStoredPref() as ResolvedTheme)
   )
   // Display name; a bundled app config may override the default.
-  const [appName, setAppName] = useState<string>('CowAgent')
+  const [appName, setAppName] = useState<string>('Maia')
   // Snapshot before any effect persists a value, so we can tell a genuine
   // first run (no prior choice) from a user who explicitly picked a theme.
   const [firstRun] = useState(() => !hasStoredThemeId())

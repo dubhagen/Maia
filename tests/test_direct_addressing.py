@@ -61,7 +61,7 @@ def _bridge(tmp_path, disabled=()):
                 },
                 {
                     "id": "ops",
-                    "name": "运营助手",
+                    "name": "Ops",
                     "workspace": str(tmp_path / "ops"),
                     "enabled": "ops" not in disabled,
                 },
@@ -141,7 +141,7 @@ def test_guest_roster_names_the_host_and_never_itself(tmp_path, monkeypatch):
             "default_agent_id": "primary",
             "agents": [
                 {"id": "primary", "name": "Primary", "workspace": str(tmp_path / "p")},
-                {"id": "ops", "name": "运营助手", "workspace": str(tmp_path / "o")},
+                {"id": "ops", "name": "Ops", "workspace": str(tmp_path / "o")},
             ],
         }
     )
@@ -155,7 +155,7 @@ def test_guest_roster_names_the_host_and_never_itself(tmp_path, monkeypatch):
 
 
 class TestSeedTeamMembersFromChannelInstance:
-    """A team channel bot (e.g. a Feishu instance with members) carries its
+    """A team channel bot carries its
     roster on every message. The bridge materializes it onto the session once,
     so the shared delegate/@mention machinery — which reads session_prefs — sees
     a team, exactly like a Web team conversation.
@@ -402,44 +402,44 @@ class TestTheAddressComesOffBeforeTheModelSeesIt:
         return _bridge(tmp_path)._strip_address(text, speaker)
 
     def test_the_name_is_removed(self, tmp_path):
-        assert self._strip(tmp_path, "@运营助手 你是谁") == "你是谁"
+        assert self._strip(tmp_path, "@Ops who are you") == "who are you"
 
     def test_the_id_is_removed_too(self, tmp_path):
-        assert self._strip(tmp_path, "@ops 你是谁") == "你是谁"
+        assert self._strip(tmp_path, "@ops who are you") == "who are you"
 
     def test_punctuation_after_the_name_goes_with_it(self, tmp_path):
-        assert self._strip(tmp_path, "@运营助手，帮我看下") == "帮我看下"
+        assert self._strip(tmp_path, "@Ops\uff0ctake a look") == "take a look"
 
     def test_leading_whitespace_is_consumed(self, tmp_path):
-        assert self._strip(tmp_path, "  @运营助手  你是谁") == "你是谁"
+        assert self._strip(tmp_path, "  @Ops  who are you") == "who are you"
 
     def test_the_rest_of_the_message_is_untouched(self, tmp_path):
         assert self._strip(
-            tmp_path, "@运营助手 看下这个 @运营助手 的历史"
-        ) == "看下这个 @运营助手 的历史"
+            tmp_path, "@Ops look at this @Ops history"
+        ) == "look at this @Ops history"
 
     def test_a_bare_address_still_reaches_the_agent(self, tmp_path):
         """"@Ops" alone means "you, speak" — stripping it would send an empty
         turn, so the mention stays rather than becoming nothing."""
-        assert self._strip(tmp_path, "@运营助手") == "@运营助手"
-        assert self._strip(tmp_path, "@运营助手   ") == "@运营助手   "
+        assert self._strip(tmp_path, "@Ops") == "@Ops"
+        assert self._strip(tmp_path, "@Ops   ") == "@Ops   "
 
     def test_a_message_addressed_to_nobody_is_unchanged(self, tmp_path):
-        assert self._strip(tmp_path, "你是谁") == "你是谁"
+        assert self._strip(tmp_path, "who are you") == "who are you"
 
     def test_someone_else_s_name_is_left_in_place(self, tmp_path):
-        assert self._strip(tmp_path, "@Primary 你是谁") == "@Primary 你是谁"
+        assert self._strip(tmp_path, "@Primary who are you") == "@Primary who are you"
 
     def test_an_unknown_speaker_leaves_the_text_alone(self, tmp_path):
-        assert self._strip(tmp_path, "@运营助手 你是谁", "ghost") == "@运营助手 你是谁"
+        assert self._strip(tmp_path, "@Ops who are you", "ghost") == "@Ops who are you"
 
     def test_empty_input_survives(self, tmp_path):
         assert self._strip(tmp_path, "") == ""
 
     def test_attachment_lines_after_the_question_are_kept(self, tmp_path):
         assert self._strip(
-            tmp_path, "@运营助手 看下\n[工作空间文件: a.md]"
-        ) == "看下\n[工作空间文件: a.md]"
+            tmp_path, "@Ops look\n[Workspace file: a.md]"
+        ) == "look\n[Workspace file: a.md]"
 
 
 class TestRecordingWhoSpoke:
@@ -507,7 +507,7 @@ class TestKnowingWhoWroteWhat:
         """assistant+[Name] is what the model copies into its own mouth."""
         message = self._attributed(tmp_path, "default")[1]
         assert message["role"] == "user"
-        assert message["content"][0]["text"].startswith("运营助手(@ops)：")
+        assert message["content"][0]["text"].startswith("Ops(@ops)\uff1a")
         assert "shipped" in message["content"][0]["text"]
 
     def test_your_own_reply_stays_assistant(self, tmp_path):
@@ -524,7 +524,7 @@ class TestKnowingWhoWroteWhat:
         attributed = self._attributed(tmp_path, "default")
         assert [m["content"][0]["text"] for m in attributed if m["role"] == "user"] == [
             "ship it",
-            "运营助手(@ops)：shipped",
+            "Ops(@ops)\uff1ashipped",
             "and now?",
         ]
 
@@ -541,14 +541,14 @@ class TestKnowingItsOwnName:
     states the name, and a console-created Agent has it in its persona file."""
 
     @staticmethod
-    def _team_prompt(language="zh"):
+    def _team_prompt(language="en"):
         from agent.prompt.builder import _build_team_section
 
         return "\n".join(
             _build_team_section(
                 {
                     "agent_id": "ops",
-                    "agent_name": "我的运营助手",
+                    "agent_name": "Ops Helper",
                     "teammates": [{"id": "default", "name": "Gray"}],
                 },
                 language,
@@ -556,11 +556,11 @@ class TestKnowingItsOwnName:
         )
 
     def test_the_prompt_states_the_agent_s_own_name(self):
-        assert "我的运营助手" in self._team_prompt()
+        assert "Ops Helper" in self._team_prompt()
         assert "@ops" in self._team_prompt()
 
     def test_the_english_prompt_states_it_too(self):
-        assert "我的运营助手(@ops)" in self._team_prompt("en")
+        assert "Ops Helper(@ops)" in self._team_prompt("en")
 
     def test_teammates_are_still_named(self):
         assert "Gray(@default)" in self._team_prompt()
@@ -568,18 +568,18 @@ class TestKnowingItsOwnName:
     def test_a_solo_conversation_gets_no_team_section(self):
         from agent.prompt.builder import _build_team_section
 
-        assert _build_team_section({"agent_id": "ops", "teammates": []}, "zh") == []
+        assert _build_team_section({"agent_id": "ops", "teammates": []}, "en") == []
 
     def test_creating_an_agent_writes_its_name_into_the_persona(self, tmp_path):
         from agent.admin import AgentAdminService
 
         persona = tmp_path / "AGENT.md"
         persona.write_text(
-            "# AGENT.md\n\n- **名字**: *(在首次对话时填写)*\n- **角色**: *(填写)*\n",
+            "# AGENT.md\n\n- **Name**: *(fill in on first chat)*\n- **Role**: *(fill in)*\n",
             encoding="utf-8",
         )
-        AgentAdminService._seed_name(str(tmp_path), "我的运营助手")
-        assert "- **名字**: 我的运营助手" in persona.read_text(encoding="utf-8")
+        AgentAdminService._seed_name(str(tmp_path), "Ops Helper")
+        assert "- **Name**: Ops Helper" in persona.read_text(encoding="utf-8")
 
     def test_an_english_persona_template_is_seeded_too(self, tmp_path):
         from agent.admin import AgentAdminService
@@ -594,7 +594,7 @@ class TestKnowingItsOwnName:
         from agent.admin import AgentAdminService
 
         persona = tmp_path / "AGENT.md"
-        original = "# 我是 Gray\n\n我是一个合伙人型助手。\n"
+        original = "# I am Gray\n\nI am a partner-style assistant.\n"
         persona.write_text(original, encoding="utf-8")
         AgentAdminService._seed_name(str(tmp_path), "Ops")
         assert persona.read_text(encoding="utf-8") == original
@@ -604,11 +604,11 @@ class TestKnowingItsOwnName:
 
         persona = tmp_path / "AGENT.md"
         persona.write_text(
-            "- **名字**: *(填写)*\n\n## 用户\n- **名字**: 老板\n", encoding="utf-8"
+            "- **Name**: *(fill in)*\n\n## User\n- **Name**: Boss\n", encoding="utf-8"
         )
         AgentAdminService._seed_name(str(tmp_path), "Ops")
         assert persona.read_text(encoding="utf-8") == (
-            "- **名字**: Ops\n\n## 用户\n- **名字**: 老板\n"
+            "- **Name**: Ops\n\n## User\n- **Name**: Boss\n"
         )
 
     def test_a_missing_persona_file_is_not_an_error(self, tmp_path):
@@ -637,7 +637,7 @@ class TestMentionParsing:
 
     ROSTER = [
         {"id": "primary", "name": "Primary", "avatar": ""},
-        {"id": "agent-17n3e8", "name": "运营助手", "avatar": ""},
+        {"id": "agent-17n3e8", "name": "Ops", "avatar": ""},
     ]
 
     @staticmethod
@@ -649,36 +649,36 @@ class TestMentionParsing:
         return _addressed_agent_id(text, roster)
 
     def test_leading_name_addresses_that_agent(self):
-        assert self._resolve("@运营助手 你是谁") == "agent-17n3e8"
+        assert self._resolve("@Ops who are you") == "agent-17n3e8"
 
     def test_leading_id_still_works(self):
-        assert self._resolve("@agent-17n3e8 你是谁") == "agent-17n3e8"
+        assert self._resolve("@agent-17n3e8 who are you") == "agent-17n3e8"
 
     def test_name_alone_addresses_that_agent(self):
-        assert self._resolve("@运营助手") == "agent-17n3e8"
+        assert self._resolve("@Ops") == "agent-17n3e8"
 
     def test_punctuation_after_the_name_counts_as_a_boundary(self):
-        assert self._resolve("@运营助手，帮我看下") == "agent-17n3e8"
+        assert self._resolve("@Ops\uff0ctake a look") == "agent-17n3e8"
 
     def test_talking_about_someone_is_not_addressing_them(self):
-        assert self._resolve("帮我问问 @运营助手 的看法") == ""
+        assert self._resolve("ask @Ops for a view") == ""
 
     def test_an_unknown_name_addresses_nobody(self):
         assert self._resolve("@nobody hello") == ""
 
     def test_plain_text_addresses_nobody(self):
-        assert self._resolve("你是谁") == ""
+        assert self._resolve("who are you") == ""
 
     def test_an_empty_roster_addresses_nobody(self):
-        assert self._resolve("@运营助手 你是谁", []) == ""
+        assert self._resolve("@Ops who are you", []) == ""
 
     def test_the_longer_label_wins_when_one_name_prefixes_another(self):
         roster = [
-            {"id": "a", "name": "运营", "avatar": ""},
-            {"id": "b", "name": "运营助手", "avatar": ""},
+            {"id": "a", "name": "Ops", "avatar": ""},
+            {"id": "b", "name": "Ops Helper", "avatar": ""},
         ]
-        assert self._resolve("@运营助手 你好", roster) == "b"
-        assert self._resolve("@运营 你好", roster) == "a"
+        assert self._resolve("@Ops Helper hi", roster) == "b"
+        assert self._resolve("@Ops hi", roster) == "a"
 
 
 class TestSharedTranscriptStaysCurrent:
@@ -732,7 +732,7 @@ class TestSharedTranscriptStaysCurrent:
             [
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "CowAgent repo is here"}],
+                    "content": [{"type": "text", "text": "Maia repo is here"}],
                 },
                 {
                     "role": "assistant",
@@ -747,7 +747,7 @@ class TestSharedTranscriptStaysCurrent:
         bridge._sync_shared_transcript(guest, "chat", "primary")
         texts = [m["content"][0]["text"] for m in guest.messages]
         assert any(
-            t.startswith("Primary(@primary)：") and "located the repo" in t for t in texts
+            t.startswith("Primary(@primary)\uff1a") and "located the repo" in t for t in texts
         )
 
     def test_only_a_runtime_built_earlier_counts_as_cached(self, tmp_path):
@@ -832,13 +832,13 @@ class TestOwnToolChainsSurviveTheReload:
         history = self._history(tmp_path, "primary")
         assert history[4:] == [
             {"role": "user", "content": [{"type": "text", "text": "check a.py"}]},
-            {"role": "user", "content": [{"type": "text", "text": "运营助手(@ops)：a.py looks fine"}]},
+            {"role": "user", "content": [{"type": "text", "text": "Ops(@ops)\uff1aa.py looks fine"}]},
         ]
 
     def test_each_speaker_keeps_only_its_own(self, tmp_path):
         history = self._history(tmp_path, "ops")
         assert [b["id"] for b in self._blocks(history, "tool_use")] == ["call_o"]
-        assert history[1]["content"][0]["text"] == "Primary(@primary)：fixed a.py"
+        assert history[1]["content"][0]["text"] == "Primary(@primary)\uff1afixed a.py"
 
     def test_an_unstamped_turn_stays_text_only(self, tmp_path):
         history = AgentInitializer._shared_history(
@@ -885,23 +885,23 @@ class TestOwnToolChainsSurviveTheReload:
         )
         bridge._sync_shared_transcript(host, "chat", "primary")
         assert [b["id"] for b in self._blocks(host.messages, "tool_use")] == ["call_p"]
-        assert host.messages[-1]["content"][0]["text"] == "运营助手(@ops)：a.py looks fine"
+        assert host.messages[-1]["content"][0]["text"] == "Ops(@ops)\uff1aa.py looks fine"
 
 
 class TestStripCopiedSpeakerPrefix:
     def test_bracket_and_colon_prefixes_are_removed(self, tmp_path):
         bridge = _bridge(tmp_path)
-        labels = ["团队负责人", "开发", "default", "developer"]
+        labels = ["Lead", "Dev", "default", "developer"]
         assert (
-            bridge._strip_speaker_prefix("[团队负责人] 浓缩一版", labels)
-            == "浓缩一版"
+            bridge._strip_speaker_prefix("[Lead] shorten this", labels)
+            == "shorten this"
         )
-        assert bridge._strip_speaker_prefix("开发：仓库在这", labels) == "仓库在这"
+        assert bridge._strip_speaker_prefix("Dev\uff1athe repo is here", labels) == "the repo is here"
         assert (
-            bridge._strip_speaker_prefix("团队负责人(@default)：浓缩一版", labels)
-            == "浓缩一版"
+            bridge._strip_speaker_prefix("Lead(@default)\uff1ashorten this", labels)
+            == "shorten this"
         )
-        assert bridge._strip_speaker_prefix("正常回复", labels) == "正常回复"
+        assert bridge._strip_speaker_prefix("normal reply", labels) == "normal reply"
 
 
 class TestReplayingWorkHandedToATeammate:
@@ -939,7 +939,7 @@ class TestReplayingWorkHandedToATeammate:
                         "content": json.dumps(
                             {
                                 "agent_id": agent_id,
-                                "agent_name": "运营助手",
+                                "agent_name": "Ops",
                                 "status": "done",
                                 "content": said,
                             }
@@ -1006,7 +1006,7 @@ class TestReplayingWorkHandedToATeammate:
         )
         spoke = AgentInitializer._attribute_history(restored, "default")[1]
         assert spoke["role"] == "user"
-        assert spoke["content"][0]["text"] == "运营助手(@ops)：shipped at noon"
+        assert spoke["content"][0]["text"] == "Ops(@ops)\uff1ashipped at noon"
 
     def test_every_other_tool_result_is_still_discarded(self):
         restored = self._restored(

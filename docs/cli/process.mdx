@@ -1,16 +1,16 @@
 ---
 title: Process Management
-description: "Manage the CowAgent background process with the cow command: start, stop, restart, update (pull code, update dependencies and restart), check status and view logs."
+description: "Manage the Maia background process with the maia command: start, stop, restart, update (pull code, update dependencies and restart), check status and view logs."
 ---
 
-Process management commands control the CowAgent background process. These commands are only available in the terminal.
+Process management commands control the Maia background process. These commands are only available in the terminal.
 
 ## start
 
-Start the CowAgent service. Runs as a background daemon by default and automatically tails logs.
+Start the Maia service. Runs as a background daemon by default and automatically tails logs.
 
 ```bash
-cow start
+maia start
 ```
 
 **Options:**
@@ -22,18 +22,18 @@ cow start
 
 ## stop
 
-Stop the running CowAgent service.
+Stop the running Maia service.
 
 ```bash
-cow stop
+maia stop
 ```
 
 ## restart
 
-Restart the CowAgent service (stop then start).
+Restart the Maia service (stop then start).
 
 ```bash
-cow restart
+maia restart
 ```
 
 **Options:**
@@ -53,7 +53,7 @@ Update code and restart the service. Automatically performs:
 5. Start service
 
 ```bash
-cow update
+maia update
 ```
 
 <Warning>
@@ -62,10 +62,10 @@ cow update
 
 ## status
 
-Check CowAgent service status, including process info, version, and current model/channel configuration.
+Check Maia service status, including process info, version, and current model/channel configuration.
 
 ```bash
-cow status
+maia status
 ```
 
 ## logs
@@ -73,7 +73,7 @@ cow status
 View service logs.
 
 ```bash
-cow logs
+maia logs
 ```
 
 **Options:**
@@ -87,10 +87,10 @@ Examples:
 
 ```bash
 # View last 100 lines
-cow logs -n 100
+maia logs -n 100
 
 # Continuously tail logs
-cow logs -f
+maia logs -f
 ```
 
 ## install-browser
@@ -98,7 +98,7 @@ cow logs -f
 Install Playwright and Chromium browser for the [browser tool](/tools/browser).
 
 ```bash
-cow install-browser
+maia install-browser
 ```
 
 <Tip>
@@ -107,17 +107,17 @@ cow install-browser
 
 ## run.sh Compatibility
 
-If Cow CLI is not installed, you can use `run.sh` to manage the service:
+If Maia CLI is not installed, you can use `run.sh` to manage the service:
 
-| cow command | run.sh equivalent |
+| maia command | run.sh equivalent |
 | --- | --- |
-| `cow start` | `./run.sh start` |
-| `cow stop` | `./run.sh stop` |
-| `cow restart` | `./run.sh restart` |
-| `cow update` | `./run.sh update` |
-| `cow status` | `./run.sh status` |
-| `cow logs` | `./run.sh logs` |
+| `maia start` | `./run.sh start` |
+| `maia stop` | `./run.sh stop` |
+| `maia restart` | `./run.sh restart` |
+| `maia update` | `./run.sh update` |
+| `maia status` | `./run.sh status` |
+| `maia logs` | `./run.sh logs` |
 
 <Note>
-  The `cow` command is recommended — it provides cleaner syntax and richer features. It is automatically installed via the one-click install script.
+  The `maia` command is recommended — it provides cleaner syntax and richer features. It is automatically installed via the one-click install script.
 </Note>

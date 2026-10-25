@@ -21,7 +21,7 @@ from common.log import logger
 from common.utils import expand_path, is_cloud_deployment, memory_headroom_mb
 
 
-_DEFAULT_USER_DATA_DIR = "~/.cow/browser_profile"
+_DEFAULT_USER_DATA_DIR = "~/.maia/browser_profile"
 
 # Bounds for the renderer's JS heap cap. The floor is what even simple pages need
 # to run at all; the ceiling is where constraining it stops being useful. The
@@ -221,7 +221,7 @@ _SNAPSHOT_JS = """
     const root = selector ? document.querySelector(selector) : document.body;
     if (!root) throw new Error("Snapshot selector not found: " + selector);
     const result = walk(root);
-    window.__cowRefMap = refMap;
+    window.__maiaRefMap = refMap;
     return { tree: result, refCount: refCounter };
 }
 """ % (
@@ -685,7 +685,7 @@ class BrowserService:
     def _launch_browser(self):
         """Launch / connect Chromium on the background thread."""
         # Point Playwright at our pinned download dir before any launch so a
-        # bundled-Chromium fallback finds the browser downloaded to ~/.cow.
+        # bundled-Chromium fallback finds the browser downloaded to ~/.maia.
         try:
             from agent.tools.browser.browser_env import apply_browsers_path_env
             apply_browsers_path_env()
@@ -820,7 +820,7 @@ class BrowserService:
             if "singletonlock" in msg or "profile" in msg or "lock" in msg:
                 raise RuntimeError(
                     f"Browser profile '{self._user_data_dir}' is in use by another process. "
-                    "Close the other Chromium / cow instance, or set a different "
+                    "Close the other Chromium / maia instance, or set a different "
                     "tools.browser.user_data_dir."
                 ) from e
             raise
@@ -1186,7 +1186,7 @@ class BrowserService:
     @contextmanager
     def _ref_element(self, ref):
         handle = self._page.evaluate_handle(
-            "ref => (window.__cowRefMap && window.__cowRefMap[ref]) || null", ref
+            "ref => (window.__maiaRefMap && window.__maiaRefMap[ref]) || null", ref
         )
         try:
             element = handle.as_element()

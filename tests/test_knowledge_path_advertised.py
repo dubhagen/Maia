@@ -20,9 +20,9 @@ def shared(tmp_path, monkeypatch):
     """A shared knowledge root plus a workspace that has no local copy."""
     from common import state_dir
 
-    shared_root = tmp_path / "cow" / "knowledge"
+    shared_root = tmp_path / "maia" / "knowledge"
     shared_root.mkdir(parents=True)
-    workspace = tmp_path / "cow" / "agents" / "pm-agent"
+    workspace = tmp_path / "maia" / "agents" / "pm-agent"
     workspace.mkdir(parents=True)
 
     def fake_knowledge_dir(base=None, ensure=False):

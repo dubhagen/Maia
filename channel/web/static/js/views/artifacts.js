@@ -11,7 +11,7 @@
    roster), all at call time only. */
 
 const ART_PAGE_SIZE = 48;
-const ART_SCOPE_KEY = 'cow_artifacts_scope';
+const ART_SCOPE_KEY = 'maia_artifacts_scope';
 const ART_TEXT_KINDS = new Set(['markdown', 'code', 'text', 'csv']);
 // Only the head of a text file is drawn on its card; past this size the fetch
 // costs more than the glimpse is worth.
@@ -19,7 +19,7 @@ const ART_TEXT_THUMB_MAX = 512 * 1024;
 const ART_TEXT_THUMB_CHARS = 2400;
 // Matches TITLE_MAX in api/artifacts.py.
 const ART_TITLE_MAX = 120;
-const ART_PREVIEW_WIDTH_KEY = 'cow_artifacts_preview_width';
+const ART_PREVIEW_WIDTH_KEY = 'maia_artifacts_preview_width';
 const ART_PREVIEW_MIN_WIDTH = 340;
 // Room the timeline keeps beside a widened preview pane.
 const ART_LIST_MIN_WIDTH = 360;

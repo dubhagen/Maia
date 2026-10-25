@@ -57,7 +57,7 @@ def test_public_url_install_preserves_loader_metadata_and_existing_skill(tmp_pat
     (data / "config.json").write_text(json.dumps({"agent_workspace": str(workspace)}), encoding="utf-8")
     try:
         with patch.dict(os.environ, {"HOME": str(home), "USERPROFILE": str(home),
-                                     "COW_DATA_DIR": str(data)}, clear=True):
+                                     "MAIA_DATA_DIR": str(data)}, clear=True):
             target = Path(get_skills_dir()).resolve()
             assert os.path.commonpath([str(target), str(tmp_path.resolve())]) == str(tmp_path.resolve())
             installed = CliRunner().invoke(skill, ["install", f"http://127.0.0.1:{server.server_port}/SKILL.md"])

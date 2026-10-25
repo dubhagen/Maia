@@ -1,7 +1,7 @@
 """
-System Prompt Builder - 系统提示词构建器
+System prompt builder.
 
-实现模块化的系统提示词构建，支持工具、技能、记忆等多个子系统
+Builds a modular system prompt covering tools, skills, memory, and other subsystems.
 """
 
 from __future__ import annotations
@@ -24,14 +24,7 @@ class ContextFile:
 class PromptBuilder:
     """System prompt builder."""
     
-    def __init__(self, workspace_dir: str, language: str = "zh"):
-        """
-        初始化提示词构建器
-        
-        Args:
-            workspace_dir: 工作空间目录
-            language: 语言 ("zh" 或 "en")
-        """
+    def __init__(self, workspace_dir: str, language: str = "en"):
         self.workspace_dir = workspace_dir
         self.language = language
     
@@ -48,22 +41,6 @@ class PromptBuilder:
         permission_mode: Optional[str] = None,
         **kwargs
     ) -> str:
-        """
-        构建完整的系统提示词
-        
-        Args:
-            base_persona: 基础人格描述（会被context_files中的AGENT.md覆盖）
-            user_identity: 用户身份信息
-            tools: 工具列表
-            context_files: 上下文文件列表（AGENT.md, USER.md, RULE.md, BOOTSTRAP.md等）
-            skill_manager: 技能管理器
-            memory_manager: 记忆管理器
-            runtime_info: 运行时信息
-            **kwargs: 其他参数
-            
-        Returns:
-            完整的系统提示词
-        """
         return build_agent_system_prompt(
             workspace_dir=self.workspace_dir,
             language=self.language,
@@ -82,7 +59,7 @@ class PromptBuilder:
 
 def build_agent_system_prompt(
     workspace_dir: str,
-    language: str = "zh",
+    language: str = "en",
     base_persona: Optional[str] = None,
     user_identity: Optional[Dict[str, str]] = None,
     tools: Optional[List[Any]] = None,
@@ -123,6 +100,7 @@ def build_agent_system_prompt(
     Returns:
         The full system prompt.
     """
+    language = "en"
     sections = []
 
     # 1. Tooling (most important, goes first)
@@ -202,9 +180,9 @@ def _build_response_language_section(language: str) -> List[str]:
             "",
         ]
     return [
-        "## 🌐 回复语言",
+        "## 🌐 Response language",
         "",
-        "默认使用与用户输入相同的语言回复，除非用户明确要求使用其他语言。",
+        "By default, reply in the same language as the user's input, unless the user explicitly asks for another language.",
         "",
     ]
 
@@ -242,24 +220,24 @@ def _build_tooling_section(tools: List[Any], language: str) -> List[str]:
         }
     else:
         core_summaries = {
-            "read": "读取文件内容",
-            "write": "创建或覆盖文件",
-            "edit": "精确编辑文件",
-            "ls": "列出目录内容",
-            "search_files": "按正则搜索文件内容，或按文件名查找文件",
-            "bash": "执行shell命令",
-            "terminal": "管理后台进程",
-            "web_search": "网络搜索",
-            "web_fetch": "获取URL内容",
-            "browser": "控制浏览器（关键结果或需要协助可截图发送给用户）",
-            "memory_search": "搜索记忆",
-            "memory_get": "读取记忆内容",
-            "env_config": "管理API密钥和技能配置",
-            "time": "获取当前日期和时间",
-            "scheduler": "管理定时任务和提醒",
-            "send": "发送本地文件给用户（仅限本地文件，URL直接放在回复文本中）",
-            "vision": "分析图片内容（识别、描述、OCR文字提取等）",
-            "subagent": "把一件自成一体的任务交给子 Agent，只拿回它的结论",
+            "read": "read file content",
+            "write": "create or overwrite a file",
+            "edit": "make precise edits to a file",
+            "ls": "list directory contents",
+            "search_files": "search inside files by regex, or find files by name",
+            "bash": "run shell commands",
+            "terminal": "manage background processes",
+            "web_search": "web search",
+            "web_fetch": "fetch URL content",
+            "browser": "control the browser (screenshot key results, or send a shot to the user when help is needed)",
+            "memory_search": "search memory",
+            "memory_get": "read memory content",
+            "env_config": "manage API keys and skill config",
+            "time": "get the current date and time",
+            "scheduler": "manage scheduled tasks and reminders",
+            "send": "send a local file to the user (local files only; put URLs directly in the reply text)",
+            "vision": "analyze images (recognition, description, OCR, and similar)",
+            "subagent": "hand a self-contained task to a sub agent and get back only its conclusion",
         }
 
     # Preferred display order
@@ -320,24 +298,24 @@ def _build_tooling_section(tools: List[Any], language: str) -> List[str]:
             )
     else:
         lines = [
-            "## 🔧 工具系统",
+            "## 🔧 Tooling",
             "",
-            "可用工具（名称大小写敏感，严格按列表调用）:",
+            "Available tools (names are case-sensitive; call them exactly as listed):",
             "\n".join(tool_lines),
             "",
-            "工具调用风格：",
+            "Tool-calling style:",
             "",
-            "- 多步骤任务、复杂决策、敏感操作时，应简要说明当前在做什么、为什么这样做，让用户了解关键进展",
-            "- 不要只宣告意图就停下：一旦你说要做某事，就必须在同一轮真正发起工具调用。纯文本回复会立即结束本轮，因此只有在任务真正完成后才用纯文本收尾",
-            "- 持续推进直到任务完成，完成后向用户报告结果",
-            "- 回复中涉及密钥、令牌等敏感信息必须脱敏",
-            "- URL链接直接放在回复文本中即可，系统会自动处理和渲染。无需下载后使用send工具发送",
+            "- For multi-step tasks, complex decisions, or sensitive operations, briefly say what you are doing and why, so the user can follow the important progress",
+            "- Do not announce an intention and then stop: once you say you will do something, you must actually call the tool in the same turn. A text-only reply ends the turn immediately, so use plain text only after the task is really finished",
+            "- Keep going until the task is done, then report the result to the user",
+            "- Redact secrets, tokens, and other sensitive information in replies",
+            "- Put URL links directly in the reply text. The system renders them. Do not download them and send them again with the send tool",
             "",
         ]
         if has_subagent:
             lines.insert(
                 -1,
-                "- 需要深度调研或大范围信息采集的独立任务，交给 `subagent`：可以单个任务，也可以用 tasks 同时执行多个任务，`subagent` 负责把结论带回来",
+                "- Hand a self-contained task that needs deep research or wide information gathering to `subagent`. It can be one task, or several tasks at once; `subagent` brings the conclusion back",
             )
 
     return lines
@@ -375,19 +353,19 @@ def _build_skills_section(skill_manager: Any, tools: Optional[List[Any]], langua
         ]
     else:
         lines = [
-            "## 🧩 技能系统（mandatory）",
+            "## 🧩 Skills (mandatory)",
             "",
-            "在回复之前：扫描下方 <available_skills> 中每个技能的 <description>。",
+            "Before replying: scan the <description> of every skill in <available_skills> below.",
             "",
-            f"- 如果有技能的描述与用户需求匹配：使用 `{read_tool_name}` 工具读取其 <location> 路径的 SKILL.md 文件，然后严格遵循文件中的指令。"
-            "当有匹配的技能时，应优先使用技能",
-            "- 如果多个技能都适用则选择最匹配的一个，然后读取并遵循。",
-            "- 如果没有技能明确适用：不要读取任何 SKILL.md，直接使用通用工具。",
+            f"- If a skill description matches what the user needs: use the `{read_tool_name}` tool to read the SKILL.md at its <location>, then follow the instructions in that file exactly. "
+            "When a skill matches, prefer the skill.",
+            "- If several skills apply, choose the best match, then read it and follow it.",
+            "- If no skill clearly applies: do not read any SKILL.md. Use the general tools.",
             "",
-            f"**重要**: 技能不是工具，不能直接调用。使用技能的唯一方式是用 `{read_tool_name}` 读取 SKILL.md 文件，然后按文件内容操作。"
-            "永远不要一次性读取多个技能，只在选择后再读取。",
+            f"**Important**: a skill is not a tool and cannot be called directly. The only way to use a skill is to read its SKILL.md with `{read_tool_name}`, then do what the file says. "
+            "Never read more than one skill at a time. Read a skill only after you have chosen it.",
             "",
-            "以下是可用技能："
+            "Available skills:"
         ]
     
     # Append the skills list (built by skill_manager)
@@ -465,7 +443,7 @@ def _build_memory_section(
     if not memory_manager:
         return []
 
-    # In project mode, memory files must be addressed absolutely under ~/cow.
+    # In project mode, memory files must be addressed absolutely under ~/maia.
     p = _state_path_prefix(workspace_dir, project_dir)
     mem_md = f"{p}MEMORY.md"
     mem_dir = f"{p}memory"
@@ -522,40 +500,40 @@ def _build_memory_section(
         ]
     else:
         lines = [
-            "## 🧠 记忆系统",
+            "## 🧠 Memory",
             "",
-            "### Memory Recall（mandatory）",
+            "### Memory Recall (mandatory)",
             "",
-            "当用户询问过往事件、引用之前的决定、提到人物关系、偏好、待办、或你对某事不确定时，**必须先检索记忆再回答**。",
-            "如果 MEMORY.md 中已有相关信息则无需重复检索。完整内容和每日记忆需要通过工具检索。",
+            "When the user asks about past events, cites an earlier decision, mentions a relationship, a preference, or a to-do, or when you are unsure, **search memory before you answer**.",
+            "If MEMORY.md already has the relevant information, do not search again. Full content and daily memory still have to be retrieved with tools.",
             "",
-            "1. 不确定位置 → `memory_search` 关键词/语义检索",
-            "2. 已知位置 → `memory_get` 直接读取对应行",
-            "3. search 无结果 → `memory_get` 读最近两天记忆",
+            "1. Location unknown → `memory_search` for a keyword or semantic search",
+            "2. Location known → `memory_get` to read those lines",
+            "3. Search returns nothing → `memory_get` for the last two days of memory",
             "",
-            "**记忆文件结构**:",
-            f"- `{mem_md}`: 长期记忆索引（已自动加载到上下文，核心信息、偏好、决策等）",
-            f"- `{mem_dir}/YYYY-MM-DD.md`: 每日记忆，今天是 `{mem_dir}/{today_file}`",
-            f"- `{kb_dir}/`: 结构化知识库（见下方知识系统）",
+            "**Memory file structure**:",
+            f"- `{mem_md}`: long-term memory index (already loaded into context: core facts, preferences, decisions, and similar)",
+            f"- `{mem_dir}/YYYY-MM-DD.md`: daily memory. Today is `{mem_dir}/{today_file}`",
+            f"- `{kb_dir}/`: structured knowledge base (see the knowledge system below)",
             "",
-            "### 写入记忆",
+            "### Writing memory",
             "",
-            "遇到以下情况时，**主动**将信息写入记忆文件（无需告知用户）：",
+            "When any of the following happens, **write it to a memory file on your own** (do not tell the user you are doing so):",
             "",
-            "- 用户要求记住某些信息，或使用了「记住」「以后」「总是」「不要」「偏好」等表达",
-            "- 用户分享了重要的个人偏好、习惯、决策",
-            "- 对话中产生了重要的结论、方案、约定",
-            "- 完成了复杂任务，值得记录关键步骤和结果",
+            "- The user asks you to remember something, or uses words such as remember, from now on, always, never, or prefer",
+            "- The user shares an important personal preference, habit, or decision",
+            "- The conversation produces an important conclusion, plan, or agreement",
+            "- A complex task is finished, and the key steps and result are worth keeping",
             "",
-            "**存储规则**:",
-            f"- 长期核心信息 → `{mem_md}`",
-            f"- 当天事件/进展 → `{mem_dir}/{today_file}`",
-            f"- 结构化知识 → `{kb_dir}/`（见知识系统）",
-            "- 追加 → `edit` 工具，oldText 留空",
-            "- 修改 → `edit` 工具，oldText 填写要替换的文本",
-            "- **禁止写入敏感信息**（API密钥、令牌等）",
+            "**Storage rules**:",
+            f"- Long-term core information → `{mem_md}`",
+            f"- Today's events and progress → `{mem_dir}/{today_file}`",
+            f"- Structured knowledge → `{kb_dir}/` (see the knowledge system)",
+            "- Append → the `edit` tool, with oldText left empty",
+            "- Change existing text → the `edit` tool, with oldText set to the text to replace",
+            "- **Do not write sensitive information** (API keys, tokens, and similar)",
             "",
-            "**使用原则**: 自然使用记忆，就像你本来就知道；不用刻意提起，除非用户问起。",
+            "**How to use it**: use memory naturally, as if you already knew it. Do not bring it up unless the user asks.",
             "",
         ]
 
@@ -618,7 +596,7 @@ def _build_knowledge_section(
     except Exception:
         return []
 
-    # Anchor knowledge paths to ~/cow when a project cwd is active, and to the
+    # Anchor knowledge paths to ~/maia when a project cwd is active, and to the
     # shared root when this Agent reads the shared copy.
     kb = _knowledge_base_path(workspace_dir, project_dir)
 
@@ -645,30 +623,30 @@ def _build_knowledge_section(
         ]
     else:
         lines = [
-            "## 📚 知识系统",
+            "## 📚 Knowledge",
             "",
-            f"你拥有一个持续积累的个人知识库 `{kb}/`，这是你的长期结构化知识存储。",
+            f"You have a personal knowledge base at `{kb}/` that keeps growing. It is your long-term store of structured knowledge.",
             "",
-            "### 自动写入规则（mandatory）",
+            "### Auto-write rules (mandatory)",
             "",
-            "以下场景**必须**在回复的同时写入知识库，**直接写入，不要询问用户是否需要**：",
+            "In the cases below you **must** write to the knowledge base in the same turn as your reply. **Write it directly. Do not ask the user whether they want that**:",
             "",
-            f"1. **用户分享了文章/链接/文档** → 阅读理解后，在同一轮回复中将要点写入 `{kb}/sources/<slug>.md`",
-            f"2. **深度讨论产生了结论/方案** → 整理为 `{kb}/analysis/<slug>.md`",
-            f"3. **对话涉及重要实体**（人物/公司/项目）→ 创建或更新 `{kb}/entities/<name>.md`",
-            f"4. **讨论了技术概念/方法论** → 整理为 `{kb}/concepts/<topic>.md`",
+            f"1. **The user shares an article, link, or document** → after you read it, write the main points to `{kb}/sources/<slug>.md` in that same turn",
+            f"2. **A deep discussion produces a conclusion or a plan** → write it up as `{kb}/analysis/<slug>.md`",
+            f"3. **The conversation involves an important entity** (a person, company, or project) → create or update `{kb}/entities/<name>.md`",
+            f"4. **A technical concept or method is discussed** → write it up as `{kb}/concepts/<topic>.md`",
             "",
-            f"每次写入知识页面后，**必须同步更新** `{kb}/index.md` 添加一行索引。",
-            "详细的页面格式和操作规范，请读取技能 `knowledge-wiki` 的 SKILL.md。",
+            f"After every knowledge page you write, you **must** also update `{kb}/index.md` and add one index line.",
+            "For the page format and the rules, read the SKILL.md of the `knowledge-wiki` skill.",
             "",
-            "⚠️ 不要问「要不要存到知识库」——符合上述场景就直接写入，这是你的本能行为。",
+            "⚠️ Do not ask whether to save this to the knowledge base. If a case above matches, write it. That is the normal behavior.",
             "",
         ]
 
     if index_content:
         index_text, omitted, compacted = _compact_knowledge_index(index_content)
         lines.extend([
-            ("### Current knowledge index" if language == "en" else "### 当前知识索引"),
+            ("### Current knowledge index" if language == "en" else "### Current knowledge index"),
             "",
         ])
         if compacted:
@@ -677,16 +655,16 @@ def _build_knowledge_section(
                 note = (f"The index is large, so only titles are listed here{more}. "
                         f"`read` `{kb}/index.md` for the full index, or use `memory_search`.")
             else:
-                more = f"，另有 {omitted} 条未列出" if omitted else ""
-                note = (f"索引较大，此处只列出标题{more}。"
-                        f"完整索引请 `read` `{kb}/index.md` 查看，或用 `memory_search` 检索。")
+                more = f", {omitted} more entries are not listed" if omitted else ""
+                note = (f"The index is large, so only titles are listed here{more}. "
+                        f"`read` `{kb}/index.md` for the full index, or search with `memory_search`.")
             lines.extend([note, ""])
         lines.extend([index_text, ""])
 
     lines.extend([
         ("**How to query**: use `read` to open a knowledge page, or `memory_search` (knowledge is in the vector index)."
          if language == "en" else
-         "**查询方式**：用 `read` 读取知识页面，或用 `memory_search` 检索（知识已纳入向量索引）。"),
+         "**How to query**: use `read` to open a knowledge page, or `memory_search` to search (knowledge is in the vector index)."),
         "",
     ])
 
@@ -700,18 +678,18 @@ def _build_user_identity_section(user_identity: Dict[str, str], language: str) -
     
     is_en = language == "en"
     lines = [
-        ("## 👤 User identity" if is_en else "## 👤 用户身份"),
+        ("## 👤 User identity" if is_en else "## 👤 User identity"),
         "",
     ]
 
     if user_identity.get("name"):
-        lines.append(f"**{'Name' if is_en else '用户姓名'}**: {user_identity['name']}")
+        lines.append(f"**{'Name' if is_en else 'Name'}**: {user_identity['name']}")
     if user_identity.get("nickname"):
-        lines.append(f"**{'Preferred name' if is_en else '称呼'}**: {user_identity['nickname']}")
+        lines.append(f"**{'Preferred name' if is_en else 'Preferred name'}**: {user_identity['nickname']}")
     if user_identity.get("timezone"):
-        lines.append(f"**{'Timezone' if is_en else '时区'}**: {user_identity['timezone']}")
+        lines.append(f"**{'Timezone' if is_en else 'Timezone'}**: {user_identity['timezone']}")
     if user_identity.get("notes"):
-        lines.append(f"**{'Notes' if is_en else '备注'}**: {user_identity['notes']}")
+        lines.append(f"**{'Notes' if is_en else 'Notes'}**: {user_identity['notes']}")
 
     lines.append("")
 
@@ -766,12 +744,12 @@ def _build_workspace_section(
             f"   - ❌ Wrong: using a relative path for files in other directories (if not inside `{workspace_dir}`)",
             "",
             "2. **Accessing other directories**: to reach directories outside the workspace (project code, system files), **you must use absolute paths**",
-            "   - ✅ Correct: e.g. `~/chatgpt-on-wechat`, `/usr/local/`",
+            "   - ✅ Correct: e.g. `~/maia`, `/usr/local/`",
             "   - ❌ Wrong: assuming a relative path points to another directory",
             "",
             "3. **Path resolution examples**:",
             f"   - relative `memory/` → actual `{workspace_dir}/memory/`",
-            "   - absolute `~/chatgpt-on-wechat/docs/` → actual `~/chatgpt-on-wechat/docs/`",
+            "   - absolute `~/maia/docs/` → actual `~/maia/docs/`",
             "",
             "4. **When unsure**: run `bash pwd` to confirm the current directory, or `ls .` to see where you are",
             "",
@@ -798,45 +776,45 @@ def _build_workspace_section(
             ]
     else:
         lines = [
-            "## 📂 工作空间",
+            "## 📂 Workspace",
             "",
-            f"你的工作目录是: `{workspace_dir}`",
+            f"Your working directory is: `{workspace_dir}`",
             "",
-            "**路径使用规则** (非常重要):",
+            "**Path rules** (very important):",
             "",
-            f"1. **相对路径的基准目录**: 所有相对路径都是相对于 `{workspace_dir}` 而言的",
-            "   - ✅ 正确: 访问工作空间内的文件用相对路径，如 `AGENT.md`",
-            f"   - ❌ 错误: 用相对路径访问其他目录的文件 (如果它不在 `{workspace_dir}` 内)",
+            f"1. **Base for relative paths**: every relative path is relative to `{workspace_dir}`",
+            "   - ✅ Correct: use a relative path for a file inside the workspace, such as `AGENT.md`",
+            f"   - ❌ Wrong: a relative path to a file in some other directory (when that file is not inside `{workspace_dir}`)",
             "",
-            "2. **访问其他目录**: 如果要访问工作空间之外的目录（如项目代码、系统文件），**必须使用绝对路径**",
-            "   - ✅ 正确: 例如 `~/chatgpt-on-wechat`、`/usr/local/`",
-            "   - ❌ 错误: 假设相对路径会指向其他目录",
+            "2. **Other directories**: to open anything outside the workspace (project code, system files), **you must use an absolute path**",
+            "   - ✅ Correct: for example `~/maia` or `/usr/local/`",
+            "   - ❌ Wrong: assuming a relative path points at some other directory",
             "",
-            "3. **路径解析示例**:",
-            f"   - 相对路径 `memory/` → 实际路径 `{workspace_dir}/memory/`",
-            "   - 绝对路径 `~/chatgpt-on-wechat/docs/` → 实际路径 `~/chatgpt-on-wechat/docs/`",
+            "3. **Path examples**:",
+            f"   - relative path `memory/` → actual path `{workspace_dir}/memory/`",
+            "   - absolute path `~/maia/docs/` → actual path `~/maia/docs/`",
             "",
-            "4. **不确定时**: 先用 `bash pwd` 确认当前目录，或用 `ls .` 查看当前位置",
+            "4. **When unsure**: run `bash pwd` to confirm the current directory, or `ls .` to see where you are",
             "",
         ]
         if context_files_loaded:
             lines += [
-                "**重要说明 - 文件已自动加载**:",
+                "**Important - these files are already loaded**:",
                 "",
-                "以下文件在会话启动时**已经自动加载**到系统提示词中，你**无需再用 read 工具读取**：",
+                "The files below are **already loaded** into the system prompt when the session starts. You **do not need to read them again** with the read tool:",
                 "",
-                "- ✅ `AGENT.md`: 已加载 - 你的人格和灵魂设定，请严格遵循。当你的名字、性格或交流风格发生变化时，主动用 `edit` 更新此文件",
-                "- ✅ `USER.md`: 已加载 - 用户的身份信息。当用户修改称呼、姓名等身份信息时，用 `edit` 更新此文件",
-                "- ✅ `RULE.md`: 已加载 - 工作空间使用指南和规则，请严格遵循",
-                "- ✅ `MEMORY.md`: 已加载 - 长期记忆索引",
+                "- ✅ `AGENT.md`: loaded. This is your persona. Follow it strictly. When your name, personality, or style changes, update this file with `edit`",
+                "- ✅ `USER.md`: loaded. This is who the user is. When they change what they are called, their name, or similar identity details, update this file with `edit`",
+                "- ✅ `RULE.md`: loaded. These are the workspace rules. Follow them strictly",
+                "- ✅ `MEMORY.md`: loaded. This is the long-term memory index",
                 "",
-                "**💬 交流规范**:",
+                "**💬 How to communicate**:",
                 "",
-                "- 记忆相关操作无需暴露文件名，用自然语言表达即可。例如说「我已记住」而非「已更新 MEMORY.md」",
-                "- 任务执行过程中的关键决策和步骤应该告知用户，让用户了解你在做什么、为什么这么做",
-                "- 做真正有帮助的助手，而不是表演式的客套，尽可能帮忙解决问题",
-                "- 回复应结构清晰、重点突出。善用 **加粗**、列表、分段等格式让信息一目了然",
-                "- 适当使用 emoji 让表达更生动自然 🎯，但不要过度堆砌",
+                "- Do not mention memory file names. Say it in ordinary language, for example that you will remember it, rather than that you updated MEMORY.md",
+                "- During a task, tell the user the important decisions and steps, so they know what you are doing and why",
+                "- Be genuinely helpful, not politely performative. Solve the problem as far as you can",
+                "- Keep replies clearly structured and easy to scan. Use **bold**, lists, and short sections",
+                "- A little emoji can make a reply easier to read 🎯, but do not pile it on",
                 "",
             ]
 
@@ -856,7 +834,7 @@ def _build_project_workspace_section(
     Two directories are in play and the model must not confuse them:
     - Project directory (the current working dir): relative paths and work
       products (documents, code, generated files, etc.) live here.
-    - System directory (``workspace_dir``, e.g. ``~/cow``): memory and skills
+    - System directory (``workspace_dir``, e.g. ``~/maia``): memory and skills
       live here and are reached with absolute paths, never relative ones.
     """
     if language == "en":
@@ -884,25 +862,25 @@ def _build_project_workspace_section(
         ]
     else:
         lines = [
-            "## 📂 工作空间",
+            "## 📂 Workspace",
             "",
-            "用户已打开一个**项目目录**，你正在当前项目目录中工作。",
+            "The user has opened a **project directory**, and you are working in that project directory.",
             "",
-            f"- **项目目录（当前工作目录）**: `{project_dir}`",
-            f"- **系统目录（记忆与技能）**: `{workspace_dir}`",
+            f"- **Project directory (current working directory)**: `{project_dir}`",
+            f"- **System directory (memory and skills)**: `{workspace_dir}`",
             "",
-            "**路径使用规则** (非常重要):",
+            "**Path rules** (very important):",
             "",
-            f"1. **相对路径基于项目目录** `{project_dir}`。你的工作产物（文档、代码、生成的文件等）都放在这里。",
-            f"   - ✅ 相对路径 `output/report.html` → `{project_dir}/output/report.html`",
+            f"1. **Relative paths are based on the project directory** `{project_dir}`. Put work products there (documents, code, generated files, and similar).",
+            f"   - ✅ relative path `output/report.html` → `{project_dir}/output/report.html`",
             "",
-            f"2. **记忆和技能仍在系统目录** `{workspace_dir}`，不要写入项目目录。记忆操作由记忆工具自动完成；若确需直接访问这些文件，请使用系统目录下的**绝对路径**。",
-            f"   - ✅ 绝对路径 `{workspace_dir}/MEMORY.md`",
-            "   - ❌ 相对路径 `MEMORY.md`（那会落到项目目录里，是错误的）",
+            f"2. **Memory and skills stay in the system directory** `{workspace_dir}`. Do not write them into the project directory. Memory tools do this for you. If you must open those files yourself, use an **absolute path** under the system directory.",
+            f"   - ✅ absolute path `{workspace_dir}/MEMORY.md`",
+            "   - ❌ relative path `MEMORY.md` (that lands in the project directory, which is wrong)",
             "",
-            "3. **访问其他任意目录**：使用绝对路径。",
+            "3. **Any other directory**: use an absolute path.",
             "",
-            "4. **不确定时**：用 `bash pwd` 确认当前处于项目目录。",
+            "4. **When unsure**: run `bash pwd` and confirm you are in the project directory.",
             "",
         ]
 
@@ -914,7 +892,7 @@ def _build_project_workspace_section(
             ]
         else:
             lines += [
-                "**已自动加载的文件**（无需再次 `read`）：`AGENT.md`、`USER.md`、`RULE.md`、`MEMORY.md`（来自系统目录）。",
+                "**Already loaded** (do not `read` them again): `AGENT.md`, `USER.md`, `RULE.md`, and `MEMORY.md` (from the system directory).",
                 "",
             ]
 
@@ -925,12 +903,9 @@ def _build_project_workspace_section(
 
 
 def _build_cloud_website_section(workspace_dir: str) -> List[str]:
-    """Build cloud website access prompt when cloud deployment is configured."""
-    try:
-        from common.cloud_client import build_website_prompt
-        return build_website_prompt(workspace_dir)
-    except Exception:
-        return []
+    """Cloud website prompts are not used."""
+    del workspace_dir
+    return []
 
 
 def _build_context_files_section(context_files: List[ContextFile], language: str) -> List[str]:
@@ -954,9 +929,9 @@ def _build_context_files_section(context_files: List[ContextFile], language: str
         ]
     else:
         lines = [
-            "# 📋 项目上下文",
+            "# 📋 Project context",
             "",
-            "以下项目上下文文件已被加载：",
+            "The following project context files have been loaded:",
             "",
         ]
 
@@ -965,8 +940,8 @@ def _build_context_files_section(context_files: List[ContextFile], language: str
             lines.append("**`AGENT.md` is your soul file** 🪞: strictly follow the persona, tone and settings it defines. Be your real self, avoid stiff, template-like replies.")
             lines.append("When the user reveals new expectations about your personality, style, responsibilities or capability boundaries, proactively `edit` AGENT.md to reflect that evolution.")
         else:
-            lines.append("**`AGENT.md` 是你的灵魂文件** 🪞：严格遵循其中定义的人格、语气和设定，做真实的自己，避免僵硬、模板化的回复。")
-            lines.append("当用户通过对话透露了对你性格、风格、职责、能力边界的新期望，你应该主动用 `edit` 更新 AGENT.md 以反映这些演变。")
+            lines.append("**`AGENT.md` is your soul file** 🪞: follow the persona, tone, and settings it defines. Be yourself, and avoid stiff, template-like replies.")
+            lines.append("When the conversation shows a new expectation about your personality, style, responsibilities, or limits, update AGENT.md with `edit` so the file matches that change.")
         lines.append("")
     
     # Append the content of each file
@@ -1008,7 +983,7 @@ def _build_team_section(runtime_info: Dict[str, Any], language: str) -> List[str
             continue
         line = f"{item.get('name') or item['id']}(@{item['id']})"
         if item.get("description"):
-            line += f"：{item['description']}" if language != "en" else f" — {item['description']}"
+            line += f" — {item['description']}"
         roster.append(line)
     if not roster:
         return []
@@ -1044,22 +1019,22 @@ def _build_team_section(runtime_info: Dict[str, Any], language: str) -> List[str
             "",
         ]
     return [
-        "## 👥 团队会话",
+        "## 👥 Team conversation",
         "",
-        f"你是 {whoami}。同在这个会话里的还有：",
+        f"You are {whoami}. Also in this conversation:",
         "",
         *[f"- {line}" for line in roster],
         "",
-        "大家读到的是同一份记录。以「名字(@id)：」开头的是那位同事说过的话，"
-        "没有前缀的才是你自己说的。不要把同事做过的事、许下的承诺当成你的。",
+        "Everyone reads the same record. A line that starts with `Name(@id)：` is something that teammate said; "
+        "a line with no prefix is something you said. Do not treat a teammate's actions, or a promise they made, as your own.",
         "",
-        "这一轮由你来回答，以你自己的身份回答即可，回答时不要在开头加自己的名字或 id "
-        "前缀（前缀只是用来向你标记其他成员的历史发言）。",
+        "This turn is yours to answer. Answer as yourself, and do not put your own name or id "
+        "at the start (that prefix only marks other members' earlier turns for you).",
         "",
-        "该由某位同事做的事，用 agent_delegate 交出去：把那位同事上面的 id "
-        "作为 agent_id 传入 (不含@符号)，并说明交给了谁、交办了什么。对用户提到同事时只用名字，"
-        "回复内容不要带 @id，id 只用于内部。不要替同事回答：该由某位成员回答的问题或执行的任务直接转交，"
-        "未经转交不得转述其言行。",
+        "When something is a teammate's job, hand it off with agent_delegate: pass that teammate's id "
+        "from above as agent_id (without the @), and say who you gave it to and what you asked. When you mention a teammate to the user, use the name only, "
+        "and do not put @id in the reply. The id is internal. Do not answer for a teammate. Hand over a question or task that belongs to them, "
+        "and do not report what they said or did unless you handed it to them.",
         "",
     ]
 
@@ -1077,23 +1052,23 @@ def _build_runtime_section(runtime_info: Dict[str, Any], language: str) -> List[
 
     is_en = language == "en"
     lines = [
-        ("## ⚙️ Runtime info" if is_en else "## ⚙️ 运行时信息"),
+        ("## ⚙️ Runtime info" if is_en else "## ⚙️ Runtime info"),
         "",
     ]
 
     if callable(runtime_info.get("_get_current_time")):
         try:
             time_info = runtime_info["_get_current_time"]()
-            date_label = "Current date" if is_en else "当前日期"
+            date_label = "Current date" if is_en else "Current date"
             lines.append(f"{date_label}: {time_info['date']} {time_info['weekday']} ({time_info['timezone']})")
             lines.append("")
         except Exception as e:
             logger.warning(f"[PromptBuilder] Failed to get dynamic time: {e}")
 
     # Add other runtime info
-    model_label = "model" if is_en else "模型"
-    workspace_label = "workspace" if is_en else "工作空间"
-    channel_label = "channel" if is_en else "渠道"
+    model_label = "model" if is_en else "model"
+    workspace_label = "workspace" if is_en else "workspace"
+    channel_label = "channel" if is_en else "channel"
     runtime_parts = []
     # Support dynamic model via callable, fallback to static value
     if callable(runtime_info.get("_get_model")):
@@ -1111,7 +1086,7 @@ def _build_runtime_section(runtime_info: Dict[str, Any], language: str) -> List[
         runtime_parts.append(f"{channel_label}={runtime_info['channel']}")
 
     if runtime_parts:
-        lines.append(("Runtime: " if is_en else "运行时: ") + " | ".join(runtime_parts))
+        lines.append(("Runtime: " if is_en else "Runtime: ") + " | ".join(runtime_parts))
         lines.append("")
 
     return lines

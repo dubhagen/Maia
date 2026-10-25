@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
-const dir = await mkdtemp(path.join(tmpdir(), 'cow-chat-scroll-'))
+const dir = await mkdtemp(path.join(tmpdir(), 'maia-chat-scroll-'))
 const outfile = path.join(dir, 'scroll.mjs')
 await build({
   stdin: { contents: `export { followingAfterUserScroll, shouldApplyBottomScroll, shouldFollowContentChange, shouldShowScrollToBottom, distanceFromBottom } from './src/renderer/src/lib/chatScroll.ts';`, resolveDir: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..') },

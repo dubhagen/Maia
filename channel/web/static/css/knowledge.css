@@ -85,8 +85,8 @@
     color: #334155;
 }
 .knowledge-tree-file.active {
-    background: #EDFDF3;
-    color: #228547;
+    background: #F2F5FE;
+    color: #2F52C4;
 }
 
 .knowledge-actions {
@@ -109,7 +109,7 @@
     font-size: 9px;
 }
 .knowledge-action:hover {
-    color: #228547;
+    color: #2F52C4;
     background: rgba(34, 133, 71, 0.08);
 }
 .knowledge-action.danger:hover {
@@ -121,11 +121,11 @@
     color: #e2e8f0;
 }
 .dark .knowledge-tree-file.active {
-    background: rgba(74, 190, 110, 0.1);
-    color: #4ABE6E;
+    background: rgba(107, 142, 240, 0.1);
+    color: #6B8EF0;
 }
 .knowledge-import-drag-over {
-    outline: 2px dashed rgba(74, 190, 110, 0.55);
+    outline: 2px dashed rgba(107, 142, 240, 0.55);
     outline-offset: 4px;
     border-radius: 14px;
 }

@@ -106,8 +106,10 @@ function renderModelsView() {
 // True when a provider card is one of the expanded custom (OpenAI-compatible)
 // providers (id "custom:<id>") — shown in the vendor grid alongside built-in
 // vendors, but edited via the dedicated custom-provider modal.
-function isCustomProviderCard(p) {
-    return !!(p && p.is_custom && p.custom_name);
+function isCustomProviderCard(_p) {
+    // Custom vendor cards and the commercial provider picker are removed.
+    // Model calls go to the single LiteLLM endpoint.
+    return false;
 }
 
 // ---------- Vendor section (Layer 1) -----------------------------------
@@ -159,7 +161,11 @@ function renderVendorsSection() {
         </div>`;
     }
 
-    wrap.innerHTML = header + body;
+    const discoveryError = (modelsState.providers[0] && modelsState.providers[0].discovery_error) || '';
+    const errHtml = discoveryError
+        ? `<p class="mb-4 text-sm text-red-500">${escapeHtml(discoveryError)}</p>`
+        : '';
+    wrap.innerHTML = header + errHtml + body;
     return wrap;
 }
 
@@ -168,9 +174,7 @@ function renderVendorChip(p) {
     // inside the edit modal so the chip stays uncluttered and scannable.
     // Custom providers open their dedicated modal (name + base + key);
     // their ids are server-generated hex, safe to inline.
-    const onclick = isCustomProviderCard(p)
-        ? `openCustomProviderModal('${escapeHtml(p.custom_id)}')`
-        : `openVendorModal('${escapeHtml(p.id)}')`;
+    const onclick = `openVendorModal('${escapeHtml(p.id)}')`;
     return `
         <button onclick="${onclick}"
                 class="group flex items-center gap-3 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-white/10
@@ -385,7 +389,7 @@ function onFallbackChainProviderChange(i, providerId) {
     const models = _fallbackModelOptions(providerId);
     const opts = models.concat([{
         value: '__custom__',
-        label: currentLang === 'zh' ? '自定义' : 'Custom',
+        label: 'Custom',
     }]);
     if (modelDd) {
         initDropdown(modelDd, opts, models.length ? models[0].value : '', (value) => {
@@ -480,7 +484,7 @@ function renderFallbackChainEditor() {
         if (modelDd) {
             initDropdown(modelDd, models.concat([{
                 value: '__custom__',
-                label: currentLang === 'zh' ? '自定义' : 'Custom',
+                label: 'Custom',
             }]), inCatalog ? link.model : (link.model ? '__custom__' : ''), (value) => {
                 if (!customWrap) return;
                 if (value === '__custom__') customWrap.classList.remove('hidden');
@@ -639,10 +643,7 @@ function _searchProviderLabel(cap, providerId) {
 }
 
 // Search card body: strategy picker + (when fixed) provider picker + a
-// status row that surfaces which providers are ready and how to add the
-// missing ones. Three of the four backends piggy-back on model-vendor
-// credentials (zhipu / qianfan / linkai); bocha owns its own key under
-// tools.web_search and gets its own minimal credential modal.
+// status row that surfaces whether SearXNG is configured.
 function renderSearchCapability(def, cap, body) {
     const providers = cap.providers || [];
     const configuredIds = cap.configured_providers || [];
@@ -682,7 +683,6 @@ function renderSearchCapability(def, cap, body) {
     `;
 
     // Strategy dropdown — when no provider is configured the strategy
-    // value is meaningless, so we show a "待配置" placeholder instead of
     // a default selection. Once any provider gets configured the saved
     // strategy (or "auto") becomes the active value.
     initDropdown(
@@ -839,7 +839,6 @@ function _setSearchProviderEnabled(providerId, enabled) {
     }).catch(() => showStatus('cap-search-status', 'models_save_failed', true));
 }
 
-// Two-step add flow: click "+ 添加厂商" -> chooser dialog -> per-provider
 // credential editor. Bocha lands on the dedicated key modal; the others
 // piggy-back on the existing vendor credential modal.
 function openSearchAddProviderPicker(missingProviders) {
@@ -891,15 +890,9 @@ function openSearchAddProviderPicker(missingProviders) {
 }
 
 function _launchSearchProviderConfig(providerId, providerMeta) {
-    // Providers that hold their own credential (dedicated key or, for SearXNG,
-    // an instance URL) use the bespoke search-key modal. zhipu/qianfan/linkai
-    // reuse a model-vendor key and go through the vendor modal instead.
-    if (['bocha', 'anysearch', 'serply', 'tavily', 'searxng', 'keenable'].includes(providerId)) {
+    // Web search is SearXNG only. Other provider ids no longer open a config modal.
+    if (providerId === 'searxng') {
         openSearchKeyModal(providerId, providerMeta);
-    } else if (providerId === 'deepseek') {
-        openDeepseekSearchModal();
-    } else {
-        openVendorModal(providerId, () => loadModelsView({ preserveScroll: true }));
     }
 }
 
@@ -907,7 +900,6 @@ function _launchSearchProviderConfig(providerId, providerMeta) {
 function saveSearchCapability() {
     const strategyDd = document.getElementById('cap-search-strategy');
     const providerDd = document.getElementById('cap-search-provider');
-    // 如果策略下拉框的值是空（待配置），默认使用 'auto'
     const strategy = strategyDd ? (getDropdownValue(strategyDd) || 'auto') : 'auto';
     const provider = (strategy === 'fixed' && providerDd) ? getDropdownValue(providerDd) : '';
 
@@ -967,9 +959,7 @@ function openSearchKeyModal(providerId, providerMeta) {
         : '';
     let descText = t('models_search_' + providerId + '_desc');
     if (providerId === 'anysearch') {
-        const hint = currentLang === 'zh'
-            ? '（留空可启用匿名模式，每日有免费额度）'
-            : '(Leave blank to enable anonymous mode with daily free quota)';
+        const hint = '(Leave blank to enable anonymous mode with daily free quota)';
         descText = descText + ' ' + hint;
     }
     const modal = document.createElement('div');
@@ -1061,7 +1051,7 @@ function _saveSearchKey(providerId) {
             action: 'set_search_credential',
             provider: providerId,
             api_key: apiKey,
-            anonymous: !apiKey, // ← 字段名必须是 anonymous；留空保存 = 启用匿名（表第 2 行）
+            anonymous: !apiKey,
         }),
     }).then(r => r.json()).then(data => {
         if (data.status === 'success') {
@@ -1106,103 +1096,6 @@ function _saveSearchKey(providerId) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'set_search_credential', provider: providerId, api_key: apiKey }),
-    }).then(r => r.json()).then(data => {
-        if (data.status === 'success') {
-            const modal = document.getElementById('search-key-modal');
-            if (modal) modal.remove();
-            loadModelsView({ preserveScroll: true });
-        }
-    });
-}
-
-// DeepSeek search shares the model vendor's key and base, so it saves through
-// set_provider. No clear button: clearing would also disable the chat model.
-function openDeepseekSearchModal() {
-    const existing = document.getElementById('search-key-modal');
-    if (existing) existing.remove();
-
-    const searchCap = (modelsState && modelsState.capabilities && modelsState.capabilities.search) || {};
-    const prov = (searchCap.providers || []).find(p => p.id === 'deepseek') || {};
-    const masked = prov.api_key_masked || '';
-    const inputCls = `w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600
-                      bg-slate-50 dark:bg-white/5 text-sm text-slate-800 dark:text-slate-100
-                      focus:outline-none focus:border-primary-500 font-mono`;
-    const labelCls = 'block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5';
-
-    const modal = document.createElement('div');
-    modal.id = 'search-key-modal';
-    modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm';
-    modal.innerHTML = `
-        <div class="bg-white dark:bg-[#1A1A1A] rounded-xl border border-slate-200 dark:border-white/10
-                    w-full max-w-md mx-4 p-6 shadow-xl">
-            <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-1">${t('models_search_deepseek_title')}</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">${t('models_search_deepseek_desc')}</p>
-            <label class="${labelCls}">Base URL</label>
-            <input id="search-ds-base" type="text" autocomplete="off" class="${inputCls}"
-                   value="${escapeHtml(prov.api_base || '')}" placeholder="https://api.deepseek.com/v1" />
-            <label class="${labelCls} mt-4">API Key</label>
-            <input id="search-key-input" type="text" autocomplete="off" data-1p-ignore data-lpignore="true"
-                   class="${inputCls} ${masked ? 'cfg-key-masked' : ''}"
-                   value="${escapeHtml(masked)}" data-masked="${masked ? '1' : ''}" placeholder="sk-..." />
-            <div class="flex items-center justify-end gap-3 mt-5">
-                <button type="button" onclick="document.getElementById('search-key-modal').remove()"
-                        class="px-3 py-1.5 rounded-md text-sm text-slate-600 dark:text-slate-300
-                               hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
-                    ${t('cancel')}
-                </button>
-                <button type="button" onclick="_saveDeepseekSearch()"
-                        class="px-4 py-1.5 rounded-md bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium
-                               cursor-pointer transition-colors">
-                    ${t('save')}
-                </button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-
-    const input = document.getElementById('search-key-input');
-    const unmask = () => {
-        if (input.dataset.masked === '1') {
-            input.value = '';
-            input.dataset.masked = '';
-            input.classList.remove('cfg-key-masked');
-        }
-    };
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab' || e.key === 'Escape') return;
-        unmask();
-    });
-    input.addEventListener('paste', unmask);
-    if (!masked) setTimeout(() => input.focus(), 50);
-
-    modal.addEventListener('mousedown', (e) => {
-        if (e.target === modal) modal.remove();
-    });
-    const onKey = (e) => {
-        if (e.key === 'Escape') {
-            modal.remove();
-            document.removeEventListener('keydown', onKey);
-        }
-    };
-    document.addEventListener('keydown', onKey);
-}
-
-function _saveDeepseekSearch() {
-    const input = document.getElementById('search-key-input');
-    const baseInput = document.getElementById('search-ds-base');
-    if (!input || !baseInput) return;
-    const keptKey = input.dataset.masked === '1';
-    const apiKey = keptKey ? '' : input.value.trim();
-    if (!keptKey && !apiKey) {
-        input.focus();
-        return;
-    }
-    const payload = { action: 'set_provider', provider_id: 'deepseek', api_base: baseInput.value.trim() };
-    if (apiKey) payload.api_key = apiKey;
-    fetch('/api/models', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
     }).then(r => r.json()).then(data => {
         if (data.status === 'success') {
             const modal = document.getElementById('search-key-modal');
@@ -1366,7 +1259,6 @@ function renderCapabilityBody(def, cap, body) {
     // Pending-config takes priority over both "auto" and "pick provider":
     // when no real (non-sentinel) configured option exists, surfacing
     // "auto" or "pick" misleads the user — there's nothing to auto-route
-    // to or pick from. Force a "待配置" placeholder instead so all
     // capabilities behave consistently on a fresh environment.
     const hasConfiguredOpt = providerOpts.some(o => !o._isAuto && o._configured);
     const noSelectionAndNoHint = !cap.current_provider && !cap.suggested_provider;
@@ -1376,16 +1268,27 @@ function renderCapabilityBody(def, cap, body) {
         initialProviderValue = '';
         dropdownPlaceholder = { placeholder: t('models_pending_config') };
     } else {
-        initialProviderValue = pendingProvider
-            ? pendingProvider
-            : ((cap.strategy === 'auto' && capabilitySupportsAuto(def.id))
-                ? ''
-                : (cap.current_provider
-                    || cap.suggested_provider
-                    || (noSelectionAndNoHint ? '' : (ddOpts[0] && ddOpts[0].value))
-                    || ''));
-        if (noSelectionAndNoHint) {
+        // One configured endpoint is the whole product now. Select it so the
+        // discovered model list is visible before a capability has been saved.
+        const onlyConfigured = providerOpts.filter(o => o.value && o._configured && !o._isAuto);
+        const autoSelected = !pendingProvider
+            && cap.strategy === 'auto'
+            && capabilitySupportsAuto(def.id);
+        if (pendingProvider) {
+            initialProviderValue = pendingProvider;
+        } else if (autoSelected) {
+            initialProviderValue = '';
+        } else if (cap.current_provider) {
+            initialProviderValue = cap.current_provider;
+        } else if (cap.suggested_provider) {
+            initialProviderValue = cap.suggested_provider;
+        } else if (noSelectionAndNoHint && onlyConfigured.length === 1) {
+            initialProviderValue = onlyConfigured[0].value;
+        } else if (noSelectionAndNoHint) {
+            initialProviderValue = '';
             dropdownPlaceholder = { placeholder: t('models_pick_provider') };
+        } else {
+            initialProviderValue = (ddOpts[0] && ddOpts[0].value) || '';
         }
     }
     // Seed the "provider active before the last switch" tracker so the very
@@ -1527,9 +1430,7 @@ function renderCapabilityHints(def, cap, body, currentProvider) {
     const fbProv = cap.fallback_provider || '';
     const fbModel = cap.fallback_model || '';
     if (!fbProv && !fbModel) return;
-    // Show the vendor's display label (e.g. "LinkAI") instead of the raw
-    // id ("linkai") when we know it. Falls back to the id when the
-    // provider isn't in our vendor table (rare).
+    // Show the provider label when we know it, otherwise the raw id.
     const provMeta = modelsState.providers.find(p => p.id === fbProv);
     const fbProvLabel = (provMeta && localizedLabel(provMeta.label)) || fbProv;
     const fbText = fbModel ? `${fbProvLabel} / ${fbModel}` : fbProvLabel;
@@ -1579,7 +1480,6 @@ function buildCapabilityProviderOptions(def, cap) {
     // value so the existing save handler propagates it untouched to the
     // backend, which interprets "" as "fall back to the main model".
     // Skip the sentinel when no real vendor is configured — "auto" would
-    // route to nothing useful and the renderer will show "待配置" instead.
     const hasAnyConfigured = opts.some(o => o._configured);
     if ((cap.strategy === 'auto' || cap.strategy === 'specified') && hasAnyConfigured) {
         if (capabilitySupportsAuto(def.id)) {
@@ -1596,8 +1496,8 @@ function buildCapabilityProviderOptions(def, cap) {
 }
 
 function capabilitySupportsAuto(capId) {
-    // Embedding is intentionally NOT here: runtime only auto-falls back to
-    // OpenAI/LinkAI, so dressing it up as "auto" hides reality from users.
+    // Embedding is not offered as auto. An empty embedding model turns that
+    // capability off.
     return capId === 'image' || capId === 'vision';
 }
 
@@ -1731,14 +1631,14 @@ function rebuildCapabilityModelDropdown(def, providerId, selectedModel, scope) {
             return { value: entry, label: entry };
         }
         modelValues.push(entry.value);
-        // An empty value is an explicit "use the gateway default" option
-        // (e.g. LinkAI ASR). It has no model id, so fall back to its hint as
+        // An empty value is an explicit "use the gateway default" option.
+        // It has no model id, so fall back to its hint as
         // the label; otherwise the row and trigger would render blank. The
         // hint is then only kept as a secondary label for real model ids.
-        const label = entry.label || entry.value || entry.hint || (currentLang === 'zh' ? '默认' : 'Default');
+        const label = entry.label || entry.value || entry.hint || ('Default');
         return { value: entry.value, label: label, hint: entry.value ? (entry.hint || '') : '' };
     });
-    opts.push({ value: '__custom__', label: currentLang === 'zh' ? '自定义' : 'Custom' });
+    opts.push({ value: '__custom__', label: 'Custom' });
 
     let initialValue = selectedModel || '';
     if (initialValue && !modelValues.includes(initialValue)) {
@@ -1821,7 +1721,7 @@ function rebuildCapabilityVoiceDropdown(providerId, selectedVoice, scope, modelI
             hint: desc === code ? '' : code,
         };
     });
-    opts.push({ value: '__custom__', label: currentLang === 'zh' ? '自定义' : 'Custom' });
+    opts.push({ value: '__custom__', label: 'Custom' });
 
     // Off-catalog values route through the custom branch.
     let initial = selectedVoice || '';
@@ -2101,7 +2001,11 @@ function openVendorModal(providerId, onSaved) {
         // (Doing it via a "default to custom" pick would leave this overlay
         // visible behind the custom one — two stacked modals.)
         if (!unconfigured.length) {
-            openCustomProviderModal('');
+            const only = builtinProviders[0];
+            if (only && only.id) {
+                fillVendorModalForProvider(only.id);
+                overlay.classList.remove('hidden');
+            }
             return;
         }
 
@@ -2112,24 +2016,10 @@ function openVendorModal(providerId, onSaved) {
         }));
         // In multi-provider mode the backend replaces the bare "custom" card
         // with the expanded ones; re-add it here so the entry stays available.
-        if (!pickerOpts.some(o => o.value === 'custom')) {
-            pickerOpts.push({ value: 'custom', label: t('models_custom_vendor_label'), _configured: false });
-        }
-        // "Custom" always behaves as an add-new action (multiple entries
-        // allowed), so it shows a + mark instead of the configured ✓.
-        pickerOpts.forEach(o => { if (o.value === 'custom') { o._isAddNew = true; o._configured = false; } });
         const defaultId = unconfigured[0].id;
         pickerWrap.classList.remove('hidden');
         const pickerEl = document.getElementById('vendor-modal-picker');
         const onPick = (val) => {
-            if (val === 'custom') {
-                // "Custom" in the add flow always creates a new
-                // OpenAI-compatible provider entry via the dedicated modal
-                // (name + base + key), supporting multiple custom endpoints.
-                closeVendorModal();
-                openCustomProviderModal('');
-                return;
-            }
             fillVendorModalForProvider(val);
         };
         initDropdown(pickerEl, pickerOpts, defaultId, onPick);
@@ -2173,12 +2063,6 @@ function fillVendorModalForProvider(providerId) {
     if (!meta) return;
     document.getElementById('vendor-modal-title').textContent = localizedLabel(meta.label);
     document.getElementById('vendor-modal-subtitle').textContent = meta.id;
-
-    // LinkAI aggregates many vendors, so only for it do we surface a link to its
-    // console for creating/managing the aggregated key. Other providers manage
-    // their keys on their own sites.
-    const manageKey = document.getElementById('vendor-modal-manage-key');
-    if (manageKey) manageKey.classList.toggle('hidden', meta.id !== 'linkai');
 
     // ----- API Base -----
     // Always reflect the *current effective* base as the input value so the
@@ -2755,9 +2639,12 @@ function saveVendorModal() {
     }
 
     if (!apiKey && !masked) {
-        // First-time setup with no key entered → nudge the user.
-        keyInput.focus();
-        return;
+        // A local LiteLLM proxy often has no key. A base URL is enough.
+        const baseOk = /^https?:\/\//i.test(apiBase);
+        if (!baseOk) {
+            keyInput.focus();
+            return;
+        }
     }
 
     const btn = document.getElementById('vendor-modal-save');

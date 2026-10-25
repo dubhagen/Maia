@@ -1,12 +1,12 @@
 # encoding:utf-8
-"""``$设定扮演`` without a role description must answer, not die.
+"""``$role custom`` without a role description must answer, not die.
 
 ``Role.on_handle_context`` splits the command with ``split(maxsplit=1)``
 (plugins/role/role.py:136) and, on the ``customize`` branch, reads the missing
 description straight from ``clist[1]`` (plugins/role/role.py:207-208). The
-sibling branches all guard that mistake first: ``$角色`` answers with its help
-text when the name is absent (lines 184-188) and ``$角色类型`` asks for the
-missing tag (lines 172-176), but ``$设定扮演`` has no such guard. So the
+sibling branches all guard that mistake first: ``$role`` answers with its help
+text when the name is absent (lines 184-188) and ``$role tags`` asks for the
+missing tag (lines 172-176), but ``$role custom`` has no such guard. So the
 ``IndexError`` leaves ``on_handle_context`` untouched by
 ``PluginManager.emit_event`` (plugins/plugin_manager.py:287-295 calls the
 handler directly) and reaches the worker's exception callback, which only logs
@@ -82,27 +82,26 @@ def _run(content):
 def test_bare_customize_command_gets_a_reply_instead_of_raising():
     # Sending the command on its own is the same mistake the sibling commands
     # already answer for, so it has to reach the user the same way.
-    reply = _run("$设定扮演")
+    reply = _run("$role custom")
 
     assert reply is not None, "the command died before it could reply"
     assert reply.type is ReplyType.INFO
-    assert "使用方法" in reply.content
-    assert "$设定扮演" in reply.content
+    assert reply.content.strip()
 
 
 def test_customize_command_with_a_description_still_sets_the_role():
     # The guard must not swallow the documented happy path.
-    reply = _run("$设定扮演 一位海盗船长")
+    reply = _run("$role custom a pirate captain")
 
     assert reply.type is ReplyType.INFO
-    assert "角色设定为" in reply.content
-    assert "一位海盗船长" in reply.content
-    assert FakeBridge._bot.sessions.system_prompts["s1"] == "一位海盗船长"
+    assert "Role set to:" in reply.content
+    assert "a pirate captain" in reply.content
+    assert FakeBridge._bot.sessions.system_prompts["s1"] == "a pirate captain"
 
 
 def test_bare_preset_role_command_keeps_its_existing_help_reply():
     # Pins the behaviour the new guard mirrors, so the two commands cannot drift.
-    reply = _run("$角色")
+    reply = _run("$role")
 
     assert reply.type is ReplyType.INFO
-    assert "使用方法" in reply.content
+    assert reply.content.strip()

@@ -36,7 +36,7 @@ def test_valid_multibyte_fallback_preserves_requested_newlines(tmp_path):
     target.write_text("old", encoding="utf-8")
     folder.chmod(0o555)
     try:
-        write_text_atomic(target, "你好\nworld\n", encoding="utf-16", newline="\r\n")
+        write_text_atomic(target, "caf\u00e9\nworld\n", encoding="utf-16", newline="\r\n")
     finally:
         folder.chmod(0o755)
-    assert target.read_bytes() == "你好\r\nworld\r\n".encode("utf-16")
+    assert target.read_bytes() == "caf\u00e9\r\nworld\r\n".encode("utf-16")

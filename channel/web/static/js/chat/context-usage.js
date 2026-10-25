@@ -13,8 +13,8 @@
 let _ctxUsageEl = null;
 let _ctxUsageInstalled = false;
 const _CTX_SLICE_COLORS = {
-    system: '#228547',
-    tools: '#4ABE6E',
+    system: '#2F52C4',
+    tools: '#6B8EF0',
     history: '#f59e0b',
     free: '#64748b',
 };

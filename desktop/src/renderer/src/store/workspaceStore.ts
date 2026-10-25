@@ -5,7 +5,7 @@ import { isEditable } from '../lib/fileKind'
 import { askConfirm } from './confirmStore'
 import type { Artifact, ArtifactOrigin, WorkspaceEntry } from '../types'
 
-const WIDTH_KEY = 'cow_workspace_width'
+const WIDTH_KEY = 'maia_workspace_width'
 export const WS_MIN_WIDTH = 300
 export const WS_DEFAULT_WIDTH = 440
 

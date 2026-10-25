@@ -29,11 +29,11 @@ def _send(text):
     return channel.reached
 
 
-@pytest.mark.parametrize("text", ["#reconf", "#重载配置", "#更新配置"])
+@pytest.mark.parametrize("text", ["#reconf"])
 def test_reload_command_passes(text):
     assert _send(text)
 
 
-@pytest.mark.parametrize("text", ["#resetall", "你好", "#starta"])
+@pytest.mark.parametrize("text", ["#resetall", "hello", "#starta"])
 def test_other_message_is_refused(text):
     assert not _send(text)

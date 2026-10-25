@@ -21,17 +21,17 @@ import type { AgentProfile, ChannelInstanceRecord, RosterSnapshot } from '../typ
  * single synthesized default Agent looks and behaves like the old client.
  */
 
-const ACTIVE_KEY = 'cow_active_agent'
+const ACTIVE_KEY = 'maia_active_agent'
 
-// The backend synthesizes a default Agent (id="default", name="CowAgent")
+// The backend synthesizes a default Agent (id="default", name="Maia")
 // whenever the roster is empty, so GET /api/agents should always return at
 // least one Agent. The team page must therefore never render truly empty. When
 // the fetch can't be completed (a transient local-service hiccup on startup,
 // see the retry note in refresh()), fall back to this same synthesized default
-// so the built-in CowAgent card is always shown. Its id matches the backend's,
+// so the built-in Maia card is always shown. Its id matches the backend's,
 // which is what makes AgentAvatar render the brand logo for it.
 const DEFAULT_AGENT_ID = 'default'
-const DEFAULT_AGENT_NAME = 'CowAgent'
+const DEFAULT_AGENT_NAME = 'Maia'
 
 function withDefaultName(agents: AgentProfile[], defaultAgentId: string): AgentProfile[] {
   const name = product.agents?.defaultAgentName?.()
@@ -122,7 +122,7 @@ export const useAgentStore = create<AgentStore>((set, get) => ({
       // Never strand the team page on an empty roster: the backend always has
       // at least the synthesized default Agent, so if we couldn't read it, keep
       // whatever we last loaded and otherwise fall back to that same default so
-      // the built-in CowAgent card is always present.
+      // the built-in Maia card is always present.
       const existing = get().agents
       if (existing.length > 0) {
         syncClient(get().activeAgentId, enabledAgents(existing).length > 1)

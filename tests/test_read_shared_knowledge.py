@@ -26,11 +26,11 @@ def agent(tmp_path, monkeypatch):
     """An Agent whose knowledge lives in the shared root, not its workspace."""
     from common import state_dir
 
-    shared_root = tmp_path / "cow" / "knowledge"
+    shared_root = tmp_path / "maia" / "knowledge"
     (shared_root / "entities").mkdir(parents=True)
-    (shared_root / "entities" / "linkai.md").write_text("# LinkAI\nshared page\n")
+    (shared_root / "entities" / "notes.md").write_text("# Notes\nshared page\n")
 
-    workspace = tmp_path / "cow" / "agents" / "pm-agent"
+    workspace = tmp_path / "maia" / "agents" / "pm-agent"
     workspace.mkdir(parents=True)
 
     def fake_knowledge_dir(base=None, ensure=False):
@@ -51,9 +51,9 @@ class TestNothingThatResolvesTodayChanges:
         # its own page.
         own = workspace / "knowledge" / "entities"
         own.mkdir(parents=True)
-        (own / "linkai.md").write_text("# LinkAI\nlocal page\n")
+        (own / "notes.md").write_text("# Notes\nlocal page\n")
 
-        result = tool.execute({"path": "knowledge/entities/linkai.md"})
+        result = tool.execute({"path": "knowledge/entities/notes.md"})
         assert "local page" in _text(result)
         assert "shared page" not in _text(result)
 
@@ -74,7 +74,7 @@ class TestNothingThatResolvesTodayChanges:
 class TestTheFallback:
     def test_a_shared_page_opens_under_its_logical_path(self, agent):
         tool, _, _ = agent
-        result = tool.execute({"path": "knowledge/entities/linkai.md"})
+        result = tool.execute({"path": "knowledge/entities/notes.md"})
         assert result.status == "success"
         assert "shared page" in _text(result)
 
@@ -102,6 +102,6 @@ class TestTheFallback:
             raise RuntimeError("registry not ready")
 
         monkeypatch.setattr(state_dir, "knowledge_dir", boom)
-        result = tool.execute({"path": "knowledge/entities/linkai.md"})
+        result = tool.execute({"path": "knowledge/entities/notes.md"})
         assert result.status == "error"
         assert "File not found" in _text(result)

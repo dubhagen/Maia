@@ -11,7 +11,7 @@ def test_native_pipe_split_utf8_is_retained_until_the_character_is_complete():
         [
             sys.executable,
             "-c",
-            "import sys; sys.stdout.buffer.write(b'\\xe4'); sys.stdout.buffer.flush(); sys.stdin.buffer.read(1); sys.stdout.buffer.write(b'\\xb8\\xad'); sys.stdout.buffer.flush()",
+            "import sys; sys.stdout.buffer.write(b'\\xf0'); sys.stdout.buffer.flush(); sys.stdin.buffer.read(1); sys.stdout.buffer.write(b'\\x9f\\x98\\x80'); sys.stdout.buffer.flush()",
         ],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
@@ -24,7 +24,7 @@ def test_native_pipe_split_utf8_is_retained_until_the_character_is_complete():
         deadline = time.monotonic() + 5
         while len(job.buffer) < 1 and time.monotonic() < deadline:
             time.sleep(0.001)
-        assert bytes(job.buffer) == b"\xe4"
+        assert bytes(job.buffer) == b"\xf0"
         partial, dropped = job.take_new_output()
         assert partial == ""
         assert dropped == 0
@@ -33,7 +33,7 @@ def test_native_pipe_split_utf8_is_retained_until_the_character_is_complete():
         process.wait(timeout=5)
         reader.join(5)
         final, dropped = job.take_new_output()
-        assert final == "中"
+        assert final == "\U0001f600"
         assert dropped == 0
     finally:
         if process.poll() is None:

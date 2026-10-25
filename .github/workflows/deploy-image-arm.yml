@@ -9,17 +9,17 @@
 
 name: Create and publish a Docker image
 
+# Manual only. A push to master does not publish. Run this after GitHub Actions
+# and ghcr.io are enabled on github.com/dubhagen/Maia.
 on:
-  push:
-    branches: ['master']
-  create:
+  workflow_dispatch:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push-image:
-    if: github.repository == 'zhayujie/CowAgent'
+    if: github.repository == 'dubhagen/Maia'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -51,8 +51,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            ${{ env.REGISTRY }}/zhayujie/chatgpt-on-wechat
-            ${{ env.REGISTRY }}/zhayujie/cowagent
+            ${{ env.REGISTRY }}/${{ github.repository }}
           tags: |
             type=raw,value=latest-arm64,enable={{is_default_branch}}
             type=ref,event=branch,suffix=-arm64
@@ -72,7 +71,7 @@ jobs:
 
       - uses: actions/delete-package-versions@v4
         with:
-          package-name: 'chatgpt-on-wechat'
+          package-name: 'maia'
           package-type: 'container'
           min-versions-to-keep: 10
           delete-only-untagged-versions: 'true'

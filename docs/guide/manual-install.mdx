@@ -1,6 +1,6 @@
 ---
 title: Manual Install
-description: "Deploy CowAgent manually: clone the source, install core and optional dependencies, install the Cow CLI, edit config.json and start the service, or deploy to a server with Docker Compose."
+description: "Deploy Maia manually: clone the source, install dependencies, install the Maia CLI, edit config.json and start the service, or build a local Docker image."
 ---
 
 ## Source Code Deployment
@@ -8,13 +8,9 @@ description: "Deploy CowAgent manually: clone the source, install core and optio
 ### 1. Clone the project
 
 ```bash
-git clone https://github.com/zhayujie/CowAgent
-cd CowAgent/
+git clone https://github.com/dubhagen/Maia.git
+cd Maia/
 ```
-
-<Tip>
-  For network issues, use the mirror: https://gitee.com/zhayujie/CowAgent
-</Tip>
 
 ### 2. Install dependencies
 
@@ -30,7 +26,7 @@ Optional dependencies (recommended):
 pip3 install -r requirements-optional.txt
 ```
 
-### 3. Install Cow CLI
+### 3. Install Maia CLI
 
 Install the command-line tool for managing services and skills:
 
@@ -38,14 +34,14 @@ Install the command-line tool for managing services and skills:
 pip3 install -e .
 ```
 
-Then use the `cow` command:
+Then use the `maia` command:
 
 ```bash
-cow help
+maia help
 ```
 
 <Note>
-  This step is recommended. After installation you can use `cow start`, `cow stop`, `cow update` to manage the service, and `cow skill` to manage skills. Without the CLI, you can use `./run.sh` or `python3 app.py` to run.
+  This step is recommended. After installation you can use `maia start`, `maia stop`, `maia update` to manage the service, and `maia skill` to manage skills. Without the CLI, you can use `./run.sh` or `python3 app.py` to run.
 </Note>
 
 ### 4. Configure
@@ -60,10 +56,10 @@ Fill in model API keys, channel type, and other settings in `config.json`. See t
 
 ### 5. Run
 
-**Using Cow CLI (recommended):**
+**Using Maia CLI (recommended):**
 
 ```bash
-cow start
+maia start
 ```
 
 **Or run locally in foreground:**
@@ -86,37 +82,33 @@ nohup python3 app.py & tail -f nohup.out
 
 ## Docker Deployment
 
-Docker deployment does not require cloning source code or installing dependencies. For Agent mode, source deployment is recommended for broader system access.
+Use the compose file in this repository. For Agent mode, a source checkout is recommended for broader system access.
 
 <Note>
   Requires [Docker](https://docs.docker.com/engine/install/) and docker-compose.
 </Note>
 
-**1. Download config**
+**1. Set the LiteLLM endpoint**
+
+In `docker/docker-compose.yml`, set `LITELLM_API_BASE` and `LITELLM_MODEL`. The base URL must be an `http` or `https` URL ending in `/v1`.
+
+**2. Start the container**
 
 ```bash
-curl -O https://cdn.link-ai.tech/code/cow/docker-compose.yml
-```
-
-Edit `docker-compose.yml` with your configuration.
-
-**2. Start container**
-
-```bash
-sudo docker compose up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 **3. View logs**
 
 ```bash
-sudo docker logs -f chatgpt-on-wechat
+sudo docker compose -f docker/docker-compose.yml logs -f
 ```
 
 <Note>
   **Data persistence**: `docker-compose.yml` mounts two host directories by default, so your data survives container restarts and `docker compose pull` image upgrades:
 
-  - `./cow` → `/home/agent/cow` in the container: the workspace, holding conversation-installed skills, memory, knowledge base, `mcp.json`, and conversation artifacts.
-  - `./cow-data` → `/home/agent/.cow` in the container: the data directory pointed to by `COW_DATA_DIR`, holding the `config.json` saved from the web console, run logs, and channel credentials.
+  - `./maia` → `/home/agent/maia` in the container: the workspace, holding conversation-installed skills, memory, knowledge base, `mcp.json`, and conversation artifacts.
+  - `./maia-data` → `/home/agent/.maia` in the container: the data directory pointed to by `MAIA_DATA_DIR`, holding the `config.json` saved from the web console, run logs, and channel credentials.
 
   Both directories are created next to `docker-compose.yml` by default — don't delete them.
 </Note>
@@ -130,28 +122,30 @@ sudo docker logs -f chatgpt-on-wechat
 ```json
 {
   "channel_type": "web",
-  "model": "deepseek-flash",
-  "deepseek_api_key": "",
+  "litellm_api_base": "http://127.0.0.1:4000/v1",
+  "litellm_api_key": "",
+  "model": "",
   "agent": true,
-  "agent_workspace": "~/cow",
+  "agent_workspace": "~/maia",
   "agent_max_context_tokens": 200000,
   "agent_max_context_turns": 30,
   "agent_max_steps": 100,
-  "cow_lang": "auto"
+  "maia_lang": "auto"
 }
 ```
 
 | Parameter | Description | Default |
 | --- | --- | --- |
-| `channel_type` | Channel type | `web` |
-| `model` | Model name | `deepseek-flash` |
+| `channel_type` | Channel type. `web` or `terminal` | `web` |
+| `litellm_api_base` | LiteLLM OpenAI-compatible base. Must end in `/v1` | |
+| `model` | Chat model id on that proxy. Empty until you set one | |
 | `agent` | Enable Agent mode | `true` |
-| `agent_workspace` | Agent workspace path | `~/cow` |
+| `agent_workspace` | Agent workspace path | `~/maia` |
 | `agent_max_context_tokens` | Max context tokens | `200000` |
 | `agent_max_context_turns` | Max context turns | `30` |
 | `agent_max_steps` | Max decision steps per task | `100` |
-| `cow_lang` | Language for the UI, command text and system prompts; `auto` to detect, or set `zh` / `en` | `auto` |
+| `maia_lang` | Language for the UI, command text and system prompts; `auto` to detect, or set `zh` / `en` | `auto` |
 
 <Tip>
-  Full configuration options are in the project [`config.py`](https://github.com/zhayujie/CowAgent/blob/master/config.py).
+  Full configuration options are in the project [`config.py`](https://github.com/dubhagen/Maia/blob/master/config.py).
 </Tip>

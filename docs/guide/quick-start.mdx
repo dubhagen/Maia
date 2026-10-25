@@ -1,6 +1,6 @@
 ---
 title: One-click Install
-description: "Install CowAgent with one command on Linux, macOS or Windows. The script checks Python, installs dependencies and the Cow CLI, walks you through model and channel setup, and starts the web console."
+description: "Install Maia on Linux, macOS or Windows. The script checks Python, installs dependencies and the Maia CLI, walks you through the LiteLLM endpoint, and starts the web console."
 ---
 
 The project provides scripts for one-click install, configuration, startup, and management. Script-based deployment is recommended for quick setup.
@@ -12,12 +12,16 @@ Supports Linux, macOS, and Windows. Requires Python 3.7-3.13 (3.9 recommended).
 <Tabs>
   <Tab title="Linux / macOS">
     ```bash
-    bash <(curl -fsSL https://cdn.link-ai.tech/code/cow/run.sh)
+    git clone https://github.com/dubhagen/Maia.git
+    cd Maia
+    bash run.sh
     ```
   </Tab>
   <Tab title="Windows (PowerShell)">
     ```powershell
-    irm https://cdn.link-ai.tech/code/cow/run.ps1 | iex
+    git clone https://github.com/dubhagen/Maia.git
+    cd Maia
+    .\scripts\run.ps1
     ```
   </Tab>
 </Tabs>
@@ -26,8 +30,8 @@ The script automatically performs these steps:
 
 1. Check Python environment (requires Python 3.7+)
 2. Install required tools (git, curl, etc.)
-3. Clone project to `~/CowAgent`
-4. Install Python dependencies and Cow CLI
+3. Clone the project to `~/Maia`
+4. Install Python dependencies and Maia CLI
 5. Guided configuration for AI model and channel
 6. Start service
 
@@ -39,20 +43,20 @@ By default, the Web console starts after installation. Access `http://localhost:
 
 ## Management Commands
 
-After installation, use the `cow` command to manage the service:
+After installation, use the `maia` command to manage the service:
 
 | Command | Description |
 | --- | --- |
-| `cow start` | Start service |
-| `cow stop` | Stop service |
-| `cow restart` | Restart service |
-| `cow status` | Check run status |
-| `cow logs` | View real-time logs |
-| `cow update` | Update code and restart |
-| `cow install-browser` | Install browser tool dependencies |
+| `maia start` | Start service |
+| `maia stop` | Stop service |
+| `maia restart` | Restart service |
+| `maia status` | Check run status |
+| `maia logs` | View real-time logs |
+| `maia update` | Update code and restart |
+| `maia install-browser` | Install browser tool dependencies |
 
 See the [Commands documentation](/cli/index) for more details.
 
 <Note>
-  If the `cow` command is not available, you can use `./run.sh <command>` (Linux/macOS) or `.\scripts\run.ps1 <command>` (Windows) as a fallback. Both are functionally equivalent.
+  If the `maia` command is not available, you can use `./run.sh <command>` (Linux/macOS) or `.\scripts\run.ps1 <command>` (Windows) as a fallback. Both are functionally equivalent.
 </Note>

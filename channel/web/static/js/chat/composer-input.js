@@ -367,7 +367,6 @@ chatInput.addEventListener('blur', () => {
 
 document.querySelectorAll('.example-card').forEach(card => {
     card.addEventListener('click', () => {
-        // data-send overrides the visible text (e.g. show "查看全部命令" but send "/help")
         const sendText = card.dataset.send;
         if (sendText) {
             chatInput.value = sendText;

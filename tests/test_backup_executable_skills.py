@@ -53,7 +53,7 @@ def test_legacy_archives_without_permissions_keep_usable_defaults(tmp_path, crea
     import json
     archive = tmp_path / "legacy.zip"
     with zipfile.ZipFile(archive, "w") as bundle:
-        bundle.writestr("manifest.json", json.dumps({"format": "cowagent-backup", "version": 1}))
+        bundle.writestr("manifest.json", json.dumps({"format": "maia-backup", "version": 1}))
         info = zipfile.ZipInfo("workspace/MEMORY.md")
         info.create_system = create_system
         # A DOS attribute keeps ZipFile from synthesizing a default Unix mode.
@@ -103,7 +103,7 @@ def test_unreadable_archived_modes_are_applied_only_after_copying(tmp_path, mode
     import json
     archive = tmp_path / "external.zip"
     with zipfile.ZipFile(archive, "w") as bundle:
-        bundle.writestr("manifest.json", json.dumps({"format": "cowagent-backup", "version": 1}))
+        bundle.writestr("manifest.json", json.dumps({"format": "maia-backup", "version": 1}))
         for name, text in [("workspace/skills/run.sh", "#!/bin/sh\nexit 0\n"),
                            ("data/config.json", json.dumps({"agent_workspace": "/old"}))]:
             if name == "data/config.json" and not include_config:
@@ -197,7 +197,7 @@ def test_duplicate_entry_uses_last_payload_and_its_metadata(tmp_path):
     import json
     archive = tmp_path / "duplicate.zip"
     with zipfile.ZipFile(archive, "w") as bundle:
-        bundle.writestr("manifest.json", json.dumps({"format": "cowagent-backup", "version": 1}))
+        bundle.writestr("manifest.json", json.dumps({"format": "maia-backup", "version": 1}))
         first = zipfile.ZipInfo("workspace/note.txt")
         first.create_system = 3
         first.external_attr = (stat.S_IFREG | 0o755) << 16

@@ -1,38 +1,50 @@
 ---
-title: Models Overview
-description: "Model providers CowAgent supports and what each can do: text, vision, image generation, speech and embeddings across OpenAI, Claude, Gemini, DeepSeek, Qwen, Doubao, Kimi, GLM, MiniMax and more."
+title: Models
+description: "Every Maia model call uses one LiteLLM OpenAI-compatible endpoint. Model ids pass through unchanged."
 ---
 
-CowAgent supports a wide range of mainstream large language models. Model interfaces live under the project's `models/` directory. Beyond text chat, several providers also provide vision understanding, image generation, speech-to-text, text-to-speech, and embeddings — all of which can be invoked on demand in the Agent flow.
+Maia sends chat, vision, embeddings, images, speech-to-text, and text-to-speech to one LiteLLM proxy. The model id is the id the proxy returns. Maia does not rewrite it and does not keep a separate key per vendor.
 
-## Capability Matrix
+## Configuration
 
-A snapshot of each provider's capabilities. "Text" refers to the main chat model; the remaining columns show which Agent capabilities the provider can power.
+```json
+{
+  "litellm_api_base": "http://127.0.0.1:4000/v1",
+  "litellm_api_key": "",
+  "model": "your-chat-model",
+  "embedding_model": "",
+  "vision_model": "",
+  "image_model": "",
+  "asr_model": "",
+  "tts_model": "",
+  "tts_voice": "alloy",
+  "agent_fallback_models": []
+}
+```
 
-| Provider | Representative Models | Text | Vision | Image Gen | STT | TTS | Embedding |
-| --- | --- | :-: | :-: | :-: | :-: | :-: | :-: |
-| [DeepSeek](/models/deepseek) | deepseek-flash (V4.1) / pro | ✅ | ✅ | | | | |
-| [Claude](/models/claude) | claude-opus-5-5 / sonnet-5 | ✅ | ✅ | | | | |
-| [OpenAI](/models/openai) | gpt-6.1 / gpt-6 series | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| [Gemini](/models/gemini) | gemini-3.8-flash | ✅ | ✅ | ✅ | | | |
-| [MiniMax](/models/minimax) | MiniMax-M3 | ✅ | ✅ | ✅ | | ✅ | |
-| [GLM](/models/glm) | glm-5.3-flash, glm-5v-turbo | ✅ | ✅ | | ✅ | | ✅ |
-| [Qwen](/models/qwen) | qwen3.8-flash | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| [Kimi](/models/kimi) | kimi-k3 | ✅ | ✅ | | | | |
-| [Doubao](/models/doubao) | doubao-seed-2.1 series | ✅ | ✅ | ✅ | | | ✅ |
-| [ERNIE](/models/qianfan) | ernie-5.1 | ✅ | ✅ | | | | |
-| [MiMo](/models/mimo) | mimo-v2.6-pro / v2.6-flash | ✅ | ✅ | | ✅ | ✅ | |
-| [LinkAI](/models/linkai) | 100+ models from multiple providers | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| [Custom](/models/custom) | Local models / third-party proxies | ✅ | | | | | |
+| Field | Call | When it is empty |
+| --- | --- | --- |
+| `model` | `POST {base}/chat/completions` | Chat replies fail until you set a model id |
+| `agent_fallback_models` | Same endpoint, next id in the list | No fallback |
+| `vision_model` | Chat completions with an image part | Uses the chat model when that model accepts images |
+| `embedding_model` | `POST {base}/embeddings` | Memory stays keyword-only |
+| `image_model` | `POST {base}/images/generations` | Image generation is off |
+| `asr_model` | `POST {base}/audio/transcriptions` | Speech-to-text is off |
+| `tts_model` | `POST {base}/audio/speech` | Text-to-speech is off |
 
-<Tip>
-  Every capability in the Web console (Vision / Image / STT / TTS / Embedding / Web Search) can be configured independently with its own provider and model — there is no forced binding between them.
-</Tip>
+`litellm_api_base` must be an `http` or `https` URL and must end with `/v1`. A missing or malformed base fails that model call. The web console can still start so you can fill the value in. `litellm_api_key` may be empty. Old vendor keys in a previous `config.json` are not read for these calls.
 
-## How to Configure
+## Discovery
 
-**Option 1 (recommended):** Manage models and capabilities online via the [Web console](/channels/web), with no need to edit the configuration file:
+The models screen probes:
 
-<img width="900" src="https://cdn.jsdelivr.net/gh/zhayujie/cowagent-assets@main/screenshots/en/web-console-models-config.png" />
+1. `GET {litellm_api_base}/models`
+2. `GET {origin}/model/info` when the proxy exposes it
 
-**Option 2:** Edit `config.json` manually and fill in the model name and API key for the selected provider. Every model also supports OpenAI-compatible access — just set `bot_type` to `openai` and configure `open_ai_api_base` and `open_ai_api_key`.
+`model_info.mode` maps onto catalog tags: `chat` to text, `supports_vision` to vision, `embedding`, `image_generation` to image, `audio_transcription` to speech-to-text, and `audio_speech` to text-to-speech. A model with no metadata is tagged text. The overlay in `models/model_catalog.py` (`~/maia/system/models.json`) still wins for tags and context windows you set by hand.
+
+Optional `reasoning_effort` (`low`, `medium`, `high`, `xhigh`, `max`) is forwarded only when thinking is enabled. There is no per-vendor request body.
+
+## Fallback
+
+`agent_fallback_models` is a list of model ids on this same proxy. It is not a list of providers.

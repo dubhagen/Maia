@@ -17,17 +17,6 @@ from common.atomic_write import write_text_atomic
 from common.log import logger
 
 
-SUMMARIZE_SYSTEM_PROMPT_ZH = """你是一个对话记录助手。请将对话内容归纳为当天的日常记录。
-
-## 要求
-
-按「事件」维度归纳发生的事，不要按对话轮次逐条记录：
-- 每条一行，用 "- " 开头
-- 合并同一件事的多轮对话
-- 只记录有意义的事件，忽略闲聊和问候
-- 保留关键的决策、结论和待办事项
-
-当对话没有任何记录价值（仅含问候或无意义内容），直接回复"无"。"""
 
 SUMMARIZE_SYSTEM_PROMPT_EN = """You are a conversation-logging assistant. Summarize the conversation into a daily record.
 
@@ -41,9 +30,6 @@ Summarize by "event", not turn by turn:
 
 If the conversation has no record value (only greetings or meaningless content), reply with exactly "None"."""
 
-SUMMARIZE_USER_PROMPT_ZH = """请归纳以下对话的日常记录：
-
-{conversation}"""
 
 SUMMARIZE_USER_PROMPT_EN = """Summarize the daily record of the following conversation:
 
@@ -53,49 +39,6 @@ SUMMARIZE_USER_PROMPT_EN = """Summarize the daily record of the following conver
 # Deep Dream prompts — distill daily memories → MEMORY.md + dream diary
 # ---------------------------------------------------------------------------
 
-DREAM_SYSTEM_PROMPT_ZH = """你是一个记忆整理助手，负责定期整理用户的长期记忆。
-
-你将收到两份材料：
-1. **当前长期记忆** — MEMORY.md 的全部现有内容
-2. **今日日记** — 当天的日常记录
-
-MEMORY.md 会注入每次对话的系统提示词中，因此必须保持精炼，只存放有价值和值得记忆的内容。
-
-**重要：只能基于提供的材料进行整理，严禁编造、推测或添加材料中不存在的信息。**
-
-## 任务
-
-### Part 1: 更新后的长期记忆（[MEMORY]）
-
-在现有记忆基础上进行整理和提炼，输出完整的更新后内容：
-- **合并提炼**：将含义相近的多条合并为一条高密度表述，而非简单罗列
-- **新增萃取**：从今日日记中提取值得永久记住的新信息（偏好、决策、人物、规则、经验）
-- **冲突更新**：当新信息与旧条目矛盾时，以新信息为准，替换旧条目
-- **清理无效**：删除临时性记录、空白条目、格式残留、无意义、重复内容等
-- **删除冗余**：已被更精炼表述涵盖的旧条目应删除，避免信息重复
-- 每条一行，用 "- " 开头，不带日期前缀
-- 可用 "## 标题" 对相关条目分组，使结构更清晰
-- 目标：控制在 50 条以内，每条尽量一句话概括
-
-### Part 2: 梦境日记（[DREAM]）
-
-用简洁的叙事风格写一篇短日记，记录这次整理的发现，保持格式美观易读：
-- 发现了哪些重复或矛盾
-- 从日记中提取了什么新洞察
-- 做了哪些清理和优化
-- 整体感受和观察
-
-## 输出格式（严格遵守）
-
-```
-[MEMORY]
-- 记忆条目1
-- 记忆条目2
-...
-
-[DREAM]
-梦境日记内容...
-```"""
 
 DREAM_SYSTEM_PROMPT_EN = """You are a memory-curation assistant that periodically organizes the user's long-term memory.
 
@@ -141,13 +84,6 @@ Write a short diary in a concise narrative style recording what this curation fo
 dream diary content...
 ```"""
 
-DREAM_USER_PROMPT_ZH = """## 当前长期记忆（MEMORY.md）
-
-{memory_content}
-
-## 近期日记（最近 {days} 天）
-
-{daily_content}"""
 
 DREAM_USER_PROMPT_EN = """## Current long-term memory (MEMORY.md)
 
@@ -168,27 +104,27 @@ def _is_en() -> bool:
 
 
 def _summarize_system_prompt() -> str:
-    return SUMMARIZE_SYSTEM_PROMPT_EN if _is_en() else SUMMARIZE_SYSTEM_PROMPT_ZH
+    return SUMMARIZE_SYSTEM_PROMPT_EN
 
 
 def _summarize_user_prompt() -> str:
-    return SUMMARIZE_USER_PROMPT_EN if _is_en() else SUMMARIZE_USER_PROMPT_ZH
+    return SUMMARIZE_USER_PROMPT_EN
 
 
 def _dream_system_prompt() -> str:
-    return DREAM_SYSTEM_PROMPT_EN if _is_en() else DREAM_SYSTEM_PROMPT_ZH
+    return DREAM_SYSTEM_PROMPT_EN
 
 
 def _dream_user_prompt() -> str:
-    return DREAM_USER_PROMPT_EN if _is_en() else DREAM_USER_PROMPT_ZH
+    return DREAM_USER_PROMPT_EN
 
 
 def _is_empty_sentinel(text: str) -> bool:
-    """Match the "no record value" sentinel in both zh ("无") and en ("None")."""
+    """True when the summary is empty or the no-record sentinel ("None")."""
     if not text:
         return True
     s = text.strip()
-    return s == "" or s == "无" or s.lower() == "none"
+    return s == "" or s.lower() == "none"
 
 
 class MemoryFlushManager:
@@ -755,9 +691,9 @@ class MemoryFlushManager:
                 continue
             text = text.strip()
             if role == "user":
-                lines.append(f"用户: {text[:500]}")
+                lines.append(f"User: {text[:500]}")
             elif role == "assistant":
-                lines.append(f"助手: {text[:500]}")
+                lines.append(f"Assistant: {text[:500]}")
         return "\n".join(lines)
 
     @staticmethod
@@ -843,7 +779,7 @@ class MemoryFlushManager:
     def _extract_summary_fallback(messages: List[Dict], max_messages: int = 0) -> str:
         """
         Rule-based summary of discarded messages.
-        Format: "用户问了X; 助手回答了Y" per event, compact and readable.
+        Format: "User asked X; assistant answered Y" per event, compact and readable.
         """
         msgs = messages if max_messages == 0 else messages[-max_messages * 2:]
 
@@ -863,13 +799,13 @@ class MemoryFlushManager:
             elif role == "assistant" and current_user_text:
                 reply_summary = MemoryFlushManager._extract_first_meaningful_line(text)
                 if reply_summary:
-                    events.append(f"- 用户: {current_user_text} → 回复: {reply_summary}")
+                    events.append(f"- User: {current_user_text} → Reply: {reply_summary}")
                 else:
-                    events.append(f"- 用户: {current_user_text}")
+                    events.append(f"- User: {current_user_text}")
                 current_user_text = ""
 
         if current_user_text:
-            events.append(f"- 用户: {current_user_text}")
+            events.append(f"- User: {current_user_text}")
 
         return "\n".join(events[:10])
     

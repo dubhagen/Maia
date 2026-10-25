@@ -1,38 +1,21 @@
 ---
 title: Desktop Client
-description: "Download and install the CowAgent desktop app for macOS (Apple Silicon and Intel) and Windows. It bundles the agent runtime, so no Python or dependencies are needed to run your AI assistant locally."
+description: "Build the Maia desktop app from the desktop/ directory. There is no hosted installer and no auto-update feed."
 ---
 
-CowAgent ships a ready-to-use desktop client with the Agent runtime bundled in — **no need to install Python or dependencies manually**. Just download, install, and run your local super AI assistant.
+Maia does not publish a desktop installer. Build it from this checkout when you want the Electron shell. The agent itself runs from source with `python app.py` or `maia start` without that shell.
 
-<Frame caption="It drives your browser, terminal, and file system directly, with long-term memory, a personal knowledge base, and self-evolution — all running locally.">
-  <video controls preload="metadata" playsInline className="w-full rounded-xl" src="https://cdn.cowagent.ai/desktop/video/cow-demo-en-v1.mp4" />
-</Frame>
+## Build
 
-## Download & Install
+From `desktop/`, install the Node dependencies and build the shell. The Python backend is packaged separately by the desktop build scripts and still uses `desktop/build/requirements-desktop.txt`.
 
-<Card title="Go to the download page" icon="download" href="https://cowagent.ai/download/">
-  Download the macOS / Windows installer
-</Card>
+```bash
+cd desktop
+npm install
+npm run build
+```
 
-<Tabs>
-  <Tab title="macOS">
-    1. Open the [download page](https://cowagent.ai/download/) and pick the build for your chip:
-       - Apple Silicon (M1/M2/M3/M4): download the `arm64` build
-       - Intel: download the `x64` build
-    2. Open the downloaded `.dmg` and drag CowAgent into your Applications folder.
-    3. Launch CowAgent from Launchpad or Applications.
-  </Tab>
-  <Tab title="Windows">
-    1. Open the [download page](https://cowagent.ai/download/) and download the Windows installer (`.exe`).
-    2. Run the installer and follow the prompts (you can choose the install directory).
-    3. Launch CowAgent from the desktop or Start menu.
-  </Tab>
-</Tabs>
-
-## Auto Update
-
-The desktop client has built-in auto-update. When a new version is available it is detected automatically; you can also manually "Check for updates" from the menu in the bottom-left corner and upgrade with one click.
+`npm run dev` starts the shell against a local backend. There is no update feed. A source checkout updates with `git pull`.
 
 ## Desktop vs. Command-line Deployment
 
@@ -49,7 +32,7 @@ If that port is unavailable (for example reserved by Hyper-V/WSL2 on Windows), t
 
 All data of the desktop client is stored on your machine:
 
-- **Config directory**: `~/.cow` in your home folder, holding `config.json` (model keys, channels, etc.) along with logs, cache and other runtime data.
-- **Workspace**: `~/cow` by default, holding chat history, knowledge base, memory, skills, scheduled tasks and other files produced by the Agent.
+- **Config directory**: `~/.maia` in your home folder, holding `config.json` (model keys, channels, etc.) along with logs, cache and other runtime data.
+- **Workspace**: `~/maia` by default, holding chat history, knowledge base, memory, skills, scheduled tasks and other files produced by the Agent.
 
 Uninstalling the client does not delete these two directories, so your data is preserved across reinstalls. To fully clean up or migrate to another device, just back up or remove the corresponding folders manually.

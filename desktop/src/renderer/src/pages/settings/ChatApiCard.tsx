@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Check, Copy, Eye, EyeOff, Plug, RotateCw } from 'lucide-react'
-import { t, getLang } from '../../i18n'
+import { t } from '../../i18n'
 import apiClient, { type ExternalApiState } from '../../api/client'
 import { askConfirm } from '../../store/confirmStore'
 import Tooltip from '../../components/Tooltip'
@@ -106,7 +106,7 @@ const ChatApiCard: React.FC<{ baseUrl: string }> = ({ baseUrl }) => {
   const enabled = !!state?.enabled
   const key = state?.api_key || ''
   const apiBase = `${baseUrl.replace(/\/$/, '')}/v1`
-  const docsUrl = `${getLang() === 'zh' ? 'https://docs.cowagent.ai/zh' : 'https://docs.cowagent.ai'}/extensions/chat-api`
+  const docsUrl = 'https://github.com/dubhagen/Maia/blob/master/docs/extensions/chat-api.mdx'
 
   return (
     <Card

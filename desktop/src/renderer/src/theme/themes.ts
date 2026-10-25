@@ -10,7 +10,7 @@
 // Contract rule: themes may ONLY set fields defined here. Adding a
 // new token is an additive, versioned change (bump THEME_SPEC_VERSION).
 //
-// Themes are NOT bundled into the app. They live in ~/.cow/themes/<id>/
+// Themes are NOT bundled into the app. They live in ~/.maia/themes/<id>/
 // (theme.json + images) and are loaded at runtime via the main process,
 // which inlines images as data URLs. The only built-in theme is 'default'
 // (a pure-color fallback that always works offline).
@@ -100,14 +100,14 @@ export const DEFAULT_THEME_ID = 'default'
 
 // The only built-in theme: 'default' maps to the base :root / .dark values in
 // index.css (no overrides). Everything else is loaded at runtime from
-// ~/.cow/themes. This keeps the app bundle free of theme assets.
+// ~/.maia/themes. This keeps the app bundle free of theme assets.
 export const DEFAULT_THEME: Theme = {
   id: DEFAULT_THEME_ID,
   name: 'Meadow',
-  preview: { accent: '#4abe6e', bg: '#f9fafb', surface: '#ffffff' },
+  preview: { accent: '#6B8EF0', bg: '#f9fafb', surface: '#ffffff' },
 }
 
-// Runtime registry: default first, then whatever was loaded from ~/.cow.
+// Runtime registry: default first, then whatever was loaded from ~/.maia.
 let runtimeThemes: Theme[] = [DEFAULT_THEME]
 
 // Basic shape validation so a malformed theme.json can't break the app.
@@ -122,7 +122,7 @@ function derivePreview(theme: Theme): { accent: string; bg: string; surface: str
   if (theme.preview) return theme.preview
   const c = theme.dark?.colors ?? theme.light?.colors ?? {}
   return {
-    accent: c.accent ?? '#4abe6e',
+    accent: c.accent ?? '#6B8EF0',
     bg: c.bgBase ?? '#111111',
     surface: c.bgSurface ?? '#1c1c1f',
   }

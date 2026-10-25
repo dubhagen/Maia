@@ -33,7 +33,7 @@ def test_html_preserves_readable_text(html, expected_lines):
         ("<p>Py<strong>thon</strong> is <em>useful</em>.</p>", "Python is useful."),
         ("<p>Before<script>if (a < b) {secret()}</script><style>.secret {color:red}</style> after.</p>",
          "Before after."),
-        ("<P>中文 <SPAN>résumé</SPAN> 🐄</P>", "中文 résumé 🐄"),
+        ("<P>caf\u00e9 <SPAN>r\u00e9sum\u00e9</SPAN> \U0001f404</P>", "caf\u00e9 r\u00e9sum\u00e9 \U0001f404"),
         ("Plain text\n\nwith   spaces", "Plain text\n\nwith spaces"),
         ('<p>Read <a href="/doc?a=1&amp;b=2">the guide</a> today.</p>', "Read the guide today."),
         ('<p>Before <img src="photo.png" alt="Photo"> after.</p>', "Before after."),

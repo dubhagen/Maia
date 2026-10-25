@@ -100,7 +100,7 @@ class TestSyncStampsVersion(unittest.TestCase):
         os.makedirs(os.path.join(ws, "knowledge", "infra"))
         with open(os.path.join(ws, "knowledge", "infra", "a.md"), "w",
                   encoding="utf-8") as f:
-            f.write("# A\n\n内容。" * 400)  # >1500 -> triggers heading path
+            f.write("# A\n\nContent." * 400)  # >1500 -> triggers heading path
         m = self._make(ws)
         asyncio.run(m.sync(force=True))
         self.assertEqual(
@@ -113,7 +113,7 @@ class TestSyncStampsVersion(unittest.TestCase):
         os.makedirs(os.path.join(ws, "knowledge", "infra"))
         with open(os.path.join(ws, "knowledge", "infra", "a.md"), "w",
                   encoding="utf-8") as f:
-            f.write("# A\n\n内容。" * 400)
+            f.write("# A\n\nContent." * 400)
         m = self._make(ws)
         # First (empty->full) sync stamps the current version.
         asyncio.run(m.sync(force=True))
@@ -124,7 +124,7 @@ class TestSyncStampsVersion(unittest.TestCase):
         # must stay whatever it was (not unset, not blindly rewritten).
         with open(os.path.join(ws, "knowledge", "infra", "b.md"), "w",
                   encoding="utf-8") as f:
-            f.write("# B\n\n其他内容。" * 300)
+            f.write("# B\n\nOther content." * 300)
         asyncio.run(m.sync())
         self.assertEqual(
             m.storage.get_meta("chunker_version"), str(TextChunker.CHUNKER_VERSION)

@@ -40,16 +40,16 @@ class TestWhichModelAnswers:
 
 
 class TestRouting:
-    """A model without its provider asks the wrong vendor for it."""
+    """A stored provider name is ignored. Every model id uses LiteLLM."""
 
     def test_the_agents_provider_routes_its_model(self, model):
         model.set_agent_default("claude", "some-model")
-        assert model._resolve_bot_type("some-model") == "claude"
+        assert model._resolve_bot_type("some-model") == "litellm"
 
     def test_the_conversations_provider_still_wins(self, model):
         model.set_agent_default("claude", "some-model")
         model.set_session_override("deepseek", "other-model")
-        assert model._resolve_bot_type("other-model") == "deepseek"
+        assert model._resolve_bot_type("other-model") == "litellm"
 
 
 class TestRebuildingTheBot:

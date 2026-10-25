@@ -89,7 +89,7 @@ def test_create_refuses_a_title_with_no_name_in_it(tmp_path):
     service = _service(tmp_path)
 
     with pytest.raises(ValueError, match="latin letters or digits"):
-        service.create({"name": "翻译助手", "description": "translate things"})
+        service.create({"name": "\u00e9\u00e9\u00e9", "description": "translate things"})
 
 
 def test_create_refuses_a_name_already_taken(tmp_path):

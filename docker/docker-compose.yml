@@ -1,47 +1,29 @@
 version: '2.0'
 services:
-  chatgpt-on-wechat:
-    image: zhayujie/chatgpt-on-wechat
-    container_name: chatgpt-on-wechat
+  maia:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.latest
+    image: maia:local
+    container_name: maia
     security_opt:
       - seccomp:unconfined
     ports:
       - "9899:9899"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      COW_LANG: 'auto'
-      # Empty: web console only. Multiple: 'web, weixin, feishu'
-      CHANNEL_TYPE: ''
-      # Empty: deepseek-flash
-      MODEL: ''
-      DEEPSEEK_API_KEY: ''
-      DEEPSEEK_API_BASE: 'https://api.deepseek.com/v1'
-      MINIMAX_API_KEY: ''
-      ZHIPU_AI_API_KEY: ''
-      ARK_API_KEY: ''
-      MOONSHOT_API_KEY: ''
-      DASHSCOPE_API_KEY: ''
-      CLAUDE_API_KEY: ''
-      CLAUDE_API_BASE: 'https://api.anthropic.com/v1'
-      OPEN_AI_API_KEY: ''
-      OPEN_AI_API_BASE: 'https://api.openai.com/v1'
-      GEMINI_API_KEY: ''
-      GEMINI_API_BASE: 'https://generativelanguage.googleapis.com'
-      VOICE_TO_TEXT: 'openai'
-      TEXT_TO_VOICE: 'openai'
+      MAIA_LANG: 'auto'
+      CHANNEL_TYPE: 'web'
+      # The proxy runs on the host. host-gateway below makes this name resolve.
+      LITELLM_API_BASE: 'http://host.docker.internal:4000/v1'
+      LITELLM_API_KEY: ''
+      LITELLM_MODEL: ''
+      VOICE_TO_TEXT: 'litellm'
+      TEXT_TO_VOICE: 'litellm'
       VOICE_REPLY_VOICE: 'False'
-      SPEECH_RECOGNITION: 'True'
-      GROUP_SPEECH_RECOGNITION: 'False'
-      USE_LINKAI: 'False'
-      LINKAI_API_KEY: ''
-      LINKAI_APP_CODE: ''
-      FEISHU_APP_ID: ''
-      FEISHU_APP_SECRET: ''
-      DINGTALK_CLIENT_ID: ''
-      DINGTALK_CLIENT_SECRET: ''
-      WECOM_BOT_ID: ''
-      WECOM_BOT_SECRET: ''
-      # To access the web console from the host, set this to '0.0.0.0' and set WEB_PASSWORD
-      WEB_HOST: '127.0.0.1'
+      # The published port is reachable from the host. Set WEB_PASSWORD before sharing it.
+      WEB_HOST: '0.0.0.0'
       WEB_PASSWORD: ''
       AGENT: 'True'
       # Container is already an isolation boundary, so the agent runs unconfined inside it
@@ -52,9 +34,9 @@ services:
       SELF_EVOLUTION_ENABLED: 'True'
       # Writable data root (config.json, run.log, credentials) — kept separate
       # from the workspace so it survives image upgrades / container recreation.
-      COW_DATA_DIR: '/home/agent/.cow'
+      MAIA_DATA_DIR: '/home/agent/.maia'
     volumes:
       # Workspace: skills, memory, knowledge, mcp.json, conversation artifacts
-      - ./cow:/home/agent/cow
+      - ./maia:/home/agent/maia
       # Data root: config.json, run.log, credentials
-      - ./cow-data:/home/agent/.cow
+      - ./maia-data:/home/agent/.maia

@@ -1,9 +1,9 @@
 ---
 title: General Commands
-description: "Reference for everyday CowAgent commands such as help, status, cancel, steer, config and context, usable with / in chat or cow in a terminal to check status, stop tasks and manage settings."
+description: "Reference for everyday Maia commands such as help, status, cancel, steer, config and context, usable with / in chat or maia in a terminal to check status, stop tasks and manage settings."
 ---
 
-The following commands can be used in chat with the `/` prefix or in the terminal with the `cow` prefix (some are chat-only).
+The following commands can be used in chat with the `/` prefix or in the terminal with the `maia` prefix (some are chat-only).
 
 <Tip>
   In the Web console, typing `/` brings up an autocomplete menu with keyboard navigation and Tab completion.
@@ -27,7 +27,7 @@ View current session and service status, including process info, model configura
 
 ## cancel
 
-Abort the agent task currently running in this session. When the agent is busy with a long task (e.g. multi-turn tool calls or a long streaming response), send `/cancel` and the agent will stop before the next tool execution. Available across all channels — Web, WeChat, WeCom, Feishu, etc.
+Abort the agent task currently running in this session. When the agent is busy with a long task (e.g. multi-turn tool calls or a long streaming response), send `/cancel` and the agent will stop before the next tool execution. Available in the web console and the local terminal.
 
 ```text
 /cancel
@@ -125,7 +125,7 @@ View recent service logs. Shows the last 20 lines by default, up to 50.
 
 ## version
 
-Show the current CowAgent version.
+Show the current Maia version.
 
 ```text
 /version

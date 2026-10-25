@@ -199,7 +199,7 @@ def test_a_failed_write_can_be_retried(tmp_path, monkeypatch):
     assert "ingest split" in written.read_text(encoding="utf-8")
 
 
-@pytest.mark.parametrize("reply", ["无", "None"])
+@pytest.mark.parametrize("reply", ["none", "None"])
 def test_a_model_that_records_nothing_is_not_asked_again(tmp_path, reply):
     """An answered "nothing worth recording" is a result, not a failure.
 

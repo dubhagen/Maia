@@ -4,16 +4,16 @@ from common.log import logger
 
 class McpTool(BaseTool):
     """
-    将单个 MCP 工具包装为 BaseTool。
-    一个 MCP Server 可以提供多个工具，每个工具对应一个 McpTool 实例。
+    Wrap one MCP tool as a BaseTool.
+    One MCP server can expose several tools, one McpTool each.
     """
 
     def __init__(self, client, tool_schema: dict, server_name: str, name_prefix: str = ""):
         """
-        :param client: 该工具所属的 McpClient 实例
-        :param tool_schema: MCP 返回的工具描述，格式：
+        :param client: McpClient that owns this tool
+        :param tool_schema: Tool description returned by MCP, shaped as:
             {"name": str, "description": str, "inputSchema": dict}
-        :param server_name: Server 名称，用于日志
+        :param server_name: Server name, used in logs
         """
         self.client = client
         self.server_name = server_name

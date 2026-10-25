@@ -2,7 +2,7 @@
    Split out of console.js. These are classic scripts sharing one global
    scope; see channel/web/README.md before changing the load order. */
 
-/* The session-panel "新对话" button. With a single Agent there is nobody to
+/* The session-panel "New chat" button. With a single Agent there is nobody to
    choose between, so it just starts a chat. With several, it opens a menu: pick
    an Agent for a solo chat, or open the team picker for a group chat. */
 function onNewChatButton(event) {
@@ -30,7 +30,7 @@ function startSoloChat(agentId) {
     document.getElementById('new-chat-menu')?.classList.add('hidden');
     if (!agentId) { newChat(true); return; }
     activeAgentId = agentId;
-    localStorage.setItem('cow_active_agent', activeAgentId);
+    localStorage.setItem('maia_active_agent', activeAgentId);
     newChat(true);
     if (typeof resetWorkspaceToAgentRoot === 'function') resetWorkspaceToAgentRoot();
     renderComposerIdentity();
@@ -92,7 +92,7 @@ function startTeamChat() {
     closeTeamChatModal();
     const [owner, ...guests] = picks;
     activeAgentId = owner;
-    localStorage.setItem('cow_active_agent', activeAgentId);
+    localStorage.setItem('maia_active_agent', activeAgentId);
     newChat(true);
     if (typeof resetWorkspaceToAgentRoot === 'function') resetWorkspaceToAgentRoot();
     // The fresh session exists client-side; invite the guests onto it so the
@@ -124,8 +124,8 @@ function newChat(optimistic = true, inherit = true) {
     ws.className = 'flex flex-col items-center justify-center h-full px-6 pb-16';
     ws.style.paddingTop = '6vh';
     ws.innerHTML = `
-        <img src="/assets/logo.jpg" alt="CowAgent" class="w-16 h-16 rounded-2xl mb-6 shadow-lg shadow-primary-500/20">
-        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3">${appConfig.title || 'CowAgent'}</h1>
+        <img src="/assets/logo.jpg" alt="Maia" class="w-16 h-16 rounded-2xl mb-6 shadow-lg shadow-primary-500/20">
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3">${appConfig.title || 'Maia'}</h1>
         <p class="text-slate-500 dark:text-slate-400 text-center max-w-lg mb-10 leading-relaxed" data-i18n="welcome_subtitle">${t('welcome_subtitle')}</p>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full max-w-2xl">
             <div class="example-card group bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/10 rounded-xl p-4 cursor-pointer hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all duration-200">

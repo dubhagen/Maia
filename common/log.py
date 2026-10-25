@@ -20,8 +20,8 @@ class _Utf8ConsoleStream:
 def _log_path():
     # Mirror config.get_data_root() without importing config (avoids a circular
     # import, since config imports this module). The desktop build sets
-    # COW_DATA_DIR (e.g. ~/.cow); source deployments fall back to CWD.
-    data_dir = os.environ.get("COW_DATA_DIR")
+    # MAIA_DATA_DIR (e.g. ~/.maia); source deployments fall back to CWD.
+    data_dir = os.environ.get("MAIA_DATA_DIR")
     if data_dir:
         data_dir = os.path.expanduser(data_dir)
         os.makedirs(data_dir, exist_ok=True)
@@ -77,5 +77,5 @@ def _get_logger():
     return log
 
 
-# 日志句柄
+
 logger = _get_logger()

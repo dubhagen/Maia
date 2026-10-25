@@ -6,7 +6,7 @@ import { useAgentStore, isMultiAgent, findAgent } from './agentStore'
 import { ownerOf, setOwner, forgetOwner, rememberOwners } from './sessionOwners'
 import type { AgentBadge, SessionItem, SessionTeam } from '../types'
 
-const ACTIVE_KEY = 'cow_session_id'
+const ACTIVE_KEY = 'maia_session_id'
 export const DEFAULT_SPACE_KEY = '__default__'
 
 /**

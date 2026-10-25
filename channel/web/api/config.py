@@ -24,7 +24,6 @@ from channel.web.core._common import (
 )
 from channel.web.core.providers import (
     PROVIDER_MODELS,
-    legacy_custom_in_use,
     mask_key,
 )
 from common import i18n
@@ -39,18 +38,14 @@ _settings_save_lock = threading.Lock()
 class ConfigHandler:
 
     EDITABLE_KEYS = {
-        "cow_lang",
-        "model", "bot_type", "use_linkai",
-        "open_ai_api_base", "deepseek_api_base", "qianfan_api_base", "claude_api_base", "gemini_api_base",
-        "zhipu_ai_api_base", "moonshot_base_url", "ark_base_url", "custom_api_base", "mimo_api_base",
-        "open_ai_api_key", "deepseek_api_key", "qianfan_api_key", "claude_api_key", "gemini_api_key",
-        "zhipu_ai_api_key", "dashscope_api_key", "moonshot_api_key",
-        "ark_api_key", "minimax_api_key", "linkai_api_key", "custom_api_key", "mimo_api_key",
-        "custom_providers",
+        "maia_lang",
+        "model", "bot_type",
+        "litellm_api_base", "litellm_api_key",
+        "vision_model", "image_model", "asr_model", "tts_model", "tts_voice",
+        "embedding_model", "agent_fallback_models",
         "agent_max_context_tokens", "agent_max_context_turns", "agent_max_steps",
         "enable_thinking", "reasoning_effort", "reasoning_effort_by_model", "self_evolution_enabled", "web_password",
         "agent_permission_mode",
-        "skill_hub_url", "skill_hub_api_key",
     }
 
     # Switches the API exposes flat - one key, one control - while the config
@@ -68,7 +63,7 @@ class ConfigHandler:
 
             local_config = conf()
             use_agent = local_config.get("agent", True)
-            title = "CowAgent" if use_agent else "AI Assistant"
+            title = "Maia" if use_agent else "AI Assistant"
 
             api_bases = {}
             api_keys_masked = {}
@@ -81,16 +76,24 @@ class ConfigHandler:
                     raw = local_config.get(key_field, "")
                     api_keys_masked[key_field] = mask_key(raw) if raw else ""
 
+            from channel.web.api.models import configured_litellm_models
+
+            discovered, discovery_error = configured_litellm_models()
+            text_models = [
+                item["name"] for item in discovered
+                if "text" in (item.get("capabilities") or [])
+            ]
             providers = {}
             provider_model = local_config.get("model", "")
             for pid, p in PROVIDER_MODELS.items():
+                names = text_models if pid == "litellm" else list(p["models"])
                 reasoning_by_model = {
                     model: provider_reasoning_metadata(pid, model)
-                    for model in p["models"]
+                    for model in names
                 }
                 providers[pid] = {
                     "label": p["label"],
-                    "models": p["models"],
+                    "models": names,
                     "api_base_key": p["api_base_key"],
                     "api_base_default": p["api_base_default"],
                     "api_base_placeholder": p.get("api_base_placeholder", ""),
@@ -98,37 +101,6 @@ class ConfigHandler:
                     "reasoning": provider_reasoning_metadata(pid, provider_model),
                     "reasoning_by_model": reasoning_by_model,
                 }
-
-            # Expose user-defined custom providers as "custom:<id>" entries so
-            # the legacy config page can display and select them. Credentials
-            # are managed on the Models page, hence the null key/base fields.
-            # Mirrors the Models page: when expanded entries exist, the bare
-            # legacy "custom" entry is hidden — unless the flat single-provider
-            # custom config is still active or filled in.
-            try:
-                from models.custom_provider import get_custom_providers
-                custom_list = get_custom_providers()
-                keep_legacy_custom = legacy_custom_in_use(local_config)
-                if custom_list and not keep_legacy_custom:
-                    providers.pop("custom", None)
-                for cp in custom_list:
-                    cid = f"custom:{cp.get('id')}"
-                    cname = cp.get("name") or cp.get("id")
-                    providers[cid] = {
-                        "label": {"zh": cname, "en": cname},
-                        "models": [cp["model"]] if cp.get("model") else [],
-                        "api_base_key": None,
-                        "api_base_default": None,
-                        "api_base_placeholder": "",
-                        "api_key_field": None,
-                        "reasoning": provider_reasoning_metadata(cid, cp.get("model") or ""),
-                        "reasoning_by_model": (
-                            {cp["model"]: provider_reasoning_metadata(cid, cp["model"])}
-                            if cp.get("model") else {}
-                        ),
-                    }
-            except Exception as cp_err:
-                logger.warning(f"[ConfigHandler] failed to expand custom providers: {cp_err}")
 
             raw_pwd = str(local_config.get("web_password", "") or "")
             masked_pwd = ("*" * len(raw_pwd)) if raw_pwd else ""
@@ -138,8 +110,7 @@ class ConfigHandler:
                 "use_agent": use_agent,
                 "title": title,
                 "model": local_config.get("model", ""),
-                "bot_type": "openai" if local_config.get("bot_type") == "chatGPT" else local_config.get("bot_type", ""),
-                "use_linkai": bool(local_config.get("use_linkai", False)),
+                "bot_type": "litellm",
                 "channel_type": local_config.get("channel_type", ""),
                 # Manual cap on the input budget (compact once reached); 0
                 # disables the cap and follows the model window.
@@ -160,14 +131,15 @@ class ConfigHandler:
                 "api_keys": api_keys_masked,
                 "providers": providers,
                 "web_password_masked": masked_pwd,
-                "skill_hub_url": local_config.get("skill_hub_url", ""),
+                "skill_hub_url": "",
+                "discovery_error": discovery_error or "",
                 # Whether "show in folder" can open this machine's file manager.
                 "can_reveal_files": _can_reveal_in_file_manager(),
             }
             # The desktop app runs on the local trusted machine, so it can edit
             # the real password in place (cursor at the end, delete to clear).
             # Browser access only ever sees the masked value.
-            if os.environ.get("COW_DESKTOP") == "1":
+            if os.environ.get("MAIA_DESKTOP") == "1":
                 result["web_password"] = raw_pwd
             return json.dumps(result, ensure_ascii=False)
         except Exception as e:
@@ -200,7 +172,7 @@ class ConfigHandler:
                     continue
                 if key in ("agent_max_context_tokens", "agent_max_context_turns", "agent_max_steps"):
                     value = int(value)
-                if key in ("use_linkai", "enable_thinking", "self_evolution_enabled"):
+                if key in ("enable_thinking", "self_evolution_enabled"):
                     value = bool(value)
                 # Never persist an unknown mode: every later read would silently
                 # fall back and the UI would show a setting that does nothing.
@@ -245,13 +217,17 @@ class ConfigHandler:
             for key, value in applied.items():
                 local_config[key] = value
 
+            if any(key in applied for key in ("litellm_api_key", "litellm_api_base")):
+                from channel.web.api.models import invalidate_litellm_discovery
+                invalidate_litellm_discovery()
+
             logger.info(f"[WebChannel] Config updated: {list(applied.keys())}")
 
             # Apply a language change immediately so backend logs, agent
             # replies and CLI output switch without a restart.
-            if "cow_lang" in applied:
+            if "maia_lang" in applied:
                 try:
-                    i18n.resolve_language(applied["cow_lang"])
+                    i18n.resolve_language(applied["maia_lang"])
                     logger.info(f"[WebChannel] Language switched to: {i18n.get_language()}")
                 except Exception as lang_err:
                     logger.warning(f"[WebChannel] Failed to apply language: {lang_err}")
@@ -276,10 +252,8 @@ class ConfigHandler:
                             "or explicitly set web_host in config to prevent unauthorized access."
                         )
 
-            # Reset Bridge so that bot routing reflects the new config.
-            # Without this, Bridge keeps its cached bot instance (e.g. LinkAIBot)
-            # even after the user switches bot_type / use_linkai / model in UI.
-            bridge_routing_keys = {"bot_type", "use_linkai", "model"}
+            # Reset Bridge so a new model id is used on the next call.
+            bridge_routing_keys = {"bot_type", "model"}
             if any(k in applied for k in bridge_routing_keys):
                 try:
                     from bridge.bridge import Bridge
@@ -339,7 +313,7 @@ class ExternalApiHandler:
             local_config = conf()
             token = str(local_config.get("external_api_token", "") or "")
             if action == "regenerate" or (action == "enable" and not token):
-                token = "sk-cow-" + secrets.token_hex(24)
+                token = "sk-maia-" + secrets.token_hex(24)
             updates = {"external_api_token": token}
             if action != "regenerate":
                 updates["external_api_enabled"] = action == "enable"

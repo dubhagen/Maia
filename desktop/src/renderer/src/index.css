@@ -12,11 +12,11 @@
    ============================================================ */
 
 :root {
-  /* Brand accent (CowAgent green), used sparingly */
-  --accent: #4abe6e;
-  --accent-hover: #35a85b;
-  --accent-active: #228547;
-  --accent-soft: rgba(74, 190, 110, 0.12);
+  /* Brand accent, royal blue, used sparingly */
+  --accent: #6B8EF0;
+  --accent-hover: #4169E1;
+  --accent-active: #2F52C4;
+  --accent-soft: rgba(107, 142, 240, 0.12);
   --accent-contrast: #ffffff;
 
   /* User message bubble (defaults to solid accent; themes may override) */
@@ -1024,7 +1024,7 @@ body[data-wallpaper='on'] .art-day-label {
   border-color: #d9f2e1;
 }
 .dark .art-empty-tile { color: #475569; box-shadow: none; }
-.dark .art-empty-tile-2 { color: var(--accent); border-color: rgba(74, 190, 110, 0.25); background: #1c211d; }
+.dark .art-empty-tile-2 { color: var(--accent); border-color: rgba(107, 142, 240, 0.25); background: #161B2A; }
 
 .art-link-btn {
   font-size: 13px;

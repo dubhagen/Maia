@@ -17,7 +17,7 @@ _ALPHA, _BETA, _GAMMA = "_scanp_alpha", "_scanp_beta", "_scanp_gamma"
 _STAND_INS = (_ALPHA, _BETA, _GAMMA)
 _PACKAGE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "plugins")
 # The restored baseline must hold these, or later tests in the process lose them.
-_BUNDLED = ("BANWORDS", "COW_CLI", "DUNGEON", "FINISH", "GODCMD", "HELLO", "KEYWORD", "ROLE")
+_BUNDLED = ("BANWORDS", "MAIA_CLI", "DUNGEON", "FINISH", "GODCMD", "HELLO", "KEYWORD", "ROLE")
 
 _PLUGIN_SRC = """
     from plugins.plugin_manager import PluginManager

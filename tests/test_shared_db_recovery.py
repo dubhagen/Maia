@@ -330,21 +330,21 @@ class TestTrigramUpdateTrigger(unittest.TestCase):
         storage = MemoryStorage(self.db)
         if not storage.trigram_fts5_available:
             self.skipTest("trigram FTS5 unavailable in this SQLite build")
-        storage.save_chunk(self._chunk("人工智能教程"))
+        storage.save_chunk(self._chunk("na\u00efvecaf\u00e9orchid"))
         # Would raise "database disk image is malformed" with the old trigger.
-        storage.save_chunk(self._chunk("机器学习笔记"))
+        storage.save_chunk(self._chunk("na\u00efvepapyrusalmanac"))
         self.assertEqual(
-            [r.path for r in storage.search_keyword("机器学习")], ["a.md"]
+            [r.path for r in storage.search_keyword("papyrusalmanac")], ["a.md"]
         )
         # Old tokens must be gone from the index after the update.
-        self.assertEqual(storage.search_keyword("人工智能教程"), [])
+        self.assertEqual(storage.search_keyword("caf\u00e9orchid"), [])
         storage.close()
 
     def test_legacy_update_trigger_is_migrated_on_open(self):
         storage = MemoryStorage(self.db)
         if not storage.trigram_fts5_available:
             self.skipTest("trigram FTS5 unavailable in this SQLite build")
-        storage.save_chunk(self._chunk("深度学习入门"))
+        storage.save_chunk(self._chunk("na\u00efver\u00e9sum\u00e9orchid"))
         storage.close()
 
         # Downgrade to the legacy buggy trigger to simulate an old database.
@@ -366,11 +366,11 @@ class TestTrigramUpdateTrigger(unittest.TestCase):
         ).fetchone()[0]
         self.assertNotIn("UPDATE chunks_fts_trigram", trigger_sql)
         # Updates now work without corrupting the index.
-        storage.save_chunk(self._chunk("强化学习进阶"))
+        storage.save_chunk(self._chunk("na\u00efvepapyrusnotes"))
         self.assertEqual(
-            [r.path for r in storage.search_keyword("强化学习")], ["a.md"]
+            [r.path for r in storage.search_keyword("papyrusnotes")], ["a.md"]
         )
-        self.assertEqual(storage.search_keyword("深度学习入门"), [])
+        self.assertEqual(storage.search_keyword("r\u00e9sum\u00e9orchid"), [])
         storage.close()
 
 
@@ -379,7 +379,7 @@ class TestTrigramTokenizerUnavailable(unittest.TestCase):
     carries an index an older build cannot open. Its triggers fire on every
     insert, update and delete on `chunks`, so leaving them in place breaks the
     whole memory and knowledge index — every save comes back with "no such
-    tokenizer: trigram" — rather than only CJK search.
+    tokenizer: trigram" — rather than only substring search.
     """
 
     def setUp(self):
@@ -436,10 +436,10 @@ class TestTrigramTokenizerUnavailable(unittest.TestCase):
         storage.save_chunk(MemoryChunk(
             id="c1", user_id=None, scope="shared", source="knowledge",
             path="knowledge/notes/a.md", start_line=1, end_line=1,
-            text="知识库编辑", embedding=None, hash="h",
+            text="knowledgenote", embedding=None, hash="h",
         ))
         self.assertEqual(
-            [r.path for r in storage.search_keyword("知识库编辑")],
+            [r.path for r in storage.search_keyword("knowledgenote")],
             ["knowledge/notes/a.md"],
         )
         storage.delete_by_path("knowledge/notes/a.md")

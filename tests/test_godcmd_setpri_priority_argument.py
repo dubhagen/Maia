@@ -108,7 +108,7 @@ def test_non_numeric_priority_gets_a_reply_instead_of_raising(tmp_path, monkeypa
 
     assert reply is not None, "the command died before it could reply"
     assert reply.type is ReplyType.ERROR
-    assert "优先级" in reply.content
+    assert "priority" in reply.content.lower()
     assert "high" in reply.content
     # The unparsable value must not be handed to the manager as a number.
     assert calls == []
@@ -120,7 +120,9 @@ def test_numeric_priority_still_reaches_the_plugin_manager(tmp_path, monkeypatch
 
     assert calls == [("keyword", 7)]
     assert reply.type is ReplyType.INFO
-    assert "优先级已设置为7" in reply.content
+    assert "keyword" in reply.content
+    assert "7" in reply.content
+    assert "priority" in reply.content.lower()
 
 
 def test_unknown_plugin_with_a_numeric_priority_still_reports_it(tmp_path, monkeypatch):
@@ -129,4 +131,4 @@ def test_unknown_plugin_with_a_numeric_priority_still_reports_it(tmp_path, monke
 
     assert calls == [("nosuch", 3)]
     assert reply.type is ReplyType.ERROR
-    assert "插件不存在" in reply.content
+    assert reply.content == "Plugin does not exist"

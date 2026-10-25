@@ -32,9 +32,9 @@ class Finish(Plugin):
         if content.startswith(trigger_prefix):
             reply = Reply()
             reply.type = ReplyType.ERROR
-            reply.content = "未知插件命令\n查看插件命令列表请输入#help 插件名\n"
+            reply.content = "Unknown plugin command.\nRun #help <plugin name> to list plugin commands.\n"
             e_context["reply"] = reply
-            e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
+            e_context.action = EventAction.BREAK_PASS  
 
     def get_help_text(self, **kwargs):
         return ""

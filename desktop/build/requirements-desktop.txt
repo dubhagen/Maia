@@ -1,20 +1,14 @@
 # Desktop backend dependencies (slimmed down from the full requirements).
 #
-# Goal: keep the package light. The desktop client only needs the web channel
-# (which Electron talks to) plus the agent core; the remaining IM channels are
-# cheap (~27MB total) so we keep them.
-#
-# Feishu's `lark-oapi` (~122MB unpacked) is NOT listed here on purpose: the
-# desktop client downloads a trimmed ~1MB bundle the first time the user enables
-# the Feishu channel (channel/feishu/lark_install.py), keeping the base download
-# small. That bundle relies on `requests` and `pycryptodome` below rather than
-# shipping its own copies.
+# The desktop client talks to the web channel and the agent core. Model calls
+# go through the LiteLLM HTTP API, so vendor SDKs are not installed. Messaging
+# channel packages are not installed.
 
-# cryptography (pulled in by dashscope) stopped shipping macOS x86_64 wheels at
-# 49.0. A source build links the runner's Homebrew OpenSSL, and PyInstaller then
-# bundles it beside Python's older libssl.3.dylib under the same name, so the
-# extension fails to load on users' machines. Wheels link OpenSSL statically;
-# forcing them makes pip settle on the newest version that has one per arch.
+# cryptography stopped shipping macOS x86_64 wheels at 49.0. A source build
+# links the runner's Homebrew OpenSSL, and PyInstaller then bundles it beside
+# Python's older libssl.3.dylib under the same name, so the extension fails to
+# load on users' machines. Wheels link OpenSSL statically; forcing them makes
+# pip settle on the newest version that has one per arch.
 --only-binary=cryptography
 
 # ---- core ----
@@ -32,7 +26,6 @@ croniter>=2.0.0
 backports.zoneinfo; python_version < "3.9"
 tzdata; sys_platform == "win32"
 click>=8.0
-qrcode
 json-repair
 
 # ---- web framework (web channel) ----
@@ -41,16 +34,11 @@ json-repair
 web.py; python_version < "3.10"
 web.py>=0.76; python_version >= "3.10"
 
-# ---- AI model SDKs ----
-zai-sdk
-dashscope
-tenacity        # used by some dashscope submodules (retry logic)
-google-generativeai
+# ---- token counting ----
 tiktoken>=0.3.2
 
-# ---- voice (TTS/ASR) — kept per product decision ----
+# ---- voice audio container (the speech HTTP calls use LiteLLM) ----
 pydub>=0.25.1
-gTTS>=2.3.1
 
 # ---- document parsing (web_fetch / knowledge) ----
 pypdf
@@ -61,15 +49,5 @@ python-pptx
 # ---- browser tool ----
 # Only the pure-Python package + Node driver are bundled by PyInstaller (~10-15MB).
 # The Chromium binary is NOT bundled: the browser tool drives the user's system
-# Chrome/Edge, or downloads Chromium on demand into ~/.cow at first use.
+# Chrome/Edge, or downloads Chromium on demand into ~/.maia at first use.
 playwright==1.52.0
-
-# ---- IM channels (kept; lightweight). Feishu/lark-oapi is fetched on demand
-#      by the desktop client when the user enables the channel (see header note). ----
-wechatpy
-pycryptodome
-dingtalk_stream
-websocket-client>=1.4.0
-python-telegram-bot
-slack_bolt
-discord.py

@@ -21,9 +21,7 @@ from channel.web.api.auth import (  # noqa: F401
     AuthCheckHandler, AuthLoginHandler, AuthLogoutHandler,
     McpOAuthCallbackHandler,
 )
-from channel.web.api.channels import (  # noqa: F401
-    ChannelsHandler, FeishuRegisterHandler, WeixinQrHandler,
-)
+from channel.web.api.channels import ChannelsHandler  # noqa: F401
 from channel.web.api.chat import (  # noqa: F401
     CancelHandler, MessageHandler, PollHandler, StreamHandler,
 )
@@ -126,8 +124,6 @@ URLS = (
     '/api/external_api', 'ExternalApiHandler',
     '/api/models', 'ModelsHandler',
     '/api/channels', 'ChannelsHandler',
-    '/api/weixin/qrlogin', 'WeixinQrHandler',
-    '/api/feishu/register', 'FeishuRegisterHandler',
     '/api/tools', 'ToolsHandler',
     '/api/mcp/servers', 'McpServersHandler',
     '/api/mcp/servers/test', 'McpServerTestHandler',

@@ -13,15 +13,10 @@ from common.log import logger
 from common.utils import expand_path
 
 
-# API Key 知识库：常见的环境变量及其描述
+
 API_KEY_REGISTRY = {
-    # AI 模型服务
-    "OPENAI_API_KEY": "OpenAI API 密钥 (用于GPT模型、Embedding模型)",
-    "GEMINI_API_KEY": "Google Gemini API 密钥",
-    "CLAUDE_API_KEY": "Claude API 密钥 (用于Claude模型)",
-    "LINKAI_API_KEY": "LinkAI智能体平台 API 密钥，支持多种模型切换",
-    # 搜索服务
-    "BOCHA_API_KEY": "博查 AI 搜索 API 密钥 ",
+    "LITELLM_API_KEY": "API key for the LiteLLM endpoint",
+    "LITELLM_API_BASE": "Base URL for the LiteLLM endpoint",
 }
 
 class EnvConfig(BaseTool):
@@ -30,7 +25,7 @@ class EnvConfig(BaseTool):
     name: str = "env_config"
     description: str = (
         "Manage API keys and skill configurations securely. "
-        "Use this tool when user wants to configure API keys (like BOCHA_API_KEY, OPENAI_API_KEY), "
+        "Use this tool when the user wants to configure API keys (like LITELLM_API_KEY), "
         "view configured keys, or manage skill settings. "
         "Actions: 'set' (add/update key), 'get' (view specific key), 'list' (show all configured keys), 'delete' (remove key). "
         "Values are automatically masked for security. Changes take effect immediately via hot reload."
@@ -48,12 +43,8 @@ class EnvConfig(BaseTool):
                 "type": "string",
                 "description": (
                     "Environment variable key name. Common keys:\n"
-                    "- OPENAI_API_KEY: OpenAI API (GPT models)\n"
-                    "- OPENAI_API_BASE: OpenAI API base URL\n"
-                    "- CLAUDE_API_KEY: Anthropic Claude API\n"
-                    "- GEMINI_API_KEY: Google Gemini API\n"
-                    "- LINKAI_API_KEY: LinkAI platform\n"
-                    "- BOCHA_API_KEY: Bocha AI search (博查搜索)\n"
+                    "- LITELLM_API_KEY: API key for the LiteLLM endpoint\n"
+                    "- LITELLM_API_BASE: Base URL for the LiteLLM endpoint\n"
                     "Use exact key names (case-sensitive, all uppercase with underscores)"
                 )
             },
@@ -67,8 +58,8 @@ class EnvConfig(BaseTool):
     
     def __init__(self, config: dict = None):
         self.config = config or {}
-        # Store env config in ~/.cow directory (outside workspace for security)
-        self.env_dir = expand_path("~/.cow")
+        # Store env config in ~/.maia directory (outside workspace for security)
+        self.env_dir = expand_path("~/.maia")
         self.env_path = os.path.join(self.env_dir, '.env')
         self.agent_bridge = self.config.get("agent_bridge")  # Reference to AgentBridge for hot reload
         # Don't create .env file in __init__ to avoid issues during tool discovery
@@ -76,7 +67,7 @@ class EnvConfig(BaseTool):
     
     def _ensure_env_file(self):
         """Ensure the .env file exists"""
-        # Create ~/.cow directory if it doesn't exist
+        # Create ~/.maia directory if it doesn't exist
         os.makedirs(self.env_dir, exist_ok=True)
         
         if not os.path.exists(self.env_path):
@@ -113,7 +104,7 @@ class EnvConfig(BaseTool):
     def _restrict_to_owner(self) -> None:
         """Keep the credentials file readable by its owner only.
 
-        ~/.cow also holds mcp_oauth.json, which is written 0o600 for the same
+        ~/.maia also holds mcp_oauth.json, which is written 0o600 for the same
         reason; the mode is best-effort because Windows has no equivalent.
         """
         try:
@@ -224,7 +215,7 @@ class EnvConfig(BaseTool):
                 value = env_vars.get(key) or os.getenv(key)
                 
                 # Get description from registry
-                description = API_KEY_REGISTRY.get(key, "未知用途的环境变量")
+                description = API_KEY_REGISTRY.get(key, "Environment variable")
                 
                 if value is not None:
                     logger.info(f"[EnvConfig] Got {key}={self._mask_value(value)}")
@@ -251,7 +242,7 @@ class EnvConfig(BaseTool):
                 for key, value in env_vars.items():
                     variables_with_info[key] = {
                         "value": self._mask_value(value),
-                        "description": API_KEY_REGISTRY.get(key, "未知用途的环境变量")
+                        "description": API_KEY_REGISTRY.get(key, "Environment variable")
                     }
                 
                 logger.info(f"[EnvConfig] Listed {len(env_vars)} environment variables")
@@ -260,7 +251,7 @@ class EnvConfig(BaseTool):
                     return ToolResult.success({
                         "message": "No environment variables configured",
                         "variables": {},
-                        "note": "常用的 API 密钥可以通过 env_config(action='set', key='KEY_NAME', value='your-key') 来配置"
+                        "note": "Set a key with env_config(action='set', key='KEY_NAME', value='your-key')."
                     })
                 
                 return ToolResult.success({

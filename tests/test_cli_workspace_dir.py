@@ -11,13 +11,13 @@ from cli import utils as cli_utils
 
 @pytest.fixture
 def install(tmp_path, monkeypatch):
-    root = tmp_path / "cow"
+    root = tmp_path / "maia"
     root.mkdir()
     data = tmp_path / "data"
     data.mkdir()
     config = data / "config.json"
     config.write_text(json.dumps({"agent_workspace": str(root)}), encoding="utf-8")
-    monkeypatch.setenv("COW_DATA_DIR", str(data))
+    monkeypatch.setenv("MAIA_DATA_DIR", str(data))
     set_agent_registry(None)
     try:
         yield AgentAdminService(str(config)), root, config

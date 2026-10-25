@@ -1050,8 +1050,6 @@ const TaskTypeField: React.FC<{
   </Field>
 )
 
-// The content/description textarea. Its label follows the task type: "固定内容"
-// for a fixed message, "任务描述" for an AI task — matching the web console.
 const TaskContentField: React.FC<{
   form: FormState
   set: <K extends keyof FormState>(k: K, v: FormState[K]) => void

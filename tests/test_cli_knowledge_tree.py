@@ -63,7 +63,7 @@ def invoke(tmp_path, documents, cycle=False, root_link=False, junction_boundary=
         (tmp_path / 'non-symbolic-link-boundary').touch()
     env = {
         'PATH': os.environ.get('PATH', ''),
-        'HOME': str(home), 'USERPROFILE': str(home), 'COW_DATA_DIR': str(data),
+        'HOME': str(home), 'USERPROFILE': str(home), 'MAIA_DATA_DIR': str(data),
         'PYTHONPATH': os.pathsep.join([str(REPO), *sys.path]),
         'PYTHONDONTWRITEBYTECODE': '1',
     }

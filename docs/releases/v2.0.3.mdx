@@ -1,6 +1,6 @@
 ---
 title: v2.0.3
-description: "CowAgent 2.0.3: new WeCom smart bot and QQ channels, file input and processing in the web console, Coding Plan support, plus a memory system upgrade, refactored tools and better Docker deployment."
+description: "Maia 2.0.3: new WeCom smart bot and QQ channels, file input and processing in the web console, Coding Plan support, plus a memory system upgrade, refactored tools and better Docker deployment."
 ---
 
 ## 🔌 New Channels
@@ -9,7 +9,7 @@ description: "CowAgent 2.0.3: new WeCom smart bot and QQ channels, file input an
 
 Added the WeCom Smart Bot (`wecom_bot`) channel with streaming card output, support for receiving and replying to text and image messages, and full configuration through the Web Console.
 
-Documentation: [WeCom Smart Bot](https://docs.cowagent.ai/en/channels/wecom-bot).
+Documentation: WeCom Smart Bot.
 
 Related commits: [d4480b6](https://github.com/zhayujie/CowAgent/commit/d4480b6), [a42f31f](https://github.com/zhayujie/CowAgent/commit/a42f31f), [4ecd4df](https://github.com/zhayujie/CowAgent/commit/4ecd4df), [8b45d6c](https://github.com/zhayujie/CowAgent/commit/8b45d6c)
 
@@ -17,7 +17,7 @@ Related commits: [d4480b6](https://github.com/zhayujie/CowAgent/commit/d4480b6),
 
 Added the QQ official bot (`qq`) channel with support for text and image messages in both private chats and group chats.
 
-Documentation: [QQ Bot](https://docs.cowagent.ai/en/channels/qq).
+Documentation: QQ Bot.
 
 Related commits: [005a0e1](https://github.com/zhayujie/CowAgent/commit/005a0e1), [a4d54f5](https://github.com/zhayujie/CowAgent/commit/a4d54f5)
 
@@ -36,7 +36,7 @@ Related commits: [30c6d9b](https://github.com/zhayujie/CowAgent/commit/30c6d9b)
 
 Added integration with provider Coding Plan (monthly programming subscription) tiers via the unified OpenAI-compatible path. Supported providers include Aliyun, MiniMax, GLM, Kimi, and Volcengine.
 
-See [Coding Plan docs](https://docs.cowagent.ai/en/models/coding-plan) for detailed configuration.
+See Coding Plan docs for detailed configuration.
 
 ## 🧠 Memory System Upgrade
 
@@ -60,7 +60,7 @@ Related commits: [022c13f](https://github.com/zhayujie/CowAgent/commit/022c13f),
 - **Config Template Alignment**: `docker-compose.yml` env vars aligned with `config-template.json`, covering full model API key and Agent settings
 - **Web Console Port Mapping**: Added `9899` port mapping so the Web Console is reachable in browser after Docker deployment
 - **Hot Config Reload**: Bot API key and API base are now read at request time — changes from the Web Console take effect without restart
-- **Workspace Persistence**: Added a `./cow` volume mount so agent workspace data (memories, persona, skills, etc.) persists across container rebuilds and upgrades
+- **Workspace Persistence**: Added a `./maia` volume mount so agent workspace data (memories, persona, skills, etc.) persists across container rebuilds and upgrades
 
 ## ⚡ Performance Improvements
 
@@ -86,6 +86,6 @@ Related commits: [022c13f](https://github.com/zhayujie/CowAgent/commit/022c13f),
 
 ## 📦 Upgrade
 
-Run `./run.sh update` for a one-click upgrade, or manually pull the latest code and restart. See [Upgrade Guide](https://docs.cowagent.ai/en/guide/upgrade) for details.
+Run `./run.sh update` for a one-click upgrade, or manually pull the latest code and restart. See [Upgrade Guide](../guide/upgrade.mdx) for details.
 
 **Release Date**: 2026.03.18 | [Full Changelog](https://github.com/zhayujie/CowAgent/compare/2.0.2...2.0.3)

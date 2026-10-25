@@ -22,7 +22,7 @@ from common.runtime_identity import identity_scope
 # Nesting depth of the currently running work. 0 is the main Agent. Lives in a
 # ContextVar rather than on the Agent because sub agents run on worker threads,
 # and contextvars.copy_context() carries it across the handoff.
-_depth: contextvars.ContextVar[int] = contextvars.ContextVar("cow_subagent_depth", default=0)
+_depth: contextvars.ContextVar[int] = contextvars.ContextVar("maia_subagent_depth", default=0)
 
 
 def current_depth() -> int:

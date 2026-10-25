@@ -1,6 +1,7 @@
-"""
-文件缓存管理器
-用于缓存单独发送的文件消息（图片、视频、文档等），在用户提问时自动附加
+"""Cache files sent on their own until the user asks a question.
+
+Images, videos, documents, and similar attachments are kept per session and
+attached automatically to the next question.
 """
 import logging
 import threading
@@ -11,25 +12,24 @@ logger = logging.getLogger(__name__)
 
 
 class FileCache:
-    """文件缓存管理器，按 session_id 缓存文件，TTL=5分钟"""
+    """Per-session file cache. Default TTL is 5 minutes."""
 
     def __init__(self, ttl=300):
         """
         Args:
-            ttl: 缓存过期时间（秒），默认5分钟
+            ttl: cache lifetime in seconds. Default is 5 minutes.
         """
         self.cache = ExpiredDict(ttl)
         self.ttl = ttl
         self._lock = threading.Lock()
 
     def add(self, session_id: str, file_path: str, file_type: str = "image"):
-        """
-        添加文件到缓存
+        """Add a file to the cache.
 
         Args:
-            session_id: 会话ID
-            file_path: 文件本地路径
-            file_type: 文件类型（image, video, file 等）
+            session_id: session id
+            file_path: local file path
+            file_type: file type (image, video, file, and so on)
         """
         # Every add rewrites the entry, so the TTL runs from the most recent
         # file: a burst of files is one batch and must not lose its head.
@@ -44,24 +44,23 @@ class FileCache:
             logger.info(f"[FileCache] Added {file_type} to cache for session {session_id}: {file_path}")
 
     def get(self, session_id: str) -> list:
-        """
-        获取缓存的文件列表
+        """Return cached files for a session.
 
         Args:
-            session_id: 会话ID
+            session_id: session id
 
         Returns:
-            文件信息列表 [{'path': '...', 'type': 'image'}, ...]，如果没有或已过期返回空列表
+            A list of file info dicts, or an empty list when nothing is cached
+            or the entry has expired.
         """
         with self._lock:
             return self.cache.get(session_id) or []
 
     def clear(self, session_id: str):
-        """
-        清除指定会话的缓存
+        """Clear one session's cache.
 
         Args:
-            session_id: 会话ID
+            session_id: session id
         """
         with self._lock:
             removed = self.cache.pop(session_id, None)
@@ -69,10 +68,9 @@ class FileCache:
             logger.info(f"[FileCache] Cleared cache for session {session_id}")
 
 
-# 全局单例
 _file_cache = FileCache()
 
 
 def get_file_cache() -> FileCache:
-    """获取全局文件缓存实例"""
+    """Return the process-wide file cache."""
     return _file_cache

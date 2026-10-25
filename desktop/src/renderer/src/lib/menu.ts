@@ -8,7 +8,6 @@ import {
   BookOpen,
   Brain,
   Zap,
-  Radio,
   Clock,
   Settings,
   ScrollText,
@@ -53,7 +52,6 @@ export const MENU_BUILTINS: Record<string, { path: string; labelKey: string; ico
   knowledge: { path: '/knowledge', labelKey: 'menu_knowledge', icon: BookOpen },
   memory: { path: '/memory', labelKey: 'menu_memory', icon: Brain },
   skills: { path: '/skills', labelKey: 'menu_skills', icon: Zap },
-  channels: { path: '/channels', labelKey: 'menu_channels', icon: Radio },
   tasks: { path: '/tasks', labelKey: 'menu_tasks', icon: Clock },
   config: { path: '/settings', labelKey: 'menu_settings', icon: Settings },
   logs: { path: '/logs', labelKey: 'menu_logs', icon: ScrollText },
@@ -64,7 +62,7 @@ export const MENU_BUILTINS: Record<string, { path: string; labelKey: string; ico
 // console has, footer ones included.
 export const MENU_DEFAULT: { id: string; views: string[] }[] = [
   { id: 'chat', views: ['chat', 'artifacts'] },
-  { id: 'manage', views: ['agents', 'knowledge', 'memory', 'skills', 'channels', 'tasks', 'config'] },
+  { id: 'manage', views: ['agents', 'knowledge', 'memory', 'skills', 'tasks', 'config'] },
   { id: 'monitor', views: ['logs'] },
 ]
 

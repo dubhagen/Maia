@@ -6,7 +6,6 @@ import {
   ChevronRight,
   FileUp,
   Loader2,
-  PawPrint,
   ShieldAlert,
   SquarePen,
   Store,
@@ -51,12 +50,11 @@ const SOURCES: Record<
   { label: string; icon: IconComponent; valueKey: string; hintKey: string; placeholder: string; link?: string }
 > = {
   hub: {
-    label: 'Cow Skill Hub',
+    label: 'Maia Skill Hub',
     icon: Box,
     valueKey: 'skill_value_hub',
     hintKey: 'skill_hint_hub',
     placeholder: 'skill-name',
-    link: 'https://skills.cowagent.ai/',
   },
   github: {
     label: 'GitHub',
@@ -65,17 +63,9 @@ const SOURCES: Record<
     hintKey: 'skill_hint_github',
     placeholder: 'https://github.com/owner/repo/tree/main/skills/my-skill',
   },
-  clawhub: {
-    label: 'ClawHub',
-    icon: PawPrint,
-    valueKey: 'skill_value_clawhub',
-    hintKey: 'skill_hint_clawhub',
-    placeholder: 'skill-name',
-    link: 'https://clawhub.ai/skills',
-  },
 }
 
-const SOURCE_LABELS: Record<string, string> = { cowhub: 'Cow Skill Hub', github: 'GitHub', clawhub: 'ClawHub', url: 'URL' }
+const SOURCE_LABELS: Record<string, string> = { maiahub: 'Maia Skill Hub', github: 'GitHub', url: 'URL' }
 
 function sourceLabel(source: string): string {
   if (!source) return ''
@@ -143,7 +133,7 @@ interface SkillAddModalProps {
 
 const SkillAddModal: React.FC<SkillAddModalProps> = ({ open, onClose, installed: installedSkills, onInstalled, onCreated }) => {
   const [tab, setTab] = useState<Tab>(initialTab)
-  const [source, setSource] = useState<SkillMarketSource>('hub')
+  const [source, setSource] = useState<SkillMarketSource>('github')
   const [value, setValue] = useState('')
   const [step, setStep] = useState<Step>('input')
   const [busy, setBusy] = useState(false)
@@ -161,7 +151,7 @@ const SkillAddModal: React.FC<SkillAddModalProps> = ({ open, onClose, installed:
   useEffect(() => {
     if (!open) return
     setTab(initialTab)
-    setSource('hub')
+    setSource('github')
     setValue('')
     setStep('input')
     setBusy(false)
@@ -370,7 +360,7 @@ const SkillAddModal: React.FC<SkillAddModalProps> = ({ open, onClose, installed:
             <>
               <Field label={t('skill_source')}>
                 <div className="grid grid-cols-3 gap-2">
-                  {(Object.keys(SOURCES) as SkillMarketSource[]).map((key) => {
+                  {(['github'] as SkillMarketSource[]).map((key) => {
                     const { label, icon: Icon } = SOURCES[key]
                     const active = key === source
                     return (

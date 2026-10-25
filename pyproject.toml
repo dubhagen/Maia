@@ -3,9 +3,9 @@ requires = ["setuptools>=45.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cowagent"
-version = "1.0.0"
-description = "CowAgent - AI Agent on WeChat and more"
+name = "maia"
+version = "0.99.0"
+description = "Maia - local agent over a LiteLLM endpoint"
 requires-python = ">=3.7"
 dependencies = [
     "click>=8.0",
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-cow = "cli.cli:main"
+maia = "cli.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["cli*"]
@@ -51,4 +51,4 @@ ignore = [
 "voice/xunfei/xunfei_voice.py" = ["F401"]
 # __init__.py re-exports the package's public API on purpose.
 "agent/tools/vision/__init__.py" = ["F401"]
-"plugins/cow_cli/__init__.py" = ["F401"]
+"plugins/maia_cli/__init__.py" = ["F401"]

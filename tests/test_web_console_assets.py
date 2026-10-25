@@ -154,7 +154,7 @@ def test_the_desktop_bundle_ships_everything_the_page_is_assembled_from():
     the spec is not a missing file at build time -- it is a 500 from the
     console inside the shipped app, where nobody runs the test suite."""
     spec_path = os.path.join(WEB, "..", "..", "desktop", "build",
-                             "cowagent-backend.spec")
+                             "maia-backend.spec")
     with open(spec_path, encoding="utf-8") as f:
         spec = f.read()
 

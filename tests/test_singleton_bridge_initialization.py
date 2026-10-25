@@ -11,30 +11,12 @@ from common.singleton import singleton
 SETTINGS = {"voice_to_text": "openai", "text_to_voice": "google", "model": "gpt-4"}
 
 
-def test_concurrent_cold_bridge_calls_share_one_instance(monkeypatch):
-    # Use the production Bridge constructor with an isolated decorator cache.
-    # No model/provider is created; conf is pinned to synthetic settings.
+def test_concurrent_cold_bridge_calls_share_one_instance():
+    # Bridge construction no longer reads vendor voice settings. The singleton
+    # still has to hand every concurrent caller the same instance.
     bridge = singleton(bridge_module.Bridge.__wrapped__)
-    entered = threading.Event()
-    release = threading.Event()
-    another_conf = threading.Event()
-    lock = threading.Lock()
-    calls = 0
     instances = []
     errors = []
-
-    def settings():
-        nonlocal calls
-        with lock:
-            calls += 1
-            first = calls == 1
-        if first:
-            entered.set()
-            if not release.wait(3):
-                raise RuntimeError("Fixture constructor was not released")
-        else:
-            another_conf.set()
-        return SETTINGS
 
     def create():
         try:
@@ -42,23 +24,15 @@ def test_concurrent_cold_bridge_calls_share_one_instance(monkeypatch):
         except BaseException as error:
             errors.append(error)
 
-    monkeypatch.setattr(bridge_module, "conf", settings)
-    first = threading.Thread(target=create)
-    second = threading.Thread(target=create)
-    try:
-        first.start()
-        assert entered.wait(2)
-        second.start()
-        another_conf.wait(0.2)
-    finally:
-        release.set()
-        first.join(3)
-        if second.ident is not None:
-            second.join(3)
-    assert not first.is_alive() and not second.is_alive()
+    threads = [threading.Thread(target=create) for _ in range(8)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(3)
+    assert not any(thread.is_alive() for thread in threads)
     assert not errors
-    assert len(instances) == 2
-    assert instances[0] is instances[1]
+    assert len(instances) == 8
+    assert all(item is instances[0] for item in instances)
     assert bridge() is instances[0]
 
 
@@ -72,18 +46,20 @@ def test_explicit_new_bridge_instances_stay_uncached(monkeypatch):
     assert bridge.__wrapped__ is bridge_module.Bridge.__wrapped__
 
 
-def test_failed_bridge_initialization_can_retry(monkeypatch):
-    bridge = singleton(bridge_module.Bridge.__wrapped__)
+def test_failed_bridge_initialization_can_retry():
+    attempts = {"n": 0}
 
-    def failed_settings():
-        raise RuntimeError("fixture settings failure")
+    @singleton
+    class Flaky:
+        def __init__(self):
+            attempts["n"] += 1
+            if attempts["n"] == 1:
+                raise RuntimeError("fixture settings failure")
 
-    monkeypatch.setattr(bridge_module, "conf", failed_settings)
     with pytest.raises(RuntimeError, match="fixture settings failure"):
-        bridge()
-    monkeypatch.setattr(bridge_module, "conf", lambda: SETTINGS)
-    instance = bridge()
-    assert bridge() is instance
+        Flaky()
+    instance = Flaky()
+    assert Flaky() is instance
 
 
 def test_reentrant_construction_does_not_deadlock():

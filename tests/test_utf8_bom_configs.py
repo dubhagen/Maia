@@ -67,12 +67,12 @@ def load_plugin(tmp_path, monkeypatch):
 def test_banwords_config_and_wordlist(tmp_path, load_plugin):
     banwords = load_plugin("banwords", "BANWORDS")
     _write(tmp_path / "config.json", {"action": "replace"})
-    _write(tmp_path / "banwords.txt", "百度\n腾讯\n")
+    _write(tmp_path / "banwords.txt", "caf\u00e9\nna\u00efve\n")
 
     plugin = banwords()
 
     assert plugin.action == "replace"
-    assert plugin.searchr.FindFirst("帮我查一下 百度 的股价")["Keyword"] == "百度"
+    assert plugin.searchr.FindFirst("look up caf\u00e9 prices")["Keyword"] == "caf\u00e9"
 
 
 def test_keyword_config(tmp_path, load_plugin):

@@ -86,7 +86,7 @@
     transition: border-color .15s, box-shadow .15s;
 }
 .art-search:hover { border-color: #cbd5e1; }
-.art-search:focus-within { border-color: #4ABE6E; box-shadow: 0 0 0 3px rgba(74, 190, 110, 0.12); }
+.art-search:focus-within { border-color: #6B8EF0; box-shadow: 0 0 0 3px rgba(107, 142, 240, 0.12); }
 .art-search i { font-size: 11px; color: #94a3b8; }
 .art-search input {
     flex: 1;
@@ -100,7 +100,7 @@
 .art-search input::placeholder { color: #94a3b8; }
 .dark .art-search { background: #1A1A1A; border-color: rgba(255, 255, 255, 0.1); }
 .dark .art-search:hover { border-color: rgba(255, 255, 255, 0.18); }
-.dark .art-search:focus-within { border-color: #4ABE6E; }
+.dark .art-search:focus-within { border-color: #6B8EF0; }
 .dark .art-search input { color: #e2e8f0; }
 .dark .art-search input::placeholder { color: #64748b; }
 
@@ -167,8 +167,8 @@
 .art-card:focus-visible .art-thumb,
 .art-card.is-selected .art-thumb,
 .art-card.is-selected:hover .art-thumb {
-    border-color: #4ABE6E;
-    box-shadow: 0 0 0 1px #4ABE6E, 0 0 0 5px rgba(74, 190, 110, 0.16);
+    border-color: #6B8EF0;
+    box-shadow: 0 0 0 1px #6B8EF0, 0 0 0 5px rgba(107, 142, 240, 0.16);
 }
 .art-card.is-selected .art-card-name { color: #1e293b; }
 .dark .art-card.is-selected .art-card-name { color: #fff; }
@@ -326,11 +326,11 @@
 .art-tool-pin.is-active,
 .art-tool-pin.is-active:hover,
 .dark .art-tool-pin.is-active,
-.dark .art-tool-pin.is-active:hover { color: #35A85B; }
+.dark .art-tool-pin.is-active:hover { color: #4169E1; }
 .art-tool-pin.is-active i { transform: none; }
 
 .art-pinned .art-day-primary { display: inline-flex; align-items: center; gap: 7px; }
-.art-pinned-glyph { font-size: 10.5px; color: #4ABE6E; }
+.art-pinned-glyph { font-size: 10.5px; color: #6B8EF0; }
 .art-pinned + .art-day { margin-top: 16px; }
 
 .art-card-name {
@@ -436,11 +436,11 @@
     left: 54px;
     top: 0;
     z-index: 1;
-    color: #4ABE6E;
+    color: #6B8EF0;
     border-color: #d9f2e1;
 }
 .dark .art-empty-tile { background: #1A1A1A; border-color: rgba(255, 255, 255, 0.08); color: #475569; box-shadow: none; }
-.dark .art-empty-tile-2 { color: #4ABE6E; border-color: rgba(74, 190, 110, 0.25); background: #1c211d; }
+.dark .art-empty-tile-2 { color: #6B8EF0; border-color: rgba(107, 142, 240, 0.25); background: #161B2A; }
 .art-empty-title { font-size: 15px; font-weight: 600; color: #1e293b; }
 .art-empty-desc {
     max-width: 400px;
@@ -463,11 +463,11 @@
     font-size: 13px;
     font-weight: 500;
     color: #fff;
-    background: #4ABE6E;
+    background: #6B8EF0;
     cursor: pointer;
     transition: background-color .15s;
 }
-.art-empty-btn:hover { background: #35A85B; }
+.art-empty-btn:hover { background: #4169E1; }
 .art-empty-btn i { font-size: 12px; }
 
 .art-state {
@@ -484,11 +484,11 @@
 .art-link-btn {
     font-size: 13px;
     font-weight: 500;
-    color: #35A85B;
+    color: #4169E1;
     cursor: pointer;
 }
 .art-link-btn:hover { text-decoration: underline; text-underline-offset: 3px; }
-.dark .art-link-btn { color: #4ABE6E; }
+.dark .art-link-btn { color: #6B8EF0; }
 
 /* ---------------------------------------------------------------------
    Preview pane
@@ -571,7 +571,7 @@
     width: calc(100% + 6px);
     margin: 0 0 0 -6px;
     padding: 1px 6px;
-    border: 1px solid #4ABE6E;
+    border: 1px solid #6B8EF0;
     border-radius: 6px;
     outline: none;
     background: #fff;
@@ -588,9 +588,9 @@
 .art-jump-btn.is-disabled:hover,
 .dark .art-jump-btn.is-disabled:hover { opacity: .38; background: transparent; cursor: default; }
 /* The one action that changes the index for the better gets the accent. */
-.art-add-btn i { color: #4ABE6E; }
+.art-add-btn i { color: #6B8EF0; }
 .art-add-btn:hover,
-.dark .art-add-btn:hover { background: rgba(74, 190, 110, 0.12); }
+.dark .art-add-btn:hover { background: rgba(107, 142, 240, 0.12); }
 
 .art-preview-body { background: #fafafa; }
 .dark .art-preview-body { background: #141414; }
@@ -633,9 +633,9 @@
     opacity: .7;
 }
 .art-meta-link { cursor: pointer; color: #64748b; transition: color .15s; }
-.art-meta-link:hover { color: #35A85B; }
+.art-meta-link:hover { color: #4169E1; }
 .dark .art-meta-link { color: #94a3b8; }
-.dark .art-meta-link:hover { color: #4ABE6E; }
+.dark .art-meta-link:hover { color: #6B8EF0; }
 
 .art-toast {
     position: absolute;
@@ -659,9 +659,9 @@
 
 /* Header entry: lit while its view is open */
 .header-view-btn.is-active { background: #f1f5f9; }
-.header-view-btn.is-active i { color: #35A85B !important; }
+.header-view-btn.is-active i { color: #4169E1 !important; }
 .dark .header-view-btn.is-active { background: rgba(255, 255, 255, 0.1); }
-.dark .header-view-btn.is-active i { color: #4ABE6E !important; }
+.dark .header-view-btn.is-active i { color: #6B8EF0 !important; }
 
 /* "All agents" has no face; indent it so its label lines up with the rows below */
 #art-scope-select .cfg-dropdown-item:first-child { padding-left: 38px; }

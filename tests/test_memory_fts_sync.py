@@ -28,7 +28,7 @@ from agent.memory.conversation_store import ConversationStore
 workspace = Path(sys.argv[1]).resolve()
 language, action = sys.argv[2:4]
 legacy = json.loads(sys.argv[4])
-word, replacement = ('quasarorchid', 'papyrusalmanac') if language == 'unicode' else ('紫羅蘭星辰', '青木翠谷')
+word, replacement = ('quasarorchid', 'papyrusalmanac') if language == 'unicode' else ('caf\u00e9orchid', 'na\u00efvealmanac')
 config = MemoryConfig(workspace_root=str(workspace))
 manager = None
 
@@ -152,7 +152,7 @@ def test_public_mutations_and_legacy_upgrade_preserve_fts(tmp_path, language, ac
     (data / 'config.json').write_text('{}', encoding='utf-8')
     env = {
         'PATH': os.environ.get('PATH', ''),
-        'HOME': str(home), 'USERPROFILE': str(home), 'COW_DATA_DIR': str(data),
+        'HOME': str(home), 'USERPROFILE': str(home), 'MAIA_DATA_DIR': str(data),
         'PYTHONPATH': os.pathsep.join([str(REPO), *sys.path]),
         'PYTHONNOUSERSITE': '1', 'PYTHONDONTWRITEBYTECODE': '1',
     }

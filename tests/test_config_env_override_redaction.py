@@ -13,7 +13,7 @@ import config as config_module
 
 
 def _override_log_lines(monkeypatch, tmp_path, env_name, value):
-    monkeypatch.setenv("COW_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("MAIA_DATA_DIR", str(tmp_path))
     monkeypatch.setenv(env_name, value)
     # load_config rebinds the module-level singleton; restore the original after.
     monkeypatch.setattr(config_module, "config", config_module.config)
@@ -25,7 +25,7 @@ def _override_log_lines(monkeypatch, tmp_path, env_name, value):
 
 
 @pytest.mark.parametrize("env_name,value,visible", [
-    ("DINGTALK_CLIENT_SECRET", "sentinel-client-secret-9f2b41aa", False),
+    ("LITELLM_API_KEY", "sentinel-client-secret-9f2b41aa", False),
     ("MODEL", "sentinel-model-7731", True),
 ])
 def test_override_log_masks_secrets_only(monkeypatch, tmp_path, env_name, value, visible):

@@ -25,7 +25,7 @@ import threading
 
 import pytest
 
-ORIGINAL = {"agent_workspace": "/srv/cow", "web_password": "hunter2"}
+ORIGINAL = {"agent_workspace": "/srv/maia", "web_password": "hunter2"}
 
 
 def _an_existing_config(tmp_path):
@@ -39,7 +39,7 @@ def _an_existing_config(tmp_path):
 def _a_disk_that_fills_up_mid_write(obj, fp, **kwargs):
     """Stand-in for ``json.dump`` that gets part of the document out and only
     then reports ENOSPC, the way a real full disk behaves."""
-    fp.write('{\n    "agent_workspace": "/srv/cow",\n    "web_password": "hun')
+    fp.write('{\n    "agent_workspace": "/srv/maia",\n    "web_password": "hun')
     fp.flush()
     raise OSError(errno.ENOSPC, "No space left on device")
 
@@ -185,21 +185,6 @@ def test_the_settings_page_still_saves_when_nothing_goes_wrong(tmp_path, monkeyp
 
     assert response["status"] == "success"
     assert json.loads(config_path.read_text(encoding="utf-8"))["reasoning_effort"] == "high"
-
-
-def test_a_channel_save_keeps_the_previous_file_when_a_save_fails(tmp_path, monkeypatch):
-    channels_api = importlib.import_module("channel.web.api.channels")
-    config_path, original = _an_existing_config(tmp_path)
-
-    monkeypatch.setattr(channels_api, "conf", lambda: dict(ORIGINAL))
-    monkeypatch.setattr(channels_api, "get_data_root", lambda: str(tmp_path))
-    monkeypatch.setattr(channels_api, "_read_config_file_for_write", lambda: dict(ORIGINAL))
-    monkeypatch.setattr(json, "dump", _a_disk_that_fills_up_mid_write)
-
-    with pytest.raises(OSError):
-        channels_api.ChannelsHandler()._handle_save("feishu", {"feishu_app_id": "cli_x"})
-
-    assert config_path.read_text(encoding="utf-8") == original
 
 
 def test_the_models_view_keeps_the_previous_file_when_a_save_fails(tmp_path, monkeypatch):

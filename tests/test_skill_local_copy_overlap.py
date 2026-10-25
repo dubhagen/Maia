@@ -26,12 +26,12 @@ def _invoke(tmp_path, source, workspace):
     (data / "config.json").write_text(
         json.dumps({"agent_workspace": str(workspace)}), encoding="utf-8"
     )
-    # Do not inherit operator COW_* settings, HOME, credentials or state roots.
+    # Do not inherit operator MAIA_* settings, HOME, credentials or state roots.
     env = {
         "PATH": os.environ.get("PATH", ""),
         "HOME": str(home),
         "USERPROFILE": str(home),
-        "COW_DATA_DIR": str(data),
+        "MAIA_DATA_DIR": str(data),
         "PYTHONPATH": os.pathsep.join([str(REPO), *sys.path]),
         "PYTHONDONTWRITEBYTECODE": "1",
     }

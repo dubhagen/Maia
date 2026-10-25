@@ -193,28 +193,28 @@ def test_credential_directory_is_blocked(tmp_path):
     # Matches read.py's test_security_read_env_bypass.py convention: the
     # direct _is_credential_path check and the execute() end-to-end check
     # (which must reject before any filesystem walk happens, and doesn't
-    # depend on ~/.cow actually existing) live in the same test.
+    # depend on ~/.maia actually existing) live in the same test.
     tool = _make_tool(tmp_path)
-    cow_dir = expand_path("~/.cow")
-    assert tool._is_credential_path(cow_dir) is True
-    assert tool._is_credential_path(cow_dir + "/some/nested/file.db") is True
+    maia_dir = expand_path("~/.maia")
+    assert tool._is_credential_path(maia_dir) is True
+    assert tool._is_credential_path(maia_dir + "/some/nested/file.db") is True
     assert tool._is_credential_path(str(tmp_path)) is False
 
-    result = tool.execute({"pattern": ".", "path": cow_dir})
+    result = tool.execute({"pattern": ".", "path": maia_dir})
     assert result.status == "error"
     assert "Access denied" in str(result.result)
 
 
 def test_credential_directory_is_pruned_mid_walk(tmp_path, monkeypatch):
-    # A broad search rooted above ~/.cow (not directly targeting it) must
+    # A broad search rooted above ~/.maia (not directly targeting it) must
     # still prune it during traversal rather than walking into it. Points
-    # expand_path("~/.cow") at a fake dir under tmp_path so this exercises
+    # expand_path("~/.maia") at a fake dir under tmp_path so this exercises
     # the real _is_credential_path logic without touching the real home dir.
     import agent.tools.search_files.search_files as sf_module
-    fake_cow = tmp_path / ".cow"
-    fake_cow.mkdir()
-    (fake_cow / "secret.env").write_text("API_KEY=leaked\n", encoding="utf-8")
-    monkeypatch.setattr(sf_module, "expand_path", lambda p: str(fake_cow) if p == "~/.cow" else p)
+    fake_maia = tmp_path / ".maia"
+    fake_maia.mkdir()
+    (fake_maia / "secret.env").write_text("API_KEY=leaked\n", encoding="utf-8")
+    monkeypatch.setattr(sf_module, "expand_path", lambda p: str(fake_maia) if p == "~/.maia" else p)
 
     tool = _make_tool(tmp_path)
     result = tool.execute({"pattern": "API_KEY"})
@@ -243,14 +243,14 @@ def test_symlink_to_credential_file_is_skipped_not_opened(tmp_path, monkeypatch)
     # not an error that aborts the whole search — a broad search shouldn't
     # blow up just because it incidentally crosses one bad symlink.
     import agent.tools.search_files.search_files as sf_module
-    fake_cow = tmp_path / "fake_cow"
-    fake_cow.mkdir()
-    (fake_cow / "secret.env").write_text("API_KEY=super-secret-value\n", encoding="utf-8")
-    monkeypatch.setattr(sf_module, "expand_path", lambda p: str(fake_cow) if p == "~/.cow" else p)
+    fake_maia = tmp_path / "fake_maia"
+    fake_maia.mkdir()
+    (fake_maia / "secret.env").write_text("API_KEY=super-secret-value\n", encoding="utf-8")
+    monkeypatch.setattr(sf_module, "expand_path", lambda p: str(fake_maia) if p == "~/.maia" else p)
 
     workspace = tmp_path / "workspace"
     workspace.mkdir()
-    (workspace / "decoy.txt").symlink_to(fake_cow / "secret.env")
+    (workspace / "decoy.txt").symlink_to(fake_maia / "secret.env")
     (workspace / "real.txt").write_text("API_KEY=this one is fine\n", encoding="utf-8")
 
     tool = _make_tool(workspace)
@@ -269,14 +269,14 @@ def test_symlinked_directory_pointing_at_credential_dir_is_pruned(tmp_path, monk
     # its comment claims, rather than relying solely on an os.walk default
     # this code doesn't control.
     import agent.tools.search_files.search_files as sf_module
-    fake_cow = tmp_path / "fake_cow"
-    fake_cow.mkdir()
-    (fake_cow / "secret.env").write_text("API_KEY=super-secret-value\n", encoding="utf-8")
-    monkeypatch.setattr(sf_module, "expand_path", lambda p: str(fake_cow) if p == "~/.cow" else p)
+    fake_maia = tmp_path / "fake_maia"
+    fake_maia.mkdir()
+    (fake_maia / "secret.env").write_text("API_KEY=super-secret-value\n", encoding="utf-8")
+    monkeypatch.setattr(sf_module, "expand_path", lambda p: str(fake_maia) if p == "~/.maia" else p)
 
     workspace = tmp_path / "workspace"
     workspace.mkdir()
-    (workspace / "decoy_dir").symlink_to(fake_cow, target_is_directory=True)
+    (workspace / "decoy_dir").symlink_to(fake_maia, target_is_directory=True)
 
     tool = _make_tool(workspace)
     result = tool.execute({"pattern": "API_KEY"})
@@ -576,7 +576,7 @@ def _fixture_tree(tmp_path):
     _write(tmp_path, "sub/b.py", "# MATCH in a comment\nMATCH = 2\n")
     _write(tmp_path, "sub/c.txt", "MATCH here too\n")
     _write(tmp_path, "node_modules/pkg/index.js", "MATCH should be skipped\n")
-    _write(tmp_path, "中文.py", "变量 MATCH 出现\n归属感 MATCH\n")
+    _write(tmp_path, "caf\u00e9.py", "token MATCH appears\nanchor MATCH\n")
 
 
 def test_backend_parity_files_mode(backend_tool, tmp_path):
@@ -585,7 +585,7 @@ def test_backend_parity_files_mode(backend_tool, tmp_path):
     assert result.status == "success"
     files = set(result.result["files"])
     # node_modules excluded on every backend; all other files present.
-    assert files == {"a.py", "sub/b.py", "sub/c.txt", "中文.py"}
+    assert files == {"a.py", "sub/b.py", "sub/c.txt", "caf\u00e9.py"}
 
 
 def test_backend_parity_count_mode(backend_tool, tmp_path):
@@ -594,22 +594,22 @@ def test_backend_parity_count_mode(backend_tool, tmp_path):
     assert result.status == "success"
     counts = {c["file"]: c["count"] for c in result.result["counts"]}
     # No :0 rows, no node_modules; counts identical across backends.
-    assert counts == {"a.py": 2, "sub/b.py": 2, "sub/c.txt": 1, "中文.py": 2}
+    assert counts == {"a.py": 2, "sub/b.py": 2, "sub/c.txt": 1, "caf\u00e9.py": 2}
 
 
 def test_backend_parity_content_mode_alternation(backend_tool, tmp_path):
     _fixture_tree(tmp_path)
-    result = backend_tool.execute({"pattern": "归属感|变量", "output_mode": "content"})
+    result = backend_tool.execute({"pattern": "anchor|token", "output_mode": "content"})
     assert result.status == "success"
     hits = {(m["file"], m["line"]) for m in result.result["matches"]}
-    assert hits == {("中文.py", 1), ("中文.py", 2)}
+    assert hits == {("caf\u00e9.py", 1), ("caf\u00e9.py", 2)}
 
 
 def test_backend_parity_glob_filter(backend_tool, tmp_path):
     _fixture_tree(tmp_path)
     result = backend_tool.execute({"pattern": "MATCH", "file_glob": "*.py", "output_mode": "files"})
     assert result.status == "success"
-    assert set(result.result["files"]) == {"a.py", "sub/b.py", "中文.py"}
+    assert set(result.result["files"]) == {"a.py", "sub/b.py", "caf\u00e9.py"}
 
 
 # --------------------------------------------------------------- target=files

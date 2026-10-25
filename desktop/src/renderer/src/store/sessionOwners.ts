@@ -14,8 +14,8 @@
  * unknown owner means "the default Agent", exactly the legacy behavior.
  */
 
-const OWNERS_KEY = 'cow_session_owners'
-const ACTIVE_SESSION_KEY = 'cow_session_id'
+const OWNERS_KEY = 'maia_session_owners'
+const ACTIVE_SESSION_KEY = 'maia_session_id'
 // Bound so a long-lived install can't grow the map without limit; the backend
 // list re-supplies owners for anything that got evicted.
 const MAX_ENTRIES = 400

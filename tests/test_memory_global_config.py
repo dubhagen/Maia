@@ -41,7 +41,7 @@ class TestMemoryGlobalConfigSync(unittest.TestCase):
         conf()["agent_workspace"] = self.workspace
 
         # Drop cached configs and stores so earlier tests/imports in the same
-        # run can't leave a stale ~/cow-pointed one behind.
+        # run can't leave a stale ~/maia-pointed one behind.
         from agent.memory import clear_conversation_store_cache, reset_memory_configs
         reset_memory_configs()
         clear_conversation_store_cache()
@@ -75,7 +75,7 @@ class TestMemoryGlobalConfigSync(unittest.TestCase):
             global_workspace,
             self.workspace,
             "get_default_memory_config() should reflect the configured "
-            "agent_workspace after agent init, not the hardcoded ~/cow default",
+            "agent_workspace after agent init, not the hardcoded ~/maia default",
         )
 
     def test_conversation_store_shares_the_configured_workspace(self):
@@ -89,7 +89,7 @@ class TestMemoryGlobalConfigSync(unittest.TestCase):
         self.assertTrue(
             os.path.realpath(store._db_path).startswith(os.path.realpath(self.workspace)),
             f"ConversationStore db_path {store._db_path} should live under "
-            f"the configured workspace {self.workspace}, not ~/cow",
+            f"the configured workspace {self.workspace}, not ~/maia",
         )
 
     def test_conversation_store_honors_workspace_without_any_priming(self):
@@ -110,7 +110,7 @@ class TestMemoryGlobalConfigSync(unittest.TestCase):
             os.path.realpath(store._db_path).startswith(os.path.realpath(self.workspace)),
             f"ConversationStore db_path {store._db_path} should live under "
             f"the configured workspace {self.workspace} even when accessed "
-            f"before the first agent init, not ~/cow",
+            f"before the first agent init, not ~/maia",
         )
 
     def test_falls_back_to_cow_when_agent_workspace_is_unset(self):
@@ -124,18 +124,18 @@ class TestMemoryGlobalConfigSync(unittest.TestCase):
         conf().pop("agent_workspace", None)
         self.assertEqual(
             os.path.realpath(MemoryConfig().workspace_root),
-            os.path.realpath(expand_path("~/cow")),
-            "an unset agent_workspace should still resolve to the ~/cow default",
+            os.path.realpath(expand_path("~/maia")),
+            "an unset agent_workspace should still resolve to the ~/maia default",
         )
 
 
 class TestLegacyWorkspaceWarning(unittest.TestCase):
     """
     `_warn_if_legacy_workspace_data_exists` is a read-only safety net: it
-    never moves or touches data, only logs when the hardcoded `~/cow`
+    never moves or touches data, only logs when the hardcoded `~/maia`
     default holds data that the configured workspace doesn't. HOME is
     redirected to an isolated temp dir so this never touches the real
-    `~/cow` on the machine running the test.
+    `~/maia` on the machine running the test.
     """
 
     def setUp(self):
@@ -147,10 +147,10 @@ class TestLegacyWorkspaceWarning(unittest.TestCase):
 
         # Resolved through the same helper the code under test uses, so the
         # assertions below compare like with like. An os.path.join(self.tmp,
-        # "cow") expectation never matched on Windows: expanduser keeps the
-        # literal "/cow" from "~/cow", so the warning text carries a mixed
+        # "maia") expectation never matched on Windows: expanduser keeps the
+        # literal "/maia" from "~/maia", so the warning text carries a mixed
         # separator the hand-built path doesn't reproduce.
-        self.legacy_root = expand_path("~/cow")
+        self.legacy_root = expand_path("~/maia")
         self.new_workspace = os.path.join(self.tmp, "custom_workspace")
         os.makedirs(self.new_workspace)
 
@@ -251,7 +251,7 @@ class TestLegacyWorkspaceWarning(unittest.TestCase):
 
     def test_no_warning_when_paths_differ_only_by_case(self):
         """
-        ~/cow and ~/COW are the same directory on a case-insensitive
+        ~/maia and ~/MAIA are the same directory on a case-insensitive
         filesystem (default on Windows and macOS). Uses real files, not
         mocked os.path calls - a mocked version previously forced
         Windows-like case-folding on every OS, masking a real bug where

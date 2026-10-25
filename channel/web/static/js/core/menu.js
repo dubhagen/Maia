@@ -49,7 +49,7 @@ const MENU_ICONS = {
     robot: 'fa-robot', pen: 'fa-pen', search: 'fa-magnifying-glass',
 };
 
-const MENU_CACHE_KEY = 'cow_menu_cache';
+const MENU_CACHE_KEY = 'maia_menu_cache';
 
 let menuSaved = null;
 let menuDoc = menuMerge(null);

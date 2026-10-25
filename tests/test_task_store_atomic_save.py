@@ -23,7 +23,7 @@ def _task(task_id):
         "id": task_id,
         "name": task_id,
         "schedule": {"type": "interval", "seconds": 60},
-        "action": {"type": "send_message", "content": "提醒我开会", "receiver": "user-1"},
+        "action": {"type": "send_message", "content": "Remind me about the meeting", "receiver": "user-1"},
     }
 
 
@@ -98,7 +98,7 @@ def test_a_successful_save_replaces_the_store_and_keeps_a_backup(tmp_path):
     assert set(store.load_tasks()) == {"task-1", "task-2"}
     backup = json.loads((tmp_path / "tasks.json.bak").read_text(encoding="utf-8"))
     assert set(backup["tasks"]) == {"task-1"}
-    assert backup["tasks"]["task-1"]["action"]["content"] == "提醒我开会"
+    assert backup["tasks"]["task-1"]["action"]["content"] == "Remind me about the meeting"
 
 
 def test_a_successful_save_leaves_no_temporary_file_behind(tmp_path):

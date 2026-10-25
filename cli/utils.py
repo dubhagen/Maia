@@ -1,4 +1,4 @@
-"""Shared utilities for cow CLI."""
+"""Shared utilities for maia CLI."""
 
 import os
 import sys
@@ -6,7 +6,7 @@ import json
 
 
 def get_project_root() -> str:
-    """Get the CowAgent project root directory."""
+    """Get the Maia project root directory."""
     # cli/ is directly under the project root
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -56,8 +56,8 @@ def get_builtin_skills_dir() -> str:
 
 def _config_json_path() -> str:
     # Mirrors config.get_data_root(): the desktop build keeps config.json in
-    # COW_DATA_DIR, outside the read-only app bundle.
-    data_dir = os.environ.get("COW_DATA_DIR")
+    # MAIA_DATA_DIR, outside the read-only app bundle.
+    data_dir = os.environ.get("MAIA_DATA_DIR")
     root = os.path.expanduser(data_dir) if data_dir else get_project_root()
     return os.path.join(root, "config.json")
 
@@ -81,14 +81,14 @@ def load_config_json() -> dict:
 def get_cli_language() -> str:
     """Resolve the CLI UI language using the shared i18n detector.
 
-    Reads the `cow_lang` field from config.json (defaults to "auto") and runs
+    Reads the `maia_lang` field from config.json (defaults to "auto") and runs
     the same detection used by the running app, so CLI output matches.
     """
     ensure_sys_path()
     try:
         from common import i18n
 
-        configured = load_config_json().get("cow_lang", "auto")
+        configured = load_config_json().get("maia_lang", "auto")
         return i18n.resolve_language(configured)
     except Exception:
         return "en"
@@ -111,9 +111,6 @@ def ensure_sys_path():
     root = get_project_root()
     if root not in sys.path:
         sys.path.insert(0, root)
-
-
-SKILL_HUB_API = "https://skills.cowagent.ai/api"
 
 
 def _skill_hub_setting(key: str) -> str:
@@ -150,12 +147,12 @@ def skill_hub(provider: str = None) -> tuple:
 
     ``skill_hub_url`` replaces the default hub for requests that name no
     provider: installs by bare name, search and the remote listing. Requests
-    for a provider (github:, clawhub:, ...) are what the default hub proxies,
+    for a provider (github:, ...) are what the default hub proxies,
     so they keep going there. ``skill_hub_api_key`` only ever goes to the
     configured registry.
     """
     if provider or not custom_skill_hub():
-        return SKILL_HUB_API, {}
+        return "", {}
     headers = {}
     key = _skill_hub_setting("skill_hub_api_key")
     if key:

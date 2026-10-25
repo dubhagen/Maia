@@ -7,7 +7,7 @@ landed. That manifest lives *inside* the workspace, under
 ``memory/.evolution_backups/<id>/``, so anything that can write there -- an
 evolution agent, a skill the agent installed, or an upload that landed in the
 workspace -- chooses where undo writes. An entry of ``{"bak": "0.bak",
-"rel": "../../.cow/.env"}`` then makes ``shutil.copy2`` overwrite a file outside
+"rel": "../../.maia/.env"}`` then makes ``shutil.copy2`` overwrite a file outside
 the workspace: the API-key file the rest of the toolchain deliberately refuses
 to touch, and the user notices it only when a later request 500s.
 
@@ -44,7 +44,7 @@ class BackupRestoreContainmentTest(unittest.TestCase):
             handle.write("current memory")
 
         # Standing in for the files undo must never reach.
-        self.outside_dir = os.path.join(self.root, ".cow")
+        self.outside_dir = os.path.join(self.root, ".maia")
         os.makedirs(self.outside_dir)
         self.env_file = os.path.join(self.outside_dir, ".env")
         with open(self.env_file, "w", encoding="utf-8") as handle:
@@ -79,7 +79,7 @@ class BackupRestoreContainmentTest(unittest.TestCase):
     def test_a_relative_escape_does_not_overwrite_a_file_outside(self):
         """'../' in ``rel`` used to be followed straight out of the workspace."""
         backup_id = self._snapshot(
-            [{"bak": "0.bak", "rel": "../.cow/.env"}],
+            [{"bak": "0.bak", "rel": "../.maia/.env"}],
             {"0.bak": "API_KEY=stolen"},
         )
 
@@ -126,7 +126,7 @@ class BackupRestoreContainmentTest(unittest.TestCase):
         backup_id = self._snapshot(
             [
                 {"bak": "0.bak", "rel": "MEMORY.md"},
-                {"bak": "1.bak", "rel": "../.cow/.env"},
+                {"bak": "1.bak", "rel": "../.maia/.env"},
             ],
             {"0.bak": "original memory", "1.bak": "API_KEY=stolen"},
         )
