@@ -703,7 +703,7 @@ const SKILL_SOURCES = {
 };
 
 const SKILL_SOURCE_LABELS = {
-    maiahub: 'Maia Skill Hub', github: 'GitHub', url: 'URL', local: 'Local',
+    maiahub: 'Registry', github: 'GitHub', url: 'URL', local: 'Local',
 };
 
 const SKILL_UPLOAD_MAX_BYTES = 50 * 1024 * 1024;

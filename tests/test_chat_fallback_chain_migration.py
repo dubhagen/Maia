@@ -50,12 +50,12 @@ class TestMigratingTheLegacyShape:
         cfg = {"chat_fallback": {
             "enabled": True,
             "chain": [{"provider": "openai", "model": "backup-1"},
-                      {"provider": "qianfan", "model": "backup-2"}],
+                      {"provider": "litellm", "model": "backup-2"}],
         }}
         _migrate_chat_fallback(cfg)
         assert cfg["chat_fallback"]["chain"] == [
             {"provider": "openai", "model": "backup-1"},
-            {"provider": "qianfan", "model": "backup-2"},
+            {"provider": "litellm", "model": "backup-2"},
         ]
 
     def test_a_stale_max_switches_is_dropped_from_the_new_shape(self):

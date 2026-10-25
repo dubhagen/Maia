@@ -33,7 +33,7 @@ FALLBACK = {
     "enabled": True,
     "chain": [
         {"provider": "openai", "model": "backup-model"},
-        {"provider": "qianfan", "model": "backup-model-2"},
+        {"provider": "litellm", "model": "backup-model-2"},
     ],
 }
 

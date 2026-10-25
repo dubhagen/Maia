@@ -34,8 +34,8 @@ from channel.web.api import scheduler as scheduler_api
 
 
 VICTIM = {
-    "channel_type": "feishu",
-    "instance_id": "feishu",
+    "channel_type": "terminal",
+    "instance_id": "terminal",
     "receiver": "ou_victim_openid",
     "name": "Victim",
     "session_id": "session-of-victim",
@@ -165,7 +165,7 @@ def test_repointing_at_an_untrusted_recipient_is_still_refused(tmp_path):
 
     response = _post(
         store,
-        {"action": {"channel_type": "feishu", "instance_id": "feishu",
+        {"action": {"channel_type": "terminal", "instance_id": "terminal",
                     "receiver": "ou_stranger"}},
         recipients,
     )
@@ -181,8 +181,8 @@ def test_repointing_at_another_trusted_recipient_rewrites_every_field(tmp_path):
     _remember(
         recipients,
         {
-            "channel_type": "wecom_bot",
-            "instance_id": "wecom_bot",
+            "channel_type": "terminal",
+            "instance_id": "terminal",
             "receiver": "user-9",
             "name": "Grace",
             "session_id": "session-9",
@@ -193,14 +193,14 @@ def test_repointing_at_another_trusted_recipient_rewrites_every_field(tmp_path):
 
     response = _post(
         store,
-        {"action": {"channel_type": "wecom_bot", "instance_id": "wecom_bot",
+        {"action": {"channel_type": "terminal", "instance_id": "terminal",
                     "receiver": "user-9"}},
         recipients,
     )
 
     assert response.get("status") != "error", response
     stored = _stored(tmp_path)
-    assert stored["channel_type"] == "wecom_bot"
+    assert stored["channel_type"] == "terminal"
     assert stored["receiver"] == "user-9"
     assert stored["receiver_name"] == "Grace"
     assert stored["notify_session_id"] == "session-9"
@@ -241,7 +241,7 @@ def test_switching_a_web_task_to_an_im_channel_is_refused(tmp_path):
         tmp_path, _action(channel_type="web", notify_session_id="web-session")
     )
 
-    response = _post(store, {"action": {"channel_type": "feishu"}}, recipients)
+    response = _post(store, {"action": {"channel_type": "terminal"}}, recipients)
 
     assert response["status"] == "error"
     assert "Cannot change channel type" in response["message"]

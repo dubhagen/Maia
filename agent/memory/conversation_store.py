@@ -639,7 +639,7 @@ class ConversationStore:
 
     Usage:
         store = ConversationStore(db_path)
-        store.append_messages("user_123", new_messages, channel_type="feishu")
+        store.append_messages("user_123", new_messages, channel_type="web")
         msgs = store.load_messages("user_123", max_turns=30)
     """
 
@@ -810,7 +810,7 @@ class ConversationStore:
         Args:
             session_id: Unique session identifier.
             messages: List of message dicts to append.
-            channel_type: Source channel (e.g. "feishu", "web", "wechat").
+            channel_type: Source channel (e.g. "web", "terminal").
                           Only written on session creation; ignored on update.
             create_if_missing: When False, do nothing if the session row is
                           gone. Callers that already stored the user turn use

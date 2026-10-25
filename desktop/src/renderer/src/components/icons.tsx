@@ -1,7 +1,7 @@
 import React from 'react'
 
 // Solid paper-plane icon (Font Awesome's fa-paper-plane path) so the send
-// button and the feishu/telegram channels match the web console exactly.
+// button matches the web console.
 export const PaperPlaneIcon: React.FC<{ size?: number; className?: string }> = ({ size = 16, className }) => (
   <svg
     width={size}

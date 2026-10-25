@@ -12,7 +12,7 @@ from typing import Any
 
 # Defaults — conservative (see executor module docstring). Only reached when
 # config.json cannot be read at all; the effective default lives in config.py.
-DEFAULT_ENABLED = True
+DEFAULT_ENABLED = False
 DEFAULT_IDLE_MINUTES = 10
 DEFAULT_MIN_TURNS = 6
 # Max review steps for the isolated evolution agent. Kept small (not exposed as

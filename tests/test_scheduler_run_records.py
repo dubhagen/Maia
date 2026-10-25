@@ -39,7 +39,7 @@ def _task(action_type="send_message"):
         "name": "Daily digest",
         "action": {
             "type": action_type,
-            "channel_type": "feishu",
+            "channel_type": "web",
             "receiver": "u-1",
             "notify_session_id": "sess-1",
             "content": "hi",

@@ -221,7 +221,7 @@ def test_delete_agent_unbinds_channel_instances_pointing_at_it(admin):
     settings = {"agent_workspace": str(root)}
     roster = team.read(settings)
     roster["channel_instances"] = [
-        {"instance_id": "feishu-ops", "channel_type": "feishu", "agent_id": "research"}
+        {"instance_id": "web-ops", "channel_type": "web", "agent_id": "research"}
     ]
     team.write(settings, roster)
     service._settings = None
@@ -231,7 +231,7 @@ def test_delete_agent_unbinds_channel_instances_pointing_at_it(admin):
     instances = _saved(root).get("channel_instances") or []
     # The instance survives (the channel is still there) but no longer points at
     # the deleted Agent, so it falls back to the default.
-    assert any(i.get("instance_id") == "feishu-ops" for i in instances)
+    assert any(i.get("instance_id") == "web-ops" for i in instances)
     assert all(i.get("agent_id") != "research" for i in instances)
 
 

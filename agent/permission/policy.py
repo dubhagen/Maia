@@ -12,8 +12,8 @@ Three modes, ordered from most to least restrictive:
                       are writes to the files that widen the Agent's reach
                       (MCP servers, config, credentials, session settings).
                       Reading anywhere is still allowed.
-- ``full-access``     No confinement. The historical behavior, kept as the
-                      default so existing installs are untouched.
+- ``full-access``     No confinement. A session uses it only when that
+                      session or ``agent_permission_mode`` selects it.
 
 The mode is resolved per session (see ``agent.workspace.session_prefs``) and
 falls back to the global ``agent_permission_mode`` setting.
@@ -42,9 +42,9 @@ FULL_ACCESS = "full-access"
 
 MODES: Tuple[str, ...] = (READ_ONLY, WORKSPACE_WRITE, FULL_ACCESS)
 
-# Preserve the behavior installs already have: unless someone opts in, nothing
-# is gated. Fresh installs ship a stricter value via config-template.json.
-DEFAULT_MODE = FULL_ACCESS
+# Missing or unknown values use the new-install default. A saved
+# agent_permission_mode, including full-access, is left as the user set it.
+DEFAULT_MODE = WORKSPACE_WRITE
 
 CONFIG_KEY = "agent_permission_mode"
 

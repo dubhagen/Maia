@@ -681,8 +681,8 @@ class AgentStreamExecutor:
         return text
 
     # Streaming needs state: a per-delta regex leaks tags split across chunks,
-    # and channels that use the accumulated deltas as the final text (wecom_bot,
-    # terminal) never get a final-text pass to clean them up.
+    # and channels that use the accumulated deltas as the final text never get
+    # a final-text pass to clean them up.
     _THINK_OPEN = "<think>"
     _THINK_CLOSE = "</think>"
 

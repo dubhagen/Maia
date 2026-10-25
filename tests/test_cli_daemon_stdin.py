@@ -8,7 +8,7 @@ def test_background_launch_detaches_stdin(tmp_path, monkeypatch):
     (tmp_path / 'app.py').write_text('pass')
     monkeypatch.setattr(process, 'get_project_root', lambda: str(tmp_path))
     monkeypatch.setattr(process, '_read_pid', lambda: None)
-    monkeypatch.setattr(process, 'load_config_json', lambda: {'channel_type': 'feishu'})
+    monkeypatch.setattr(process, 'load_config_json', lambda: {'channel_type': 'web'})
     monkeypatch.setattr(process, '_write_pid', lambda pid: None)
     monkeypatch.setattr(process, '_IS_WIN', False)
     launches = []
@@ -33,7 +33,7 @@ import subprocess, sys
 from cli.commands import process
 process.get_project_root = lambda: sys.argv[1]
 process._read_pid = lambda: None
-process.load_config_json = lambda: {'channel_type': 'feishu'}
+process.load_config_json = lambda: {'channel_type': 'web'}
 process._write_pid = lambda pid: None
 process._IS_WIN = False
 popen = subprocess.Popen
@@ -52,7 +52,7 @@ process.start.main(['--no-logs'], standalone_mode=False)
     assert (tmp_path / 'nohup.out').read_text().strip() == "''"
 
 
-@pytest.mark.parametrize("channels", ["terminal,feishu", "feishu, terminal", ["feishu", "terminal"], "terminal", "feishu"])
+@pytest.mark.parametrize("channels", ["terminal,web", "web, terminal", ["web", "terminal"], "terminal", "web"])
 def test_configured_terminal_keeps_native_stdin(tmp_path, channels):
     import os
     import sys

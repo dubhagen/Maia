@@ -16,8 +16,8 @@ from channel.web.api.openai_compat import (
 
 
 _CATALOG = [
-    {"id": "deepseek", "label": "DeepSeek", "models": ["deepseek-chat", "deepseek-reasoner"]},
-    {"id": "custom:gw", "label": "Gateway", "models": ["deepseek-chat", "qwen-max"]},
+    {"id": "litellm", "label": "LiteLLM", "models": ["demo-chat", "demo-reasoner"]},
+    {"id": "custom:gw", "label": "Gateway", "models": ["demo-chat", "demo-max"]},
 ]
 
 
@@ -91,7 +91,7 @@ def test_external_api_uses_independent_bearer_auth(
     with pytest.raises(OpenAIAPIError) as exc_info:
         handle_chat_completions(
             {
-                "model": "deepseek-chat",
+                "model": "demo-chat",
                 "messages": [{"role": "user", "content": "hello"}],
             },
             authorization=authorization,
@@ -106,7 +106,7 @@ def test_external_api_uses_independent_bearer_auth(
 def test_bearer_scheme_is_case_insensitive(scheme):
     response = handle_chat_completions(
         {
-            "model": "deepseek-chat",
+            "model": "demo-chat",
             "messages": [{"role": "user", "content": "hello"}],
         },
         authorization=f"{scheme} secret",
@@ -181,7 +181,7 @@ def test_non_streaming_completion_maps_content_reasoning_and_tools():
     calls = []
     response = handle_chat_completions(
         {
-            "model": "deepseek-chat",
+            "model": "demo-chat",
             "conversation_id": "conversation-42",
             "messages": [
                 {"role": "assistant", "content": "previous answer"},
@@ -233,7 +233,7 @@ def test_non_streaming_completion_maps_content_reasoning_and_tools():
         "id": "chatcmpl-test",
         "object": "chat.completion",
         "created": 1700000000,
-        "model": "deepseek-chat",
+        "model": "demo-chat",
         "choices": [
             {
                 "index": 0,
@@ -259,11 +259,11 @@ def test_non_streaming_completion_maps_content_reasoning_and_tools():
     }
 
 
-def test_streaming_completion_uses_standard_deltas_and_additive_cow_events():
+def test_streaming_completion_uses_standard_deltas_and_additive_maia_events():
     calls = []
     stream = handle_chat_completions(
         {
-            "model": "deepseek-chat",
+            "model": "demo-chat",
             "stream": True,
             "user": "user-7",
             "messages": [{"role": "user", "content": "hello"}],
@@ -322,7 +322,7 @@ def test_streaming_agent_failure_before_first_event_returns_500():
     with pytest.raises(OpenAIAPIError) as exc_info:
         handle_chat_completions(
             {
-                "model": "deepseek-chat",
+                "model": "demo-chat",
                 "stream": True,
                 "messages": [{"role": "user", "content": "hello"}],
             },
@@ -351,7 +351,7 @@ def test_streaming_agent_failure_after_first_event_finishes_with_error():
 
     stream = handle_chat_completions(
         {
-            "model": "deepseek-chat",
+            "model": "demo-chat",
             "stream": True,
             "messages": [{"role": "user", "content": "hello"}],
         },
@@ -397,7 +397,7 @@ def test_streaming_returns_after_first_event_without_waiting_for_completion():
         prepared_stream.put(
             handle_chat_completions(
                 {
-                    "model": "deepseek-chat",
+                    "model": "demo-chat",
                     "stream": True,
                     "messages": [{"role": "user", "content": "hello"}],
                 },
@@ -446,7 +446,7 @@ def test_streaming_generator_close_cancels_agent_request_once(monkeypatch):
     )
     stream = handle_chat_completions(
         {
-            "model": "deepseek-chat",
+            "model": "demo-chat",
             "stream": True,
             "conversation_id": "close-me",
             "messages": [{"role": "user", "content": "hello"}],
@@ -498,7 +498,7 @@ def test_streaming_timeout_while_waiting_for_session_lock_skips_run_chat(monkeyp
         with pytest.raises(OpenAIAPIError) as exc_info:
             handle_chat_completions(
                 {
-                    "model": "deepseek-chat",
+                    "model": "demo-chat",
                     "stream": True,
                     "conversation_id": "queued-timeout",
                     "messages": [{"role": "user", "content": "hello"}],
@@ -583,7 +583,7 @@ def test_streaming_timeout_after_closed_check_reuses_pre_registered_cancel_event
         try:
             handle_chat_completions(
                 {
-                    "model": "deepseek-chat",
+                    "model": "demo-chat",
                     "stream": True,
                     "conversation_id": "registration-race",
                     "messages": [{"role": "user", "content": "hello"}],
@@ -640,7 +640,7 @@ def test_streaming_generator_close_while_waiting_for_session_lock_skips_run_chat
                 "id": "chatcmpl-queued-close",
                 "object": "chat.completion.chunk",
                 "created": 1700000000,
-                "model": "deepseek-chat",
+                "model": "demo-chat",
                 "choices": [
                     {
                         "index": 0,
@@ -671,7 +671,7 @@ def test_streaming_generator_close_while_waiting_for_session_lock_skips_run_chat
     try:
         stream = handle_chat_completions(
             {
-                "model": "deepseek-chat",
+                "model": "demo-chat",
                 "stream": True,
                 "conversation_id": "queued-close",
                 "messages": [{"role": "user", "content": "hello"}],
@@ -710,7 +710,7 @@ def test_streaming_normal_completion_does_not_cancel_agent_request(monkeypatch):
     )
     stream = handle_chat_completions(
         {
-            "model": "deepseek-chat",
+            "model": "demo-chat",
             "stream": True,
             "messages": [{"role": "user", "content": "hello"}],
         },
@@ -749,7 +749,7 @@ def test_invalid_messages_return_400():
     with pytest.raises(OpenAIAPIError) as exc_info:
         handle_chat_completions(
             {
-                "model": "deepseek-chat",
+                "model": "demo-chat",
                 "messages": [{"role": "user", "content": [{"type": "text"}]}],
             },
             authorization="Bearer secret",
@@ -768,7 +768,7 @@ def test_non_streaming_agent_failure_returns_500():
     with pytest.raises(OpenAIAPIError) as exc_info:
         handle_chat_completions(
             {
-                "model": "deepseek-chat",
+                "model": "demo-chat",
                 "messages": [{"role": "user", "content": "hello"}],
             },
             authorization="Bearer secret",
@@ -828,7 +828,7 @@ def test_http_post_returns_200_json(monkeypatch):
     response = _post(
         app,
         {
-            "model": "deepseek-chat",
+            "model": "demo-chat",
             "messages": [{"role": "user", "content": "hello"}],
         },
     )
@@ -868,7 +868,7 @@ def test_http_post_returns_401_for_invalid_bearer_token(monkeypatch):
     response = _post(
         app,
         {
-            "model": "deepseek-chat",
+            "model": "demo-chat",
             "messages": [{"role": "user", "content": "hello"}],
         },
         authorization="Bearer wrong",
@@ -884,7 +884,7 @@ def test_http_post_returns_503_when_external_api_is_disabled(monkeypatch):
     response = _post(
         app,
         {
-            "model": "deepseek-chat",
+            "model": "demo-chat",
             "messages": [{"role": "user", "content": "hello"}],
         },
     )
@@ -901,7 +901,7 @@ def test_http_stream_returns_500_when_agent_fails_immediately(monkeypatch):
     response = _post(
         app,
         {
-            "model": "deepseek-chat",
+            "model": "demo-chat",
             "stream": True,
             "messages": [{"role": "user", "content": "hello"}],
         },
@@ -938,7 +938,7 @@ def test_http_stream_first_event_timeout_returns_500_and_cancels(monkeypatch):
             _post(
                 app,
                 {
-                    "model": "deepseek-chat",
+                    "model": "demo-chat",
                     "stream": True,
                     "conversation_id": "timeout",
                     "messages": [{"role": "user", "content": "hello"}],
@@ -975,7 +975,7 @@ def test_http_stream_returns_sse_body_and_done_marker(monkeypatch):
     response = _post(
         app,
         {
-            "model": "deepseek-chat",
+            "model": "demo-chat",
             "stream": True,
             "messages": [{"role": "user", "content": "hello"}],
         },
@@ -1039,7 +1039,7 @@ def test_request_without_conversation_runs_once_on_the_history_it_carries():
     calls = []
     _complete(
         {
-            "model": "deepseek-chat",
+            "model": "demo-chat",
             "messages": [
                 {"role": "system", "content": "be brief"},
                 {"role": "user", "content": [{"type": "text", "text": "my name is "}, {"type": "text", "text": "Ann"}]},
@@ -1063,7 +1063,7 @@ def test_named_conversation_keeps_its_history_on_the_server():
     calls = []
     _complete(
         {
-            "model": "deepseek-chat",
+            "model": "demo-chat",
             "conversation_id": "c1",
             "messages": [
                 {"role": "user", "content": "earlier"},
@@ -1083,7 +1083,7 @@ def test_image_content_parts_are_rejected():
     with pytest.raises(OpenAIAPIError) as exc_info:
         _complete(
             {
-                "model": "deepseek-chat",
+                "model": "demo-chat",
                 "messages": [
                     {"role": "user", "content": [{"type": "image_url", "image_url": {"url": "x"}}]}
                 ],
@@ -1139,7 +1139,7 @@ def agents(monkeypatch):
 def test_agent_id_selects_the_agent(agents, extra, agent_id):
     calls = []
     _complete(
-        {"model": "deepseek-chat", "conversation_id": "c",
+        {"model": "demo-chat", "conversation_id": "c",
          "messages": [{"role": "user", "content": "hi"}], **extra},
         _recording_runner([], calls),
     )
@@ -1149,7 +1149,7 @@ def test_agent_id_selects_the_agent(agents, extra, agent_id):
 
 @pytest.mark.parametrize("extra", [{}, {"model": ""}])
 def test_without_a_model_the_agent_answers_on_its_own(catalog, monkeypatch, extra):
-    monkeypatch.setattr(openai_compat, "_agent_model_name", lambda agent_id: "deepseek-chat")
+    monkeypatch.setattr(openai_compat, "_agent_model_name", lambda agent_id: "demo-chat")
     calls = []
     response = _complete(
         {"conversation_id": "c", "messages": [{"role": "user", "content": "hi"}], **extra},
@@ -1157,12 +1157,12 @@ def test_without_a_model_the_agent_answers_on_its_own(catalog, monkeypatch, extr
     )
 
     assert "model_override" not in calls[0]
-    assert response["model"] == "deepseek-chat"
+    assert response["model"] == "demo-chat"
 
 
 @pytest.mark.parametrize(
     ("model", "route"),
-    [("qwen-max", ("custom:gw", "qwen-max")), ("deepseek-chat", ("deepseek", "deepseek-chat"))],
+    [("demo-max", ("custom:gw", "demo-max")), ("demo-chat", ("litellm", "demo-chat"))],
 )
 def test_a_named_model_answers_this_turn(catalog, model, route):
     calls = []
@@ -1179,15 +1179,15 @@ def test_a_named_model_reaches_a_stream_too(catalog):
     calls = []
     frames = list(
         handle_chat_completions(
-            {"model": "qwen-max", "stream": True, "messages": [{"role": "user", "content": "hi"}]},
+            {"model": "demo-max", "stream": True, "messages": [{"role": "user", "content": "hi"}]},
             authorization="Bearer secret",
             external_api_token="secret",
             run_chat=_recording_runner([{"chunk_type": "content", "delta": "x"}], calls),
         )
     )
 
-    assert calls[0]["model_override"] == ("custom:gw", "qwen-max")
-    assert '"model": "qwen-max"' in frames[0]
+    assert calls[0]["model_override"] == ("custom:gw", "demo-max")
+    assert '"model": "demo-max"' in frames[0]
 
 
 def test_an_unavailable_model_returns_404(catalog):
@@ -1213,7 +1213,7 @@ def test_a_non_string_model_returns_400(catalog):
 def test_unknown_or_disabled_agent_returns_404(agents, agent_id):
     with pytest.raises(OpenAIAPIError) as exc_info:
         _complete(
-            {"model": "deepseek-chat", "agent_id": agent_id,
+            {"model": "demo-chat", "agent_id": agent_id,
              "messages": [{"role": "user", "content": "hi"}]},
             _recording_runner([], []),
         )
@@ -1225,7 +1225,7 @@ def test_unknown_or_disabled_agent_returns_404(agents, agent_id):
 def test_blank_or_non_string_agent_id_returns_400(agents, agent_id):
     with pytest.raises(OpenAIAPIError) as exc_info:
         _complete(
-            {"model": "deepseek-chat", "agent_id": agent_id,
+            {"model": "demo-chat", "agent_id": agent_id,
              "messages": [{"role": "user", "content": "hi"}]},
             _recording_runner([], []),
         )
@@ -1237,9 +1237,9 @@ def test_models_lists_every_configured_model(catalog):
 
     assert result["object"] == "list"
     assert [(m["id"], m["owned_by"]) for m in result["data"]] == [
-        ("deepseek-chat", "deepseek"),
-        ("deepseek-reasoner", "deepseek"),
-        ("qwen-max", "custom:gw"),
+        ("demo-chat", "litellm"),
+        ("demo-reasoner", "litellm"),
+        ("demo-max", "custom:gw"),
     ]
 
 
@@ -1280,7 +1280,7 @@ _OPENAI_USAGE = {
 
 def test_non_streaming_response_reports_usage():
     response = _complete(
-        {"model": "deepseek-chat", "messages": [{"role": "user", "content": "hi"}]},
+        {"model": "demo-chat", "messages": [{"role": "user", "content": "hi"}]},
         _recording_runner([{"chunk_type": "content", "delta": "ok"}], [], usage=_RUN_USAGE),
     )
     assert response["usage"] == _OPENAI_USAGE
@@ -1288,7 +1288,7 @@ def test_non_streaming_response_reports_usage():
 
 def test_non_streaming_response_omits_usage_the_provider_did_not_report():
     response = _complete(
-        {"model": "deepseek-chat", "messages": [{"role": "user", "content": "hi"}]},
+        {"model": "demo-chat", "messages": [{"role": "user", "content": "hi"}]},
         _recording_runner([{"chunk_type": "content", "delta": "ok"}], []),
     )
     assert "usage" not in response
@@ -1297,7 +1297,7 @@ def test_non_streaming_response_omits_usage_the_provider_did_not_report():
 def test_stream_sends_usage_last_when_asked():
     payloads = _sse_payloads(list(_complete(
         {
-            "model": "deepseek-chat",
+            "model": "demo-chat",
             "stream": True,
             "stream_options": {"include_usage": True},
             "messages": [{"role": "user", "content": "hi"}],
@@ -1312,7 +1312,7 @@ def test_stream_sends_usage_last_when_asked():
 
 def test_stream_leaves_usage_out_unless_asked():
     payloads = _sse_payloads(list(_complete(
-        {"model": "deepseek-chat", "stream": True, "messages": [{"role": "user", "content": "hi"}]},
+        {"model": "demo-chat", "stream": True, "messages": [{"role": "user", "content": "hi"}]},
         _recording_runner([{"chunk_type": "content", "delta": "ok"}], [], usage=_RUN_USAGE),
     )))
 
@@ -1332,7 +1332,7 @@ def test_tool_result_is_streamed_when_the_call_finishes_and_not_repeated():
         {"chunk_type": "content", "delta": "done"},
     ]
     payloads = _sse_payloads(list(_complete(
-        {"model": "deepseek-chat", "stream": True, "messages": [{"role": "user", "content": "hi"}]},
+        {"model": "demo-chat", "stream": True, "messages": [{"role": "user", "content": "hi"}]},
         _recording_runner(events, []),
     )))
 
@@ -1358,7 +1358,7 @@ def test_http_models_route_and_cors_preflight(monkeypatch, agents, catalog):
     listed = app.request("/v1/models", headers={"Authorization": "Bearer secret"})
     assert listed.status == "200 OK"
     assert listed.headers["Access-Control-Allow-Origin"] == "*"
-    assert json.loads(listed.data)["data"][0]["id"] == "deepseek-chat"
+    assert json.loads(listed.data)["data"][0]["id"] == "demo-chat"
 
     preflight = app.request("/v1/chat/completions", method="OPTIONS")
     assert preflight.status == "204 No Content"
@@ -1368,7 +1368,7 @@ def test_http_models_route_and_cors_preflight(monkeypatch, agents, catalog):
         "/v1/chat/completions",
         method="POST",
         data=json.dumps({
-            "model": "deepseek-chat", "agent_id": "nope",
+            "model": "demo-chat", "agent_id": "nope",
             "messages": [{"role": "user", "content": "hi"}],
         }),
         headers={"Authorization": "Bearer secret"},

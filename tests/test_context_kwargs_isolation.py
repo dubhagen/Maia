@@ -27,17 +27,17 @@ def test_two_contexts_do_not_share_kwargs():
 def test_a_fresh_context_does_not_inherit_a_delivered_tasks_keys():
     """The shape the scheduler and the evolution push build: no explicit kwargs."""
     scheduled = Context(ContextType.TEXT, "reminder")
-    scheduled["receiver"] = "feishu:user-1"
-    scheduled["session_id"] = "feishu:user-1"
+    scheduled["receiver"] = "web:user-1"
+    scheduled["session_id"] = "web:user-1"
     scheduled["receive_id_type"] = "open_id"
 
     push = Context(ContextType.TEXT, "an unrelated proactive push")
-    push["receiver"] = "wecom:user-2"
+    push["receiver"] = "terminal:user-2"
     push["isgroup"] = False
 
     assert push.get("receive_id_type") is None
     assert push.get("session_id") is None
-    assert push.get("receiver") == "wecom:user-2"
+    assert push.get("receiver") == "terminal:user-2"
 
 
 def test_deleting_a_key_on_one_context_leaves_the_next_one_alone():

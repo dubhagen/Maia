@@ -211,7 +211,7 @@ function initConfigView(data) {
         const permOpts = Object.keys(PERMISSION_META)
             .filter(mode => offered.includes(mode))
             .map(mode => ({ value: mode, label: t(PERMISSION_META[mode].key) }));
-        initDropdown(permEl, permOpts, data.agent_permission_mode || 'full-access', saveGlobalPermission);
+        initDropdown(permEl, permOpts, data.agent_permission_mode || 'workspace-write', saveGlobalPermission);
     }
 
     const pwdInput = document.getElementById('cfg-password');

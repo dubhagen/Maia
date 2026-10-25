@@ -19,6 +19,6 @@ def test_credential_file_access_is_blocked(command):
     "ls ~/.maia/",
     "echo hello",
 ])
-def test_legitimate_cow_directory_access_is_not_blocked(command):
+def test_legitimate_maia_directory_access_is_not_blocked(command):
     result = Bash().execute({"command": command})
     assert "Access denied" not in str(result.result)

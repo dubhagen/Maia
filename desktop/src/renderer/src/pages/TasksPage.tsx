@@ -1190,8 +1190,7 @@ const TaskEditModal: React.FC<{
   const [error, setError] = useState('')
 
   const buildAction = (): TaskAction => {
-    // Preserve stored channel-specific fields (notify_session_id, silent,
-    // dingtalk ids, ...) and overwrite only what the form/picker changed.
+    // Preserve stored delivery fields and overwrite only what the form changed.
     const a: TaskAction = { ...task.action, type: form.actionType }
     if (form.actionType === 'send_message') {
       a.content = form.content

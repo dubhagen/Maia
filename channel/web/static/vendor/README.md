@@ -57,7 +57,3 @@ Notes:
   because message content is untrusted agent output. A failed load (offline,
   blocked CDN, integrity mismatch) falls back to the code view and is retried
   on the next Preview click.
-- One external script remains, in `channel/web/static/js/views/channels-wecom.js`:
-  `wwcdn.weixin.qq.com/.../wecom-aibot-sdk` — Tencent requires the WeCom Bot
-  SDK to be loaded from their CDN, and it is only fetched when the user opens
-  the WeCom Bot QR-login flow.

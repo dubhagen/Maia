@@ -4,22 +4,15 @@ LABEL maintainer="https://github.com/dubhagen"
 ARG TZ='UTC'
 # Set to "false" to skip Playwright/Chromium and produce a smaller image
 ARG INSTALL_BROWSER=true
-# Set to "true" to use China mirrors for apt / pip / playwright (faster in CN)
-ARG USE_CN_MIRROR=false
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright
 ENV BUILD_PREFIX=/app
 # Make the TZ env var effective at runtime (slim base has no tzdata by default)
 ENV TZ=${TZ}
 
-# Optionally switch apt and pip to China mirrors.
 # bullseye is EOL: its debian-security pool returns 404 on removed versions, so
-# drop the debian-security lines and pull only from the still-mirrored main suite.
-RUN sed -i '/security/d' /etc/apt/sources.list \
-    && if [ "$USE_CN_MIRROR" = "true" ]; then \
-        sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list; \
-        pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/; \
-    fi
+# drop the debian-security lines and pull only from the main suite.
+RUN sed -i '/security/d' /etc/apt/sources.list
 
 ADD . ${BUILD_PREFIX}
 
@@ -40,16 +33,10 @@ RUN apt-get update \
     && pip install --no-cache -r requirements-optional.txt \
     && pip install --no-cache -e . \
     && if [ "$INSTALL_BROWSER" = "true" ]; then \
-        apt-get install -y --no-install-recommends fonts-wqy-zenhei \
-        && pip install --no-cache "playwright==1.52.0" \
+        pip install --no-cache "playwright==1.52.0" \
         && python -m playwright install-deps chromium \
         && mkdir -p /app/ms-playwright \
-        && if [ "$USE_CN_MIRROR" = "true" ]; then \
-            PLAYWRIGHT_DOWNLOAD_HOST=https://registry.npmmirror.com/-/binary/playwright \
-            python -m playwright install chromium; \
-        else \
-            python -m playwright install chromium; \
-        fi; \
+        && python -m playwright install chromium; \
     fi \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /home/agent/maia \

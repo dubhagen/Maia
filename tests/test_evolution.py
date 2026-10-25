@@ -726,14 +726,13 @@ def run_real():
     # Load config.json so real API keys are available to the bots.
     load_config()
 
-    # Default the test to deepseek-v4-flash (fast, low cost) unless overridden.
-    override_model = os.environ.get("EVO_TEST_MODEL", "deepseek-v4-flash")
+    override_model = os.environ.get("EVO_TEST_MODEL") or conf().get("model") or ""
     conf()["model"] = override_model
-    conf()["bot_type"] = os.environ.get("EVO_TEST_BOT_TYPE", "deepseek")
+    conf()["bot_type"] = "litellm"
     # Force-enable evolution for the test regardless of config.json default.
     conf()["self_evolution_enabled"] = True
-    print(f"[test] model: {override_model} (bot_type={conf().get('bot_type')}, "
-          f"key={'set' if conf().get('deepseek_api_key') else 'MISSING'})")
+    print(f"[test] model: {override_model} (bot_type=litellm, "
+          f"key={'set' if conf().get('litellm_api_key') else 'MISSING'})")
 
     from agent.memory.manager import MemoryManager
     import agent.evolution.executor as ex
@@ -827,7 +826,7 @@ def run_real():
 
     # Summary table.
     print("\n" + "=" * 72)
-    print("Summary (deepseek-v4-flash live run)")
+    print("Summary (live run)")
     print("-" * 72)
     for name, goal, evolved, changed, reply_ok in results:
         exp = "silent" if goal == "none" else "should evolve"
@@ -839,9 +838,9 @@ def run_real():
 if __name__ == "__main__":
     if "--debug" in sys.argv:
         import logging
-        from common.log import logger as _cow_logger
-        _cow_logger.setLevel(logging.DEBUG)
-        for _h in _cow_logger.handlers:
+        from common.log import logger as _log
+        _log.setLevel(logging.DEBUG)
+        for _h in _log.handlers:
             _h.setLevel(logging.DEBUG)
     if "--real" in sys.argv:
         run_real()

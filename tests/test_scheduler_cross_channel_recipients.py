@@ -37,13 +37,13 @@ def test_recipient_store_persists_only_delivery_identity(tmp_path):
     path = tmp_path / "recipients.json"
     store = RecipientStore(str(path))
     store.remember(
-        "wecom_bot",
+        "terminal",
         "user-42",
         name="Ada",
         session_id="session-42",
     )
 
-    reloaded = RecipientStore(str(path)).get("wecom_bot", "user-42")
+    reloaded = RecipientStore(str(path)).get("terminal", "user-42")
     payload = json.loads(path.read_text(encoding="utf-8"))
 
     assert reloaded["name"] == "Ada"
@@ -54,33 +54,33 @@ def test_recipient_store_persists_only_delivery_identity(tmp_path):
 def test_recipient_store_avoids_rewriting_an_unchanged_recent_entry(tmp_path):
     path = tmp_path / "recipients.json"
     store = RecipientStore(str(path))
-    store.remember("wecom_bot", "user-42", name="Ada")
+    store.remember("terminal", "user-42", name="Ada")
     original_mtime = path.stat().st_mtime_ns
 
-    store.remember("wecom_bot", "user-42", name="Ada")
+    store.remember("terminal", "user-42", name="Ada")
 
     assert path.stat().st_mtime_ns == original_mtime
 
 
 def test_recipient_key_uses_colon_separator(tmp_path):
     path = tmp_path / "recipients.json"
-    RecipientStore(str(path)).remember("weixin", "abc@im.wechat", name="Ada")
+    RecipientStore(str(path)).remember("terminal", "ada@example.com", name="Ada")
 
     payload = json.loads(path.read_text(encoding="utf-8"))
     keys = list(payload["recipients"].keys())
 
-    assert keys == ["weixin:abc@im.wechat"]
+    assert keys == ["terminal:ada@example.com"]
     assert "\u0000" not in path.read_text(encoding="utf-8")
 
 
 def test_receiver_id_with_colon_still_round_trips(tmp_path):
-    # Feishu group ids contain a colon; the key is only the joined form, the
+    # A receiver id can contain a colon; the key is only the joined form, the
     # structured fields are what downstream code reads, so lookup must still work.
     path = tmp_path / "recipients.json"
     store = RecipientStore(str(path))
-    store.remember("feishu", "user-1:group-9", name="Room", is_group=True)
+    store.remember("terminal", "user-1:group-9", name="Room", is_group=True)
 
-    got = store.get("feishu", "user-1:group-9")
+    got = store.get("terminal", "user-1:group-9")
     assert got is not None
     assert got["receiver"] == "user-1:group-9"
     assert got["is_group"] is True
@@ -91,8 +91,8 @@ def test_same_person_on_one_instance_is_a_single_entry(tmp_path):
     # Agent is derived from the instance at delivery time and is not stored here.
     path = tmp_path / "recipients.json"
     store = RecipientStore(str(path))
-    store.remember("weixin", "user-1", name="Ada", instance_id="weixin-aaa")
-    store.remember("weixin", "user-1", name="Ada", instance_id="weixin-aaa")
+    store.remember("terminal", "user-1", name="Ada", instance_id="terminal-aaa")
+    store.remember("terminal", "user-1", name="Ada", instance_id="terminal-aaa")
 
     entries = store.list()
     assert len(entries) == 1
@@ -100,17 +100,17 @@ def test_same_person_on_one_instance_is_a_single_entry(tmp_path):
 
 
 def test_same_receiver_on_two_instances_are_distinct_entries(tmp_path):
-    # The same receiver id seen on two WeChat instances is two different people
+    # The same receiver id seen on two channel instances is two different people
     # (separate logins / id spaces), so they must not collapse into one entry.
     path = tmp_path / "recipients.json"
     store = RecipientStore(str(path))
-    store.remember("weixin", "user-1", name="Ada", instance_id="weixin-aaa")
-    store.remember("weixin", "user-1", name="Bob", instance_id="weixin-bbb")
+    store.remember("terminal", "user-1", name="Ada", instance_id="terminal-aaa")
+    store.remember("terminal", "user-1", name="Bob", instance_id="terminal-bbb")
 
     entries = store.list()
     assert len(entries) == 2
-    assert store.get("weixin-aaa", "user-1")["name"] == "Ada"
-    assert store.get("weixin-bbb", "user-1")["name"] == "Bob"
+    assert store.get("terminal-aaa", "user-1")["name"] == "Ada"
+    assert store.get("terminal-bbb", "user-1")["name"] == "Bob"
 
 
 def test_missing_instance_id_falls_back_to_channel_type(tmp_path):
@@ -118,16 +118,16 @@ def test_missing_instance_id_falls_back_to_channel_type(tmp_path):
     # retrieved under the channel type, which is its running instance id.
     path = tmp_path / "recipients.json"
     store = RecipientStore(str(path))
-    store.remember("wecom_bot", "user-42", name="Ada")
+    store.remember("terminal", "user-42", name="Ada")
 
-    entry = store.get("wecom_bot", "user-42")
+    entry = store.get("terminal", "user-42")
     assert entry is not None
-    assert entry["instance_id"] == "wecom_bot"
+    assert entry["instance_id"] == "terminal"
 
 
 def test_created_task_carries_instance_id(tmp_path):
     recipients = RecipientStore(str(tmp_path / "recipients.json"))
-    recipients.remember("weixin", "user-1", name="Ada", instance_id="weixin-aaa")
+    recipients.remember("terminal", "user-1", name="Ada", instance_id="terminal-aaa")
     tasks = _TaskStore()
     tool = SchedulerTool({"channel_type": "web"})
     tool.current_context = _context("web", "web-session")
@@ -136,13 +136,13 @@ def test_created_task_carries_instance_id(tmp_path):
 
     result = _create(
         tool,
-        channel_type="weixin",
+        channel_type="terminal",
         receiver="user-1",
-        instance_id="weixin-aaa",
+        instance_id="terminal-aaa",
     )
 
     assert "Error:" not in result
-    assert tasks.tasks[0]["action"]["instance_id"] == "weixin-aaa"
+    assert tasks.tasks[0]["action"]["instance_id"] == "terminal-aaa"
 
 
 def test_legacy_entry_without_instance_id_is_normalized_on_read(tmp_path):
@@ -153,8 +153,8 @@ def test_legacy_entry_without_instance_id_is_normalized_on_read(tmp_path):
         json.dumps({
             "version": 1,
             "recipients": {
-                "weixin:user-1": {
-                    "channel_type": "weixin",
+                "terminal:user-1": {
+                    "channel_type": "terminal",
                     "receiver": "user-1",
                     "name": "Ada",
                     "is_group": False,
@@ -167,23 +167,23 @@ def test_legacy_entry_without_instance_id_is_normalized_on_read(tmp_path):
     )
     store = RecipientStore(str(path))
 
-    assert store.get("weixin", "user-1")["instance_id"] == "weixin"
-    assert store.list()[0]["instance_id"] == "weixin"
+    assert store.get("terminal", "user-1")["instance_id"] == "terminal"
+    assert store.list()[0]["instance_id"] == "terminal"
 
 
 def test_web_can_create_message_for_trusted_cross_channel_recipient(tmp_path):
     recipients = RecipientStore(str(tmp_path / "recipients.json"))
-    recipients.remember("wecom_bot", "user-42", name="Ada")
+    recipients.remember("terminal", "user-42", name="Ada")
     tasks = _TaskStore()
     tool = SchedulerTool({"channel_type": "web"})
     tool.current_context = _context("web", "web-session")
     tool.recipient_store = recipients
     tool.task_store = tasks
 
-    result = _create(tool, channel_type="wecom_bot", receiver="user-42")
+    result = _create(tool, channel_type="terminal", receiver="user-42")
 
     assert "Error:" not in result
-    assert tasks.tasks[0]["action"]["channel_type"] == "wecom_bot"
+    assert tasks.tasks[0]["action"]["channel_type"] == "terminal"
     assert tasks.tasks[0]["action"]["receiver"] == "user-42"
     assert tasks.tasks[0]["action"]["receiver_name"] == "Ada"
 
@@ -197,20 +197,20 @@ def test_cross_channel_target_must_be_trusted_and_selected_from_web(tmp_path):
 
     tool.current_context = _context("web", "web-session")
     assert "not in the trusted recipient directory" in _create(
-        tool, channel_type="wecom_bot", receiver="unknown"
+        tool, channel_type="terminal", receiver="unknown"
     )
 
-    recipients.remember("wecom_bot", "user-42")
-    tool.current_context = _context("feishu", "feishu-user")
+    recipients.remember("terminal", "user-42")
+    tool.current_context = _context("terminal", "terminal-user")
     assert "only be selected from the Web console" in _create(
-        tool, channel_type="wecom_bot", receiver="user-42"
+        tool, channel_type="terminal", receiver="user-42"
     )
     assert tasks.tasks == []
 
 
 def test_cross_channel_supports_ai_tasks(tmp_path):
     recipients = RecipientStore(str(tmp_path / "recipients.json"))
-    recipients.remember("wecom_bot", "user-42", name="Ada")
+    recipients.remember("terminal", "user-42", name="Ada")
     tasks = _TaskStore()
     tool = SchedulerTool({"channel_type": "web"})
     tool.current_context = _context("web", "web-session")
@@ -221,12 +221,12 @@ def test_cross_channel_supports_ai_tasks(tmp_path):
         tool,
         message=None,
         ai_task="Prepare a report",
-        channel_type="wecom_bot",
+        channel_type="terminal",
         receiver="user-42",
     )
 
     assert "Error:" not in result
     action = tasks.tasks[0]["action"]
     assert action["type"] == "agent_task"
-    assert action["channel_type"] == "wecom_bot"
+    assert action["channel_type"] == "terminal"
     assert action["receiver"] == "user-42"

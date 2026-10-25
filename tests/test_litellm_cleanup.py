@@ -92,7 +92,7 @@ def test_missing_base_fails_closed_and_ignores_vendor_keys(monkeypatch):
     monkeypatch.setitem(conf(), "litellm_api_base", "")
     monkeypatch.setitem(conf(), "open_ai_api_key", "sk-vendor")
     monkeypatch.setitem(conf(), "open_ai_api_base", "https://api.openai.com/v1")
-    monkeypatch.setitem(conf(), "deepseek_api_key", "sk-deepseek")
+    monkeypatch.setitem(conf(), "unused_vendor_api_key", "sk-unused")
     with pytest.raises(LiteLLMConfigError):
         litellm_api_base()
     assert "open_ai_api_key" not in conf().get("litellm_api_key", "")

@@ -1,8 +1,6 @@
 # encoding:utf-8
 
 import os
-import random
-import string
 import logging
 from typing import Tuple
 
@@ -139,9 +137,7 @@ def get_help_text(isadmin, isgroup):
     for cmd, info in COMMANDS.items():
         if cmd in ["auth", "set_openai_api_key", "reset_openai_api_key", "set_gpt_model", "reset_gpt_model", "gpt_model"]:  
             continue
-        raw_ct = conf().get("channel_type", "web")
-        active_channels = raw_ct if isinstance(raw_ct, list) else [c.strip() for c in str(raw_ct).split(",")]
-        if cmd == "id" and not any(c in ["wxy", "wechatmp"] for c in active_channels):
+        if cmd == "id":
             continue
         alias = ["#" + a for a in info["alias"][:1]]
         help_text += f"{','.join(alias)} "
@@ -207,11 +203,11 @@ class Godcmd(Plugin):
                 # exists to avoid — so a plugin directory that is read-only
                 # (packaged builds) or a full disk must not take the plugin down.
                 logger.warning(f"[Godcmd] cannot write {config_path}: {e}")
+        # An empty password does not invent one. Admin commands stay closed
+        # until the plugin config sets a password.
+        self.temp_password = None
         if gconf["password"] == "":
-            self.temp_password = "".join(random.sample(string.digits, 4))
-            logger.info("[Godcmd] No password is set. Temporary password for this run: %s." % self.temp_password)
-        else:
-            self.temp_password = None
+            logger.info("[Godcmd] No admin password is set. #auth stays closed until plugins/godcmd/config.json sets one.")
         custom_commands = conf().get("clear_memory_commands", [])
         for custom_command in custom_commands:
             if custom_command and custom_command.startswith("#"):
@@ -284,14 +280,14 @@ class Godcmd(Plugin):
                     if not isadmin and not self.is_admin_in_group(e_context["context"]):
                         ok, result = False, "Admin permission is required"
                     elif len(args) == 0:
-                        model = conf().get("model") or const.GPT35
+                        model = conf().get("model") or "not set"
                         ok, result = True, "Current model: " + str(model)
                     elif len(args) == 1:
                         model_id = args[0].strip()
                         if not model_id:
                             ok, result = False, "Provide a model name"
                         else:
-                            conf()["model"] = self.model_mapping(model_id)
+                            conf()["model"] = model_id
                             Bridge().reset_bot()
                             model = conf().get("model") or model_id
                             ok, result = True, "Model set to: " + str(model)
@@ -334,7 +330,7 @@ class Godcmd(Plugin):
                     except Exception:
                         ok, result = False, "You have not set a private model"
                 elif cmd == "reset":
-                    if bottype in [const.LITELLM, const.OPEN_AI, const.OPENAI, const.CHATGPT, const.CHATGPTONAZURE, const.BAIDU, const.QIANFAN, const.XUNFEI, const.QWEN, const.QWEN_DASHSCOPE, const.GEMINI, const.ZHIPU_AI, const.CLAUDEAPI]:
+                    if bottype == const.LITELLM:
                         bot.sessions.clear_session(session_id)
                         if Bridge().chat_bots.get(bottype):
                             Bridge().chat_bots.get(bottype).sessions.clear_session(session_id)
@@ -361,9 +357,7 @@ class Godcmd(Plugin):
                             load_config()
                             ok, result = True, "Config reloaded"
                         elif cmd == "resetall":
-                            if bottype in [const.LITELLM, const.OPEN_AI, const.OPENAI, const.CHATGPT, const.CHATGPTONAZURE,
-                                           const.BAIDU, const.QIANFAN, const.XUNFEI, const.QWEN, const.QWEN_DASHSCOPE, const.GEMINI, const.ZHIPU_AI, const.MOONSHOT,
-                                           const.MODELSCOPE]:
+                            if bottype == const.LITELLM:
                                 channel.cancel_all_session()
                                 bot.sessions.clear_all_session()
                                 ok, result = True, "All sessions reset"
@@ -475,6 +469,9 @@ class Godcmd(Plugin):
         if isadmin:
             return False, "This account is already an admin"
 
+        if not self.password:
+            return False, "Set an admin password in the plugin config"
+
         if len(args) != 1:
             return False, "Provide the password"
 
@@ -483,10 +480,6 @@ class Godcmd(Plugin):
             self.admin_users.append(userid)
             global_config["admin_users"].append(userid)
             return True, "Authenticated"
-        elif password == self.temp_password:
-            self.admin_users.append(userid)
-            global_config["admin_users"].append(userid)
-            return True, "Authenticated. Set a password soon."
         else:
             return False, "Authentication failed"
 
@@ -499,11 +492,6 @@ class Godcmd(Plugin):
             return context.kwargs.get("msg").actual_user_id in global_config["admin_users"]
         return False
 
-
-    def model_mapping(self, model) -> str:
-        if model == "gpt-4-turbo":
-            return const.GPT4_TURBO_PREVIEW
-        return model
 
     def reload(self):
         gconf = pconf(self.name)

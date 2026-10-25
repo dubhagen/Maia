@@ -5,9 +5,6 @@ Supports:
 - HTML web pages: extracts readable text content
 - Document files (PDF, Word, TXT, Markdown, etc.): downloads to workspace/tmp and parses content
 - Plain text downloads: prefers a declared HTTP charset, then existing decoding fallbacks
-- DeepSeek Fetch backend (opt-in via tools.web_fetch.provider="deepseek"):
-  returns the page as Markdown through DeepSeek's official Fetch API
-  (https://api-docs.deepseek.com/guides/search)
 """
 
 import os

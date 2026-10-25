@@ -46,8 +46,6 @@ const MODELS_CAPABILITY_DEFS = [
 const MODELS_PROVIDER_LOGO_PATH = '/assets/logos';
 const MODELS_PROVIDER_LOGO_DARK_INVERT = new Set([
     'openai',     // black wordmark
-    'moonshot',   // dark monogram
-    'zhipu',      // dark monogram
     'custom',     // single-color slider glyph
 ]);
 
@@ -924,44 +922,23 @@ function saveSearchCapability() {
 }
 
 
-// Minimal bocha API-key modal. Reuses the existing vendor-modal markup
-// helpers would be nice, but bocha isn't in PROVIDER_MODELS (it's not a
-// model vendor), so we render a tiny dedicated dialog.
-// For search vendors that hold their own keys.
-
+// SearXNG instance URL. Web search has no other provider.
 
 function openSearchKeyModal(providerId, providerMeta) {
+    if (providerId !== 'searxng') return;
     const existing = document.getElementById('search-key-modal');
     if (existing) existing.remove();
 
-        const searchCap = (modelsState && modelsState.capabilities && modelsState.capabilities.search) || {};
+    const searchCap = (modelsState && modelsState.capabilities && modelsState.capabilities.search) || {};
     const prov = (searchCap.providers || []).find(p => p.id === providerId);
-    const isSearxng = providerId === 'searxng';
-    // SearXNG holds an instance URL (echoed back verbatim in url_masked); the
-    // rest hold a masked API key. Resolve whichever applies as the field value.
-    let masked;
-    if (isSearxng) {
-        masked = (providerMeta && providerMeta.url_masked) || (prov && prov.url_masked) || '';
-    } else {
-        masked = (providerMeta && providerMeta.api_key_masked) || '';
-        if (!masked && prov && prov.api_key_masked) masked = prov.api_key_masked;
-    }
-    // SearXNG URL is not masked, so it's safe to keep editable (not a sentinel).
-    const hasKey = !!masked;
-    const isAnonymous = (providerId === 'anysearch' || providerId === 'keenable')
-        && !!((providerMeta && providerMeta.anonymous) || (prov && prov.anonymous));
-    const clearBtnHtml = (hasKey || isAnonymous)
+    const current = (providerMeta && providerMeta.url_masked) || (prov && prov.url_masked) || '';
+    const clearBtnHtml = current
         ? `<button type="button" id="search-key-clear"
                   class="px-3 py-1.5 rounded-md text-xs text-red-500 dark:text-red-400
                          hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer transition-colors">
               ${t('models_clear_credential')}
            </button>`
         : '';
-    let descText = t('models_search_' + providerId + '_desc');
-    if (providerId === 'anysearch') {
-        const hint = '(Leave blank to enable anonymous mode with daily free quota)';
-        descText = descText + ' ' + hint;
-    }
     const modal = document.createElement('div');
     modal.id = 'search-key-modal';
     modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm';
@@ -969,16 +946,15 @@ function openSearchKeyModal(providerId, providerMeta) {
         <div id="search-key-modal-card"
              class="bg-white dark:bg-[#1A1A1A] rounded-xl border border-slate-200 dark:border-white/10
                     w-full max-w-md mx-4 p-6 shadow-xl">
-            <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-1">${t('models_search_' + providerId + '_title')}</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">${descText}</p>
-            <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5">${providerId === 'searxng' ? 'Instance URL' : 'API Key'}</label>
+            <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-1">${t('models_search_searxng_title')}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">${t('models_search_searxng_desc')}</p>
+            <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5">Instance URL</label>
             <input id="search-key-input" type="text" autocomplete="off" data-1p-ignore data-lpignore="true"
                    class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600
                           bg-slate-50 dark:bg-white/5 text-sm text-slate-800 dark:text-slate-100
-                          focus:outline-none focus:border-primary-500 ${isSearxng ? '' : 'font-mono'} ${(hasKey && !isSearxng) ? 'cfg-key-masked' : ''}"
-                   value="${escapeHtml(masked)}"
-                   data-masked="${(hasKey && !isSearxng) ? '1' : ''}"
-                   placeholder="${isSearxng ? 'https://searxng.example.com' : 'sk-...'}" />
+                          focus:outline-none focus:border-primary-500"
+                   value="${escapeHtml(current)}"
+                   placeholder="https://searxng.example.com" />
             <div class="flex items-center justify-between gap-3 mt-5">
                 <div>${clearBtnHtml}</div>
                 <div class="flex items-center gap-3">
@@ -987,7 +963,7 @@ function openSearchKeyModal(providerId, providerMeta) {
                                    hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
                         ${t('cancel')}
                     </button>
-                    <button type="button" onclick="_saveSearchKey('${providerId}')"
+                    <button type="button" onclick="_saveSearchKey()"
                             class="px-4 py-1.5 rounded-md bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium
                                    cursor-pointer transition-colors">
                         ${t('save')}
@@ -998,26 +974,10 @@ function openSearchKeyModal(providerId, providerMeta) {
     `;
     document.body.appendChild(modal);
 
-    // Reset masked sentinel as soon as the user starts editing so the save
-    // handler can tell apart "kept the existing key" vs "typed a new one".
     const input = document.getElementById('search-key-input');
-    if (input) {
-        const unmask = () => {
-            if (input.dataset.masked === '1') {
-                input.value = '';
-                input.dataset.masked = '';
-                input.classList.remove('cfg-key-masked');
-            }
-        };
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Tab' || e.key === 'Escape') return;
-            unmask();
-        });
-        input.addEventListener('paste', unmask);
-        if (!hasKey) setTimeout(() => input.focus(), 50);
-    }
+    if (input && !current) setTimeout(() => input.focus(), 50);
     const clearBtn = document.getElementById('search-key-clear');
-    if (clearBtn) clearBtn.addEventListener('click', () => _clearSearchKey(providerId));
+    if (clearBtn) clearBtn.addEventListener('click', () => _clearSearchKey());
 
     modal.addEventListener('mousedown', (e) => {
         if (e.target === modal) modal.remove();
@@ -1032,26 +992,21 @@ function openSearchKeyModal(providerId, providerMeta) {
 }
 
 
-function _saveSearchKey(providerId) {
+function _saveSearchKey() {
     const input = document.getElementById('search-key-input');
     if (!input) return;
-    if (input.dataset.masked === '1') {
-        const modal = document.getElementById('search-key-modal');
-        if (modal) modal.remove();
+    const url = input.value.trim();
+    if (!url) {
+        input.focus();
         return;
     }
-    const apiKey = input.value.trim();
-
-    // anysearch and keenable: saving with an empty key enables the anonymous tier.
-    if (providerId === 'anysearch' || providerId === 'keenable') {
     fetch('/api/models', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             action: 'set_search_credential',
-            provider: providerId,
-            api_key: apiKey,
-            anonymous: !apiKey,
+            provider: 'searxng',
+            url,
         }),
     }).then(r => r.json()).then(data => {
         if (data.status === 'success') {
@@ -1060,60 +1015,13 @@ function _saveSearchKey(providerId) {
             loadModelsView({ preserveScroll: true });
         }
     });
-    return;
 }
 
-    if (providerId === 'searxng') {
-        // SearXNG uses an instance URL, not an API key. Empty input is a no-op
-        // here (use the clear button to remove it).
-    if (!apiKey) {
-        input.focus();
-        return;
-    }
+function _clearSearchKey() {
     fetch('/api/models', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                action: 'set_search_credential',
-                provider: providerId,
-                url: apiKey, // reuse the input value as the URL
-            }),
-    }).then(r => r.json()).then(data => {
-        if (data.status === 'success') {
-                const modal = document.getElementById('search-key-modal');
-            if (modal) modal.remove();
-            loadModelsView({ preserveScroll: true });
-        }
-    });
-        return;
-}
-
-    if (!apiKey) {
-        input.focus();
-        return;
-    }
-    fetch('/api/models', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'set_search_credential', provider: providerId, api_key: apiKey }),
-    }).then(r => r.json()).then(data => {
-        if (data.status === 'success') {
-            const modal = document.getElementById('search-key-modal');
-            if (modal) modal.remove();
-            loadModelsView({ preserveScroll: true });
-        }
-    });
-}
-
-function _clearSearchKey(providerId) {
-    // SearXNG is cleared by emptying its instance URL, not an API key.
-    const payload = (providerId === 'searxng')
-        ? { action: 'set_search_credential', provider: providerId, url: '' }
-        : { action: 'set_search_credential', provider: providerId, api_key: '' };
-    fetch('/api/models', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ action: 'set_search_credential', provider: 'searxng', url: '' }),
     }).then(r => r.json()).then(data => {
         if (data.status === 'success') {
             const modal = document.getElementById('search-key-modal');
@@ -1447,7 +1355,7 @@ function buildCapabilityProviderOptions(def, cap) {
     // who's configured (green check) and who isn't (gray dot, click to set
     // up). The list order puts configured vendors first; clicking an
     // unconfigured row opens the vendor modal in-place. ASR/TTS engines that
-    // aren't tracked by PROVIDER_MODELS (azure/baidu/google etc.) are treated
+    // aren't in the built-in list are treated
     // as "always available" — no credential gate.
     const knownProviderMap = {};
     modelsState.providers.forEach(p => { knownProviderMap[p.id] = p; });

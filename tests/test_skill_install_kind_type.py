@@ -28,13 +28,21 @@ def test_valid_kind_parses(raw, expected):
     assert _install(f"      - {raw}\n") == expected
 
 
-@pytest.mark.parametrize("namespace", ["maia", "cow", "cowagent", "openclaw"])
-def test_legacy_metadata_namespace_still_parses(namespace):
+def test_maia_metadata_namespace_parses():
     meta = parse_metadata(yaml.safe_load(
-        f"metadata:\n  {namespace}:\n    emoji: \"*\"\n    requires:\n      bins: [curl]\n"
+        "metadata:\n  maia:\n    emoji: \"*\"\n    requires:\n      bins: [curl]\n"
     ))
     assert meta.emoji == "*"
     assert meta.requires["bins"] == ["curl"]
+
+
+@pytest.mark.parametrize("namespace", ["cow", "cowagent", "openclaw"])
+def test_other_metadata_namespaces_are_ignored(namespace):
+    meta = parse_metadata(yaml.safe_load(
+        f"metadata:\n  {namespace}:\n    emoji: \"*\"\n    requires:\n      bins: [curl]\n"
+    ))
+    assert meta.emoji is None
+    assert meta.requires == {}
 
 
 def test_bad_skill_does_not_hide_the_others(tmp_path: Path):

@@ -11,7 +11,6 @@ import click
 PLAYWRIGHT_VERSION = "1.52.0"
 PLAYWRIGHT_LEGACY_VERSION = "1.28.0"
 GLIBC_THRESHOLD = (2, 28)
-CHINA_MIRROR = "https://registry.npmmirror.com/-/binary/playwright"
 
 # stream(msg, fg=None) — fg is "yellow" | "green" | "red" | None
 StreamFn = Callable[[str, Optional[str]], None]
@@ -64,18 +63,6 @@ def _get_glibc_version():
         return (int(parts[0]), int(parts[1]))
     except Exception:
         return None
-
-
-def _is_china_network() -> bool:
-    try:
-        out = subprocess.check_output(
-            [sys.executable, "-m", "pip", "config", "get", "global.index-url"],
-            stderr=subprocess.DEVNULL,
-        )
-        url = out.decode().strip().lower()
-        return any(kw in url for kw in ("tsinghua", "aliyun", "npmmirror", "douban", "ustc", "huawei", "tencentyun"))
-    except Exception:
-        return False
 
 
 def _pip_install(package_spec: str, stream: StreamFn) -> int:
@@ -347,6 +334,8 @@ def run_install_browser(
     env = os.environ.copy()
     # Pin the download location so it survives desktop app updates and matches
     # what the runtime looks up (see browser_env.browsers_download_dir()).
+    # Always use the official Playwright download host.
+    env.pop("PLAYWRIGHT_DOWNLOAD_HOST", None)
     try:
         from agent.tools.browser.browser_env import browsers_download_dir
         env["PLAYWRIGHT_BROWSERS_PATH"] = browsers_download_dir()
@@ -354,22 +343,7 @@ def run_install_browser(
     except Exception:
         pass
 
-    use_mirror = _is_china_network()
-    if use_mirror:
-        env["PLAYWRIGHT_DOWNLOAD_HOST"] = CHINA_MIRROR
-        stream(f"  (using China mirror: {CHINA_MIRROR})", None)
-        _phase(on_phase, _t("📡 Detected a China pip mirror; Chromium will be downloaded from the China mirror first.",
-        ))
-
     ret = _playwright_cli(pw_args, env=env)
-
-    if ret != 0 and use_mirror:
-        stream("  Mirror download failed, retrying with official CDN...", "yellow")
-        _phase(on_phase, _t("⚠️ Mirror download failed; retrying with the official CDN…",
-        ))
-        env_no_mirror = dict(env)
-        env_no_mirror.pop("PLAYWRIGHT_DOWNLOAD_HOST", None)
-        ret = _playwright_cli(pw_args, env=env_no_mirror)
 
     if ret != 0:
         stream("Failed to install Chromium.", "red")

@@ -50,7 +50,7 @@ const SOURCES: Record<
   { label: string; icon: IconComponent; valueKey: string; hintKey: string; placeholder: string; link?: string }
 > = {
   hub: {
-    label: 'Maia Skill Hub',
+    label: 'Registry',
     icon: Box,
     valueKey: 'skill_value_hub',
     hintKey: 'skill_hint_hub',
@@ -65,7 +65,7 @@ const SOURCES: Record<
   },
 }
 
-const SOURCE_LABELS: Record<string, string> = { maiahub: 'Maia Skill Hub', github: 'GitHub', url: 'URL' }
+const SOURCE_LABELS: Record<string, string> = { maiahub: 'Registry', github: 'GitHub', url: 'URL' }
 
 function sourceLabel(source: string): string {
   if (!source) return ''

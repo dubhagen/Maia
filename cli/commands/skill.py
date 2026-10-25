@@ -707,10 +707,10 @@ def skill():
 # maia skill list
 # ------------------------------------------------------------------
 @skill.command("list")
-@click.option("--remote", is_flag=True, help="Browse skills on Skill Hub")
+@click.option("--remote", is_flag=True, help="List the registry at skill_hub_url, when set")
 @click.option("--page", default=1, type=int, help="Page number for remote listing")
 def skill_list(remote, page):
-    """List installed skills or browse Skill Hub."""
+    """List installed skills, or the registry at skill_hub_url when one is set."""
     if remote:
         _list_remote(page=page)
     else:
@@ -803,10 +803,10 @@ _REMOTE_PAGE_SIZE = 10
 
 
 def _list_remote(page: int = 1):
-    """List skills from remote Skill Hub with server-side pagination."""
+    """List skills from the registry at skill_hub_url, with server-side pagination."""
     hub_api, hub_headers = skill_hub()
     if not hub_api:
-        click.echo("Skill Hub is disabled. Install a skill from a git URL.", err=True)
+        click.echo("No registry is configured. Install a skill from a git URL.", err=True)
         sys.exit(1)
     try:
         resp = requests.get(
@@ -818,14 +818,14 @@ def _list_remote(page: int = 1):
         resp.raise_for_status()
         data = resp.json()
     except Exception as e:
-        click.echo(f"Error: Failed to fetch from Skill Hub: {e}", err=True)
+        click.echo(f"Error: Failed to fetch the skill registry: {e}", err=True)
         sys.exit(1)
 
     skills = data.get("skills", [])
     total = data.get("total", len(skills))
 
     if not skills and page == 1:
-        click.echo("No skills available on Skill Hub.")
+        click.echo("No skills available on the configured registry.")
         return
 
     total_pages = max(1, (total + _REMOTE_PAGE_SIZE - 1) // _REMOTE_PAGE_SIZE)
@@ -835,7 +835,7 @@ def _list_remote(page: int = 1):
     name_w = max((len(s.get("name", "")) for s in skills), default=4)
     name_w = max(name_w, 4) + 2
 
-    click.echo(f"\n  Skill Hub ({total} available) — page {page}/{total_pages}\n")
+    click.echo(f"\n  Registry ({total} available) — page {page}/{total_pages}\n")
     click.echo(f"  {'Name':<{name_w}} {'Status':<12} {'Description'}")
     click.echo(f"  {'─' * (name_w + 12 + 50)}")
 
@@ -865,17 +865,17 @@ def _list_remote(page: int = 1):
 @skill.command()
 @click.argument("query")
 def search(query):
-    """Search skills on Skill Hub."""
+    """Search the registry at skill_hub_url."""
     hub_api, hub_headers = skill_hub()
     if not hub_api:
-        click.echo("Skill Hub is disabled. Install a skill from a git URL.", err=True)
+        click.echo("No registry is configured. Install a skill from a git URL.", err=True)
         sys.exit(1)
     try:
         resp = requests.get(f"{hub_api}/skills/search", params={"q": query}, headers=hub_headers, timeout=10)
         resp.raise_for_status()
         data = resp.json()
     except Exception as e:
-        click.echo(f"Error: Failed to search Skill Hub: {e}", err=True)
+        click.echo(f"Error: Failed to search the skill registry: {e}", err=True)
         sys.exit(1)
 
     skills = data.get("skills", [])
@@ -909,8 +909,8 @@ def search(query):
 def install_skill(name: str, agent_id: str = None) -> InstallResult:
     """Core install logic, usable from CLI and chat plugin.
 
-    Accepts all formats: Skill Hub name, owner/repo, GitHub/GitLab URL,
-    git@ SSH, local path, SKILL.md URL.
+    Accepts a git URL, owner/repo, git@ SSH, a local path, a SKILL.md URL,
+    or a bare name when skill_hub_url is set.
     ``agent_id`` selects which agent's skills directory to write to.
     Returns InstallResult with installed skill names and messages.
     """
@@ -990,7 +990,7 @@ def _route_install(name: str, result: InstallResult, agent_id: str = None):
         _install_github(spec, result, subpath=subpath, agent_id=agent_id)
         return
 
-    # --- Fallback: Skill Hub by name ---
+    # --- Fallback: bare name on the user-configured registry ---
     _check_skill_name(name)
     _install_hub(name, result, agent_id=agent_id)
 
@@ -1176,19 +1176,19 @@ def commit_staged(staging_dir: str, names=None, agent_id: str = None) -> list:
 @skill.command()
 @click.argument("name")
 def install(name):
-    """Install skill(s) from Skill Hub, GitHub, GitLab, git URL, or local path.
+    """Install skill(s) from a git URL, GitHub, GitLab, or a local path.
 
     When given an owner/repo (or full URL), downloads the repo and
     auto-discovers all skills/ subdirectories containing SKILL.md,
     installing them in batch. Use a subpath to install a single skill.
+    A bare name is installed only when skill_hub_url is set. There is no
+    default registry.
 
     Examples:
 
-      maia skill install pptx                          (from Skill Hub)
+      maia skill install owner/repo                    (GitHub shorthand, all skills)
 
-      maia skill install larksuite/cli                 (GitHub shorthand, all skills)
-
-      maia skill install larksuite/cli#skills/lark-im  (single skill by subpath)
+      maia skill install owner/repo#skills/one-skill   (single skill by subpath)
 
       maia skill install https://github.com/owner/repo
 
@@ -1209,7 +1209,7 @@ def install(name):
 
 
 def _install_hub(name, result: InstallResult, provider=None, agent_id: str = None, owner: str = None):
-    """Install a skill from a Skill Hub the user configured."""
+    """Install a skill from the registry URL the user configured."""
     skills_dir = _target_skills_dir(agent_id)
     os.makedirs(skills_dir, exist_ok=True)
 
@@ -1217,7 +1217,7 @@ def _install_hub(name, result: InstallResult, provider=None, agent_id: str = Non
     hub_api, hub_headers = skill_hub(provider)
     if not hub_api:
         raise SkillInstallError(
-            "Skill Hub is disabled. Install from a git URL or a local path."
+            "No registry is configured. Install from a git URL or a local path."
         )
     custom_hub = not provider and custom_skill_hub()
 
@@ -1239,10 +1239,10 @@ def _install_hub(name, result: InstallResult, provider=None, agent_id: str = Non
         except requests.HTTPError as e:
             not_found = e.response is not None and e.response.status_code == 404
             if not_found:
-                raise SkillInstallError(f"Skill '{name}' not found on Skill Hub.")
+                raise SkillInstallError(f"Skill '{name}' not found on the configured registry.")
             raise SkillInstallError(f"Failed to fetch skill: {_hub_error_message(e)}")
         except Exception as e:
-            raise SkillInstallError(f"Failed to connect to Skill Hub: {e}")
+            raise SkillInstallError(f"Failed to connect to the skill registry: {e}")
 
     content_type = resp.headers.get("Content-Type", "")
     hub_display_name = ""
@@ -1274,7 +1274,7 @@ def _install_hub(name, result: InstallResult, provider=None, agent_id: str = Non
                 if not has_mirror:
                     raise SkillInstallError(f"GitHub download failed: {e}")
 
-            # Fallback: download mirror from Skill Hub
+            # Fallback: download the archive from the configured registry.
             result.messages.append(f"GitHub download failed ({gh_err}), trying mirror...")
             try:
                 mirror_resp = requests.post(
@@ -1361,7 +1361,7 @@ def _install_hub(name, result: InstallResult, provider=None, agent_id: str = Non
                         _record_hub_fields(result.installed[installed_before:], data, agent_id=agent_id)
                     return
 
-                # Fallback: download mirror from Skill Hub
+                # Fallback: download the archive from the configured registry.
                 result.messages.append(f"Direct download failed ({dl_err}), trying mirror...")
                 try:
                     mirror_resp = requests.post(
@@ -1414,10 +1414,10 @@ def _install_hub(name, result: InstallResult, provider=None, agent_id: str = Non
         if len(result.installed) == installed_before:
             _register_installed_skill(name, agent_id=agent_id)
             result.installed.append(name)
-            result.messages.append(f"Installed '{name}' from Skill Hub.")
+            result.messages.append(f"Installed '{name}' from the configured registry.")
         return
 
-    raise SkillInstallError("Unexpected response from Skill Hub.")
+    raise SkillInstallError("Unexpected response from the skill registry.")
 
 
 def _install_github(spec, result: InstallResult, subpath=None, skill_name=None, branch=None, source="github", timeout=30, agent_id: str = None):

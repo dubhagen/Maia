@@ -394,11 +394,8 @@ class ChatChannel(Channel):
                     image_reply = copy.copy(reply)
                     image_reply.text_content = None
                     self._send(image_reply, context)
-                # Send text bubble before voice, unless channel already streamed
-                # the text (feishu) or natively renders STT under the voice (wechatcom).
-                elif reply.type == ReplyType.VOICE and context.get("voice_reply_text") \
-                        and not context.get("feishu_streamed") \
-                        and context.get("channel_type") not in ("wechatcom_app",):
+                # Send the transcript as its own text bubble, then the voice.
+                elif reply.type == ReplyType.VOICE and context.get("voice_reply_text"):
                     text_reply = Reply(ReplyType.TEXT, context.get("voice_reply_text"))
                     self._send(text_reply, context)
                     time.sleep(0.3)

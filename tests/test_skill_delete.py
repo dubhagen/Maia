@@ -25,13 +25,13 @@ def _service(tmp_path):
 
 def test_delete_removes_a_folder_named_differently_from_the_skill(tmp_path):
     svc, _, custom = _service(tmp_path)
-    folder = _write_skill(custom, "wecom-cli", "wecom-unified")
+    folder = _write_skill(custom, "terminal-cli", "terminal-unified")
     svc.manager.refresh_skills()
 
-    svc.delete({"name": "wecom-unified"})
+    svc.delete({"name": "terminal-unified"})
 
     assert not folder.exists()
-    assert svc.manager.get_skill("wecom-unified") is None
+    assert svc.manager.get_skill("terminal-unified") is None
 
 
 def test_delete_still_removes_a_folder_named_after_the_skill(tmp_path):

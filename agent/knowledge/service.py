@@ -727,7 +727,7 @@ class KnowledgeService:
                     ...
                 ],
                 "links": [
-                    {"source": "concepts/moe.md", "target": "entities/deepseek.md"},
+                    {"source": "concepts/moe.md", "target": "entities/proxy.md"},
                     ...
                 ]
             }

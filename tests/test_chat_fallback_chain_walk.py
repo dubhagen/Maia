@@ -77,8 +77,8 @@ class TestWalkingTheChain:
     def test_a_failed_link_advances_to_the_next(self, monkeypatch):
         model = _FailingModel([
             {"provider": "openai", "model": "backup-1"},
-            {"provider": "qianfan", "model": "backup-2"},
-            {"provider": "zhipu", "model": "backup-3"},
+            {"provider": "litellm", "model": "backup-2"},
+            {"provider": "litellm", "model": "backup-3"},
         ])
         executor = _executor(model, monkeypatch)
         monkeypatch.setattr(executor.model, "call_stream", _always_down(executor))
@@ -97,7 +97,7 @@ class TestWalkingTheChain:
         when in fact each one was tried and each one failed."""
         model = _FailingModel([
             {"provider": "openai", "model": "backup-1"},
-            {"provider": "qianfan", "model": "backup-2"},
+            {"provider": "litellm", "model": "backup-2"},
         ])
         executor = _executor(model, monkeypatch)
         monkeypatch.setattr(executor.model, "call_stream", _always_down(executor))
@@ -139,7 +139,7 @@ class TestWalkingTheChain:
     def test_the_turn_stops_at_the_link_that_answers(self, monkeypatch):
         model = _FailingModel([
             {"provider": "openai", "model": "backup-1"},
-            {"provider": "qianfan", "model": "backup-2"},
+            {"provider": "litellm", "model": "backup-2"},
         ])
         executor = _executor(model, monkeypatch)
         attempts = {"n": 0}

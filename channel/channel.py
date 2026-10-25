@@ -81,8 +81,8 @@ class Channel(object):
         ``instance_id`` and team ``members`` ride along for logging and team
         handling. All empty on a legacy single-instance channel, so the old
         routing stays intact. Channels that subclass ChatChannel inherit this
-        via the base ``_compose_context``; channels that override
-        ``_compose_context`` (feishu, telegram, ...) call it explicitly.
+        via the base ``_compose_context``. A channel that overrides
+        ``_compose_context`` calls this explicitly.
         """
         if context is None:
             return context

@@ -117,7 +117,7 @@ curl http://localhost:9899/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "agent_id": "research",
-    "model": "deepseek-chat",
+    "model": "your-model-id",
     "messages": [{"role": "user", "content": "Look into recent open-source agent frameworks"}]
   }'
 ```
@@ -134,8 +134,7 @@ Returns the available models: the chat models of every provider configured under
 {
   "object": "list",
   "data": [
-    { "id": "deepseek-chat", "object": "model", "created": 0, "owned_by": "deepseek" },
-    { "id": "qwen-max", "object": "model", "created": 0, "owned_by": "dashscope" }
+    { "id": "your-model-id", "object": "model", "created": 0, "owned_by": "litellm" }
   ]
 }
 ```
@@ -169,7 +168,7 @@ Besides the standard OpenAI response, `message` carries the reasoning and a reco
   "id": "chatcmpl-82c19c44...",
   "object": "chat.completion",
   "created": 1791861130,
-  "model": "deepseek-chat",
+  "model": "your-model-id",
   "choices": [
     {
       "index": 0,

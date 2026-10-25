@@ -62,21 +62,21 @@ View or modify runtime configuration. Changes take effect immediately without re
 **Modify a config item:**
 
 ```text
-/config model deepseek-flash
+/config model your-model-id
 ```
 
 **Configurable items:**
 
 | Item | Description | Example |
 | --- | --- | --- |
-| `model` | AI model name | `deepseek-flash` |
+| `model` | AI model name | `your-model-id` |
 | `agent_max_context_tokens` | Max context tokens | `200000` |
 | `agent_max_context_turns` | Max context memory turns | `30` |
 | `agent_max_steps` | Max decision steps per task | `100` |
 | `enable_thinking` | Enable deep thinking mode | `true` / `false` |
 
 <Note>
-  When changing `model`, the system automatically matches the corresponding model API. Configuration is persisted to `config.json`.
+  Changing `model` stores the model id and sends it to the LiteLLM endpoint unchanged. Configuration is persisted to `config.json`.
 </Note>
 
 ## context

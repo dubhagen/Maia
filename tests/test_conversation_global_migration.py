@@ -70,7 +70,7 @@ def _seed_legacy_db(workspace: Path, session_id: str, text: str) -> None:
         )
         conn.execute(
             "INSERT INTO sessions (session_id, channel_type, created_at, last_active, msg_count) "
-            "VALUES (?, 'feishu', 1, 1, 1)",
+            "VALUES (?, 'web', 1, 1, 1)",
             (session_id,),
         )
         conn.execute(

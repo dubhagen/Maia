@@ -683,7 +683,7 @@ export interface ConfigData {
   // Real password, only returned to the desktop app (trusted local machine) so
   // it can be edited in place. Undefined for browser access.
   web_password?: string
-  // Registry used for installs by name; empty means the default Skill Hub.
+  // Registry used for installs by name. Empty disables that path.
   skill_hub_url?: string
 }
 
@@ -1224,9 +1224,6 @@ export interface TaskAction {
   instance_id?: string
   // Session the push/notification is threaded into; preserved across edits.
   notify_session_id?: string
-  // Channel-specific delivery hints preserved across edits when the target is
-  // unchanged (e.g. DingTalk needs the sender staff id to reply).
-  dingtalk_sender_staff_id?: string
   silent?: boolean
 }
 

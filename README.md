@@ -46,7 +46,7 @@ Update a checkout with `git pull`. Maia does not look up GitHub releases or a de
 
 `litellm_api_base` must be an `http` or `https` URL ending in `/v1`. The key may be empty when the proxy does not require one. An empty model id for embeddings, vision, images, speech-to-text, or text-to-speech turns that capability off. `agent_fallback_models` is an ordered list of model ids on the same proxy.
 
-The same values can be set in the web console under model settings. A new install starts the agent in `full-access` and leaves self-evolution on. Set `web_password` before you bind the console to anything other than localhost.
+The same values can be set in the web console under model settings. A new install starts the agent in `workspace-write` and leaves self-evolution off. Set `web_password` before you bind the console to anything other than localhost.
 
 ## What stays on your machine
 
@@ -75,8 +75,6 @@ The compose file publishes port 9899 and points LiteLLM at `http://host.docker.i
 - [Models](docs/models/index.mdx)
 - [Channels](docs/channels/index.mdx)
 - [Web console](docs/channels/web.mdx)
-
-`docs/releases/` is the upstream CowAgent changelog. The commit and pull-request links in those notes stay on `github.com/zhayujie/CowAgent`, because that is where those changes were made.
 
 ## License
 

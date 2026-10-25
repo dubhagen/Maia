@@ -360,7 +360,7 @@ class MaiaCliPlugin(Plugin):
             "/compact: Summarize older turns to free up context",
             "/tasks: List scheduled tasks for this chat",
             "/skill list: List installed skills",
-            "/skill list --remote: Browse Skill Hub",
+            "/skill list --remote: List the configured registry",
             "/skill search <keyword>: Search skills",
             "/skill install <name>: Install a skill",
             "/skill info <name>: Show skill details",
@@ -958,7 +958,7 @@ class MaiaCliPlugin(Plugin):
                         if os.path.exists(os.path.join(skill_path, "SKILL.md")):
                             entries.append({"name": name, "source": source, "enabled": True})
             if not entries:
-                return "No skills installed yet\n\n💡 /skill list --remote: Browse Skill Hub"
+                return "No skills installed yet\n\n💡 /skill install <git-url>: Install a skill"
             config = {e["name"]: e for e in entries}
 
         sorted_entries = sorted(config.values(), key=lambda e: e.get("name", ""))
@@ -985,7 +985,7 @@ class MaiaCliPlugin(Plugin):
             lines.append("")
 
         lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        lines.append("💡 /skill list --remote: Browse Skill Hub")
+        lines.append("💡 /skill install <git-url>: Install a skill")
         lines.append("💡 /skill info <name>: Show details")
         return "\n".join(lines)
 
@@ -1033,7 +1033,7 @@ class MaiaCliPlugin(Plugin):
         page_size = self._REMOTE_PAGE_SIZE
         hub_api, hub_headers = skill_hub()
         if not hub_api:
-            return "Skill Hub is disabled. Install a skill from a git URL."
+            return "No registry is configured. Install a skill from a git URL."
         try:
             resp = requests.get(
                 f"{hub_api}/skills",
@@ -1046,16 +1046,16 @@ class MaiaCliPlugin(Plugin):
             skills = data.get("skills", [])
             total = data.get("total", len(skills))
         except Exception as e:
-            return f"Failed to fetch Skill Hub: {e}"
+            return f"Failed to fetch the skill registry: {e}"
 
         if not skills and page == 1:
-            return "No skills available on Skill Hub"
+            return "No skills available on the configured registry"
 
         total_pages = max(1, (total + page_size - 1) // page_size)
         page = min(page, total_pages)
         installed = set(load_skills_config(agent_id).keys())
 
-        lines = ["🌐 Skill Hub", ""]
+        lines = ["Registry", ""]
         for s in skills:
             name = s.get("name", "")
             display = s.get("display_name", "") or name
@@ -1077,8 +1077,6 @@ class MaiaCliPlugin(Plugin):
             lines.append(f"💡 /skill list --remote --page {page - 1}: Previous page")
         lines.append("💡 /skill install <name>: Install a skill")
         lines.append("💡 /skill search <keyword>: Search skills")
-        # The hub site is the default product's; a renamed build or another
-        # registry leaves it out.
         return "\n".join(lines)
 
     def _skill_search(self, query: str, agent_id=None) -> str:
@@ -1089,7 +1087,7 @@ class MaiaCliPlugin(Plugin):
         from cli.utils import load_skills_config, skill_hub
         hub_api, hub_headers = skill_hub()
         if not hub_api:
-            return "Skill Hub is disabled. Install a skill from a git URL."
+            return "No registry is configured. Install a skill from a git URL."
         try:
             resp = requests.get(f"{hub_api}/skills/search", params={"q": query}, headers=hub_headers, timeout=10)
             resp.raise_for_status()

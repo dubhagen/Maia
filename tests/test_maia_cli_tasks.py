@@ -61,9 +61,9 @@ def test_tasks_is_a_known_command_and_is_listed_in_help():
 def test_tasks_command_only_lists_tasks_owned_by_current_channel_and_receiver(monkeypatch):
     store = FakeTaskStore(
         [
-            _task("mine", "user-1", "telegram"),
-            _task("other-channel", "user-1", "feishu"),
-            _task("other-user", "user-2", "telegram"),
+            _task("mine", "user-1", "terminal"),
+            _task("other-channel", "user-1", "web"),
+            _task("other-user", "user-2", "terminal"),
         ]
     )
     monkeypatch.setattr(
@@ -72,7 +72,7 @@ def test_tasks_command_only_lists_tasks_owned_by_current_channel_and_receiver(mo
     plugin = MaiaCliPlugin()
 
     result = plugin._cmd_tasks(
-        "", _event_context("telegram", "user-1", "session-1")
+        "", _event_context("terminal", "user-1", "session-1")
     )
 
     assert "mine" in result
@@ -84,7 +84,7 @@ def test_tasks_command_uses_session_identity_without_channel_context(monkeypatch
     store = FakeTaskStore(
         [
             _task("direct", "session-1", "web"),
-            _task("notified", "chat-1", "feishu", notify_session_id="session-1"),
+            _task("notified", "chat-1", "web", notify_session_id="session-1"),
             _task("hidden", "session-2", "web"),
         ]
     )

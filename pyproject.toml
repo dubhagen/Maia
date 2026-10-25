@@ -48,7 +48,6 @@ ignore = [
 # symbols for the probe and never use them again; keep the marker explicit.
 "agent/tools/browser/browser_service.py" = ["F401"]
 "common/package_manager.py" = ["F401"]
-"voice/xunfei/xunfei_voice.py" = ["F401"]
 # __init__.py re-exports the package's public API on purpose.
 "agent/tools/vision/__init__.py" = ["F401"]
 "plugins/maia_cli/__init__.py" = ["F401"]

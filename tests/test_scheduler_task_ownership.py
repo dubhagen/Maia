@@ -44,7 +44,7 @@ def _bind_instances(monkeypatch, mapping):
     monkeypatch.setattr("config.conf", lambda: {}, raising=False)
 
 
-def _im_task(instance_id, channel_type="feishu", stored_agent_id=""):
+def _im_task(instance_id, channel_type="terminal", stored_agent_id=""):
     return {
         "id": "t1",
         "agent_id": stored_agent_id,
@@ -60,31 +60,31 @@ def _im_task(instance_id, channel_type="feishu", stored_agent_id=""):
 
 def test_im_task_owner_follows_the_instance_not_the_stored_value(monkeypatch):
     # The instance is bound to "beta"; the task still carries a stale "alpha".
-    _bind_instances(monkeypatch, {"feishu-1": "beta"})
+    _bind_instances(monkeypatch, {"terminal-1": "beta"})
     registry = _FakeRegistry({"alpha", "beta"}, default_id="alpha")
-    task = _im_task("feishu-1", stored_agent_id="alpha")
+    task = _im_task("terminal-1", stored_agent_id="alpha")
 
     assert effective_task_agent_id(task, registry) == "beta"
 
 
 def test_rebinding_the_instance_moves_the_task_with_no_rewrite(monkeypatch):
     registry = _FakeRegistry({"alpha", "beta"}, default_id="alpha")
-    task = _im_task("feishu-1", stored_agent_id="alpha")
+    task = _im_task("terminal-1", stored_agent_id="alpha")
 
-    _bind_instances(monkeypatch, {"feishu-1": "alpha"})
+    _bind_instances(monkeypatch, {"terminal-1": "alpha"})
     assert effective_task_agent_id(task, registry) == "alpha"
 
     # Re-bind the same instance; the task dict is untouched but ownership flips.
-    _bind_instances(monkeypatch, {"feishu-1": "beta"})
+    _bind_instances(monkeypatch, {"terminal-1": "beta"})
     assert effective_task_agent_id(task, registry) == "beta"
     assert task["agent_id"] == "alpha"  # storage never rewritten
 
 
 def test_unbound_instance_falls_back_to_the_stored_owner(monkeypatch):
     # Instance exists but has no explicit binding (agent_id empty) -> stored wins.
-    _bind_instances(monkeypatch, {"feishu-1": ""})
+    _bind_instances(monkeypatch, {"terminal-1": ""})
     registry = _FakeRegistry({"alpha", "beta"}, default_id="alpha")
-    task = _im_task("feishu-1", stored_agent_id="beta")
+    task = _im_task("terminal-1", stored_agent_id="beta")
 
     assert effective_task_agent_id(task, registry) == "beta"
 
@@ -104,9 +104,9 @@ def test_web_task_keeps_its_stored_owner(monkeypatch):
 def test_execution_degrades_to_default_when_instance_binds_disabled_agent(monkeypatch):
     # Instance binds "ghost", who is not an enabled Agent. Execution must not run
     # as a phantom identity: validate=True degrades to the default.
-    _bind_instances(monkeypatch, {"feishu-1": "ghost"})
+    _bind_instances(monkeypatch, {"terminal-1": "ghost"})
     registry = _FakeRegistry({"alpha"}, default_id="alpha")
-    task = _im_task("feishu-1", stored_agent_id="alpha")
+    task = _im_task("terminal-1", stored_agent_id="alpha")
 
     class _Bridge:
         agent_registry = registry

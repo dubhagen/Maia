@@ -260,7 +260,7 @@ def test_multi_agent_backup_restore_preserves_all_isolated_workspaces(tmp_path):
                 },
             ],
             "channel_instances": [
-                {"instance_id": "feishu-ops", "channel_type": "feishu", "agent_id": "research"}
+                {"instance_id": "web-ops", "channel_type": "web", "agent_id": "research"}
             ],
         },
     )

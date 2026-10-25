@@ -49,7 +49,7 @@ available_setting = {
         "enabled": False,
         # Each item: {"provider": "openai", "model": "gpt-4o-mini"}.
         # `provider` is a provider id as used by `bot_type`
-        # (e.g. "openai", "qianfan", "custom:<id>").
+        # (e.g. "litellm", "custom:<id>").
         "chain": [],
     },
     # Bot trigger config
@@ -94,7 +94,7 @@ available_setting = {
     "embedding_dimensions": 0, # leave empty/0 to use the provider's default dimension (1024 recommended for consistency)
     # Memory rerank config (optional, off by default)
     "rerank_provider": "",  # leave empty to disable; "local" runs a cross-encoder via sentence-transformers (install it yourself)
-    "rerank_model": "",     # leave empty to use the provider's default model (local: BAAI/bge-reranker-base)
+    "rerank_model": "",     # leave empty to use the local default cross-encoder/ms-marco-MiniLM-L-6-v2
     # voice config
     "speech_recognition": True,  # whether to enable speech recognition
     "group_speech_recognition": False,  # whether to enable group speech recognition
@@ -167,11 +167,9 @@ available_setting = {
     "agent_max_context_turns": 30,  # max context memory turns in Agent mode
     "agent_max_steps": 100,  # max decision steps per run in Agent mode
     # Default permission mode for sessions that have not picked one of their own:
-    # "read-only" | "workspace-write" | "full-access". Kept at full-access so an
-    # existing install behaves exactly as before an upgrade. Only a fresh desktop
-    # client (MAIA_DESKTOP=1 with no config.json yet) is tightened to the stricter
-    # workspace-write in load_config(); docker/source stay at full-access.
-    "agent_permission_mode": "full-access",
+    # "read-only" | "workspace-write" | "full-access". New installs can write
+    # inside the workspace. An existing config.json keeps the mode it saved.
+    "agent_permission_mode": "workspace-write",
     # In-process sub agents: the Agent hands a self-contained task to a
     # short-lived worker with its own context, and gets back only the result.
     # Set enabled to false to withhold the subagent tool entirely.
@@ -202,15 +200,12 @@ available_setting = {
     "reasoning_effort_by_model": {},  # Per-model effort intent: {"<provider>:<model>": "<value>"}; overrides the global key per model
     "knowledge": True,  # whether to enable the knowledge base feature
     # Self-evolution: review idle conversations to learn memory/skills. Flat keys.
-    "self_evolution_enabled": True,         # switch to enable/disable self-evolution
+    "self_evolution_enabled": False,        # switch to enable/disable self-evolution
     "self_evolution_idle_minutes": 10,      # idle time before a session is reviewed
     "self_evolution_min_turns": 6,          # min user turns (or context pressure) to trigger
     # Deep Dream: nightly memory distillation into MEMORY.md + dream diary.
     "deep_dream_enabled": True,             # scheduled deep dream switch; manual /memory dream is unaffected
     "skill": {},  # Per-skill runtime config; nested keys flatten to SKILL_<NAME>_<KEY> env vars at startup
-    # Registry that installs by bare name, skill search and skill list --remote
-    # use; empty means the default Skill Hub. It must speak the same API. The key,
-    # if set, is sent as a bearer token to this registry only.
     "mcp_servers": [],  # MCP server list; each entry supports type "stdio" (local process) or "sse" (remote URL)
     # On-demand MCP tool retrieval: when many MCP tools are connected, inject
     # only the most query-relevant ones instead of all of them. Built-in tools
@@ -431,17 +426,6 @@ def load_config():
     # A backup model configured before the fallback chain must survive the
     # upgrade, so normalize it into the current shape before anything reads it.
     _migrate_chat_fallback(config)
-
-    # Fresh desktop installs default to the stricter "workspace-write"; every
-    # other case keeps the template's "full-access". A packaged client only
-    # lacks config.json on its very first launch (config_path fell back to the
-    # bundled template) — once the user configures anything (e.g. a model) the
-    # console persists config.json, so an existing install always has it and is
-    # never silently tightened by an upgrade. Non-desktop (docker, source) is
-    # untouched. Placed before the env override so AGENT_PERMISSION_MODE still
-    # wins if explicitly set.
-    if os.environ.get("MAIA_DESKTOP") == "1" and config_path != user_config_path:
-        config["agent_permission_mode"] = "workspace-write"
 
     # override config with environment variables.
     # Some online deployment platforms (e.g. Railway) deploy project from github directly. So you shouldn't put your secrets like api key in a config file, instead use environment variables to override the default config.

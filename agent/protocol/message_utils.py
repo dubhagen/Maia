@@ -235,7 +235,7 @@ def sanitize_claude_messages(messages: List[Dict]) -> int:
 
 
 # ------------------------------------------------------------------ #
-# OpenAI-format sanitizer (used by minimax_bot, openai_compatible_bot)
+# OpenAI-format sanitizer (used by the LiteLLM chat client)
 # ------------------------------------------------------------------ #
 
 def drop_orphaned_tool_results_openai(messages: List[Dict]) -> List[Dict]:

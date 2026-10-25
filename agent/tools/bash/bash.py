@@ -180,9 +180,9 @@ SAFETY:
 
             # Pass the current run/source identity into child processes
             try:
-                from common import utils as _cow_utils
+                from common import utils as _maia_utils
                 _attr = {}
-                _cow_utils.apply_client_source(_attr)
+                _maia_utils.apply_client_source(_attr)
                 _header_to_env = {
                     "X-Agent-Run-Id": "MAIA_AGENT_RUN_ID",
                     "X-Client-Source": "MAIA_CLIENT_SOURCE",

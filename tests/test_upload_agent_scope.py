@@ -73,7 +73,7 @@ def console(tmp_path, monkeypatch):
 
 def _upload_multipart(console, agent_id):
     """What the browser sends: the Agent rides in the query string only."""
-    boundary = "----cowtest"
+    boundary = "----maiatest"
     body = (
         f"--{boundary}\r\n"
         f'Content-Disposition: form-data; name="file"; filename="photo.png"\r\n'

@@ -51,7 +51,7 @@ class ChatService:
         :param query: user query text
         :param session_id: session identifier for agent isolation
         :param send_chunk_fn: callable(chunk_data: dict) to send a streaming chunk
-        :param channel_type: source channel (e.g. "web", "feishu") for persistence
+        :param channel_type: source channel (e.g. "web", "terminal") for persistence
         :param agent_id: agent that owns the conversation; defaults to the configured default
         :param request_id: per-request cancellation key; defaults to session scope
         :param speaker_agent_id: teammate addressed for this turn; it answers in

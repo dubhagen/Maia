@@ -353,7 +353,7 @@ def update(ctx):
         # On Windows, `maia.exe` (this process) locks the exe file, so
         # `pip install -e .` fails with WinError 5.  Write a small .bat
         # helper that waits for maia.exe to exit, then installs & starts.
-        bat = os.path.join(root, "_cow_update.bat")
+        bat = os.path.join(root, "_maia_update.bat")
         lines = [
             "@echo off",
             "chcp 65001 >nul",

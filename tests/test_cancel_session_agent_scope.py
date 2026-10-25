@@ -136,7 +136,7 @@ class _ChatBridge:
         pass
 
     def get_bot_type(self, bot_role):
-        return const.OPENAI
+        return const.LITELLM
 
     def get_bot(self, bot_role):
         return SimpleNamespace(sessions=MagicMock())

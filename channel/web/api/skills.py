@@ -79,7 +79,7 @@ _GITHUB_SHORTHAND_RE = re.compile(r"^[A-Za-z0-9_\-]+/[A-Za-z0-9_.\-]+(?:#.+)?$")
 def _market_spec(source: str, value: str) -> str:
     """Turn the console's (source, value) pair into an installer spec.
 
-    Explicit per source so that, say, ``owner/repo`` typed into the Skill Hub
+    Explicit per source so that, say, ``owner/repo`` typed into the registry
     box cannot silently turn into a GitHub install, and so the console can
     never reach the installer's local-path route.
     """
@@ -197,7 +197,7 @@ def _skill_service(agent_id: str = ''):
 
 
 def _record_staged_fields(staging_dir: str, installed: list, service) -> None:
-    """Carry the fields a configured Skill Hub registry recorded at staging
+    """Carry the fields a configured skill registry recorded at staging
     (category, display_description, icon, version) into the live config."""
     from cli.commands.skill import _read_staged_config
 

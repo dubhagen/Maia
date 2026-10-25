@@ -28,7 +28,7 @@ def test_unknown_action_type_is_handled_but_recorded_as_error(monkeypatch, one_a
     task = {
         "id": "task-42",
         "name": "Daily digest",
-        "action": {"type": "remind_me", "channel_type": "feishu", "receiver": "u-1", "content": "hi"},
+        "action": {"type": "remind_me", "channel_type": "web", "receiver": "u-1", "content": "hi"},
     }
 
     ok = integration._run_scheduled_task(task, agent_bridge=object(), agent_id="default")

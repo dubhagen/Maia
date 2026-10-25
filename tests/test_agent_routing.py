@@ -41,7 +41,7 @@ def test_channel_instance_binding_routes_to_bound_agent(registry):
     bound_agent_id decides which Agent answers."""
     router = _router(registry)
     context = Context(ContextType.TEXT, "hi", kwargs={})
-    context["channel_type"] = "feishu"
+    context["channel_type"] = "web"
     context["bound_agent_id"] = "research"
 
     assert router.resolve_context(context) == "research"
@@ -64,7 +64,7 @@ def test_instance_binding_falls_back_to_default_when_unavailable(registry):
     the default Agent rather than dropping the message."""
     router = _router(registry)
     context = Context(ContextType.TEXT, "hi", kwargs={})
-    context["channel_type"] = "feishu"
+    context["channel_type"] = "web"
     context["bound_agent_id"] = "disabled"
 
     assert router.resolve_context(context) == "primary"
@@ -74,7 +74,7 @@ def test_context_without_binding_uses_default(registry):
     """No bound_agent_id and no explicit selection -> the default Agent."""
     router = _router(registry)
     context = Context(ContextType.TEXT, "hi", kwargs={})
-    context["channel_type"] = "feishu"
+    context["channel_type"] = "web"
 
     assert router.resolve_context(context) == "primary"
     assert context["agent_id"] == "primary"

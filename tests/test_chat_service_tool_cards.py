@@ -160,9 +160,9 @@ def test_run_answers_on_the_requested_model(runtime):
     agent.model.set_session_override = lambda provider, model: routes.append((provider, model))
 
     service.run("q", "s1", lambda chunk: None)
-    service.run("q", "s1", lambda chunk: None, model_override=("deepseek", "deepseek-chat"))
+    service.run("q", "s1", lambda chunk: None, model_override=("litellm", "demo-chat"))
 
-    assert routes == [("deepseek", "deepseek-chat")]
+    assert routes == [("litellm", "demo-chat")]
 
 
 def test_run_without_persist_stores_nothing(runtime, monkeypatch):

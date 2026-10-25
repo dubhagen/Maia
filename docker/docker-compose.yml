@@ -26,12 +26,12 @@ services:
       WEB_HOST: '0.0.0.0'
       WEB_PASSWORD: ''
       AGENT: 'True'
-      # Container is already an isolation boundary, so the agent runs unconfined inside it
-      AGENT_PERMISSION_MODE: 'full-access'
+      # The container is the isolation boundary. New installs default to workspace-write.
+      AGENT_PERMISSION_MODE: 'workspace-write'
       AGENT_MAX_CONTEXT_TOKENS: 200000
       AGENT_MAX_CONTEXT_TURNS: 30
       AGENT_MAX_STEPS: 100
-      SELF_EVOLUTION_ENABLED: 'True'
+      SELF_EVOLUTION_ENABLED: 'False'
       # Writable data root (config.json, run.log, credentials) — kept separate
       # from the workspace so it survives image upgrades / container recreation.
       MAIA_DATA_DIR: '/home/agent/.maia'

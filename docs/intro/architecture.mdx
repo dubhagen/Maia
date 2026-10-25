@@ -98,7 +98,7 @@ Configure Agent mode parameters in `config.json`:
   "agent_max_context_tokens": 200000,
   "agent_max_context_turns": 30,
   "agent_max_steps": 100,
-  "agent_permission_mode": "full-access",
+  "agent_permission_mode": "workspace-write",
   "enable_thinking": false,
   "maia_lang": "auto"
 }
@@ -111,8 +111,8 @@ Configure Agent mode parameters in `config.json`:
 | `agent_max_context_tokens` | Max context tokens | `200000` |
 | `agent_max_context_turns` | Max context turns | `30` |
 | `agent_max_steps` | Max decision steps per task | `100` |
-| `agent_permission_mode` | Global default permission inherited by new sessions: `read-only` / `workspace-write` / `full-access` | `full-access` |
+| `agent_permission_mode` | Global default permission inherited by new sessions: `read-only` / `workspace-write` / `full-access` | `workspace-write` |
 | `enable_thinking` | Enable deep-thinking mode | `false` |
 | `knowledge` | Enable personal knowledge base | `true` |
-| `self_evolution_enabled` | Enable Self-Evolution (on by default for new installs) | `false` |
-| `maia_lang` | Language for the UI, command text and system prompts; `auto` to detect, or set `zh` / `en` | `auto` |
+| `self_evolution_enabled` | Enable Self-Evolution. New installs leave it off | `false` |
+| `maia_lang` | UI language. English is the only language; `auto` stays English | `auto` |

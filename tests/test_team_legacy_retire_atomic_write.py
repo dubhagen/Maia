@@ -22,7 +22,7 @@ LEGACY_ROSTER = {
     "agent_workspace": "/srv/maia",
     "agents": [{"id": "main", "name": "Main"}],
     "default_agent_id": "main",
-    "channel_instances": [{"id": "weixin", "agent_id": "main"}],
+    "channel_instances": [{"id": "terminal", "agent_id": "main"}],
 }
 
 

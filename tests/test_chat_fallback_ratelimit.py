@@ -86,8 +86,8 @@ class TestRateLimitWithABackup:
     def test_it_walks_the_whole_chain_without_retrying(self, monkeypatch):
         model = _Model([
             {"provider": "openai", "model": "backup-1"},
-            {"provider": "qianfan", "model": "backup-2"},
-            {"provider": "zhipu", "model": "backup-3"},
+            {"provider": "litellm", "model": "backup-2"},
+            {"provider": "litellm", "model": "backup-3"},
         ])
         executor = _executor(model, monkeypatch)
         monkeypatch.setattr(executor.model, "call_stream", _always_down(model, RATE_LIMITED))

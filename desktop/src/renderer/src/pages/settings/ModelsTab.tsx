@@ -225,22 +225,8 @@ const ModelsTab: React.FC<ModelsTabProps> = ({ baseUrl }) => {
         onSaveStrategy={(strategy, provider) =>
           run('search', { action: 'set_capability', capability: 'search', strategy, provider })
         }
-        onSaveSearchKey={(provider, value, anonymous) =>
-          run(
-            'search_key',
-            provider === 'searxng'
-              ? // SearXNG persists an instance URL, not an API key.
-                { action: 'set_search_credential', provider, url: value }
-              : { action: 'set_search_credential', provider, api_key: value, anonymous }
-          )
-        }
-        onSaveDeepseek={(apiKey, apiBase) =>
-          run('search_key', {
-            action: 'set_provider',
-            provider_id: 'deepseek',
-            api_base: apiBase,
-            ...(apiKey ? { api_key: apiKey } : {}),
-          })
+        onSaveSearchKey={(provider, value) =>
+          run('search_key', { action: 'set_search_credential', provider, url: value })
         }
         keyStatus={statusMap.search_key}
         keyBusy={busy === 'search_key'}
@@ -880,25 +866,19 @@ const EmbeddingCard: React.FC<{
   </CapabilityCard>
 )
 
-// Search providers editable from the search card: a dedicated API key, or —
-// for SearXNG — a self-hosted instance URL. AnySearch additionally supports an
-// anonymous tier, so it counts as "configured" even without a key. DeepSeek
-// edits the shared model key and base. Mirrors the web console flow.
+// Web search is a self-hosted SearXNG instance URL.
 const isDedicatedKeyProvider = (p: SearchProviderMeta): boolean =>
-  p.needs_dedicated_key ||
-  p.needs_url ||
-  ['deepseek', 'bocha', 'anysearch', 'serply', 'tavily', 'searxng', 'keenable'].includes(p.id)
+  p.id === 'searxng' || !!p.needs_url
 
 const SearchCard: React.FC<{
   state: SearchCapabilityState
   busy: boolean
   status?: string
   onSaveStrategy: (strategy: string, provider: string) => void
-  onSaveSearchKey: (provider: string, key: string, anonymous: boolean) => void
-  onSaveDeepseek: (apiKey: string, apiBase: string) => void
+  onSaveSearchKey: (provider: string, url: string) => void
   keyStatus?: string
   keyBusy: boolean
-}> = ({ state, busy, status, onSaveStrategy, onSaveSearchKey, onSaveDeepseek, keyStatus, keyBusy }) => {
+}> = ({ state, busy, status, onSaveStrategy, onSaveSearchKey, keyStatus, keyBusy }) => {
   const [strategy, setStrategy] = useState<string>(state.strategy || 'auto')
   const [provider, setProvider] = useState<string>(state.fixed_provider || state.current_provider || '')
   // The dedicated-key provider currently open in the credential modal, or null.
@@ -953,7 +933,7 @@ const SearchCard: React.FC<{
         )}
 
         {/* Dedicated-key providers: configured chips (click to edit) + add entry. */}
-        <Field label={t('models_search_bocha_key')}>
+        <Field label={t('models_search_instance')}>
           <div className="flex items-center flex-wrap gap-2">
             {configured.map((p) => (
               <button
@@ -1023,23 +1003,13 @@ const SearchCard: React.FC<{
         </div>
       </Modal>
 
-      <DeepseekSearchModal
-        provider={keyProvider?.id === 'deepseek' ? keyProvider : null}
-        busy={keyBusy}
-        onClose={() => setKeyProvider(null)}
-        onSave={(apiKey, apiBase) => {
-          onSaveDeepseek(apiKey, apiBase)
-          setKeyProvider(null)
-        }}
-      />
-
       <SearchKeyModal
-        provider={keyProvider?.id === 'deepseek' ? null : keyProvider}
+        provider={keyProvider?.id === 'searxng' || keyProvider?.needs_url ? keyProvider : null}
         busy={keyBusy}
         status={keyStatus}
         onClose={() => setKeyProvider(null)}
-        onSave={(key, anonymous) => {
-          if (keyProvider) onSaveSearchKey(keyProvider.id, key, anonymous)
+        onSave={(url) => {
+          if (keyProvider) onSaveSearchKey(keyProvider.id, url)
           setKeyProvider(null)
         }}
       />
@@ -1047,23 +1017,16 @@ const SearchCard: React.FC<{
   )
 }
 
-// Dedicated-credential editor for a single search provider. Most providers
-// hold an API key; SearXNG holds a self-hosted instance URL (echoed back
-// verbatim, not masked). AnySearch adds an anonymous option: saving with an
-// empty key enables the anonymous tier.
+// SearXNG holds a self-hosted instance URL. It is echoed back, not masked.
 const SearchKeyModal: React.FC<{
   provider: SearchProviderMeta | null
   busy: boolean
   status?: string
   onClose: () => void
-  onSave: (value: string, anonymous: boolean) => void
+  onSave: (url: string) => void
 }> = ({ provider, busy, onClose, onSave }) => {
   const open = !!provider
-  // anysearch and keenable share the "save empty = enable anonymous tier" contract.
-  const isAnonymousProvider = provider?.id === 'anysearch' || provider?.id === 'keenable'
-  const isSearxng = provider?.id === 'searxng' || !!provider?.needs_url
-  // SearXNG prefills its plain instance URL; others prefill the masked key.
-  const initial = isSearxng ? provider?.url_masked || '' : provider?.api_key_masked || ''
+  const initial = provider?.url_masked || ''
   const [value, setValue] = useState('')
   const [dirty, setDirty] = useState(false)
 
@@ -1076,40 +1039,20 @@ const SearchKeyModal: React.FC<{
 
   if (!provider) return null
 
-  const title = t(`models_search_${provider.id}_title`)
-  const desc = t(`models_search_${provider.id}_desc`)
+  const title = t('models_search_searxng_title')
+  const desc = t('models_search_searxng_desc')
 
   const handleSave = () => {
-    if (isSearxng) {
-      // URL is plain text (never masked). Empty is a no-op here — use the
-      // configured chip / clear flow to remove it.
-      const trimmed = value.trim()
-      if (!dirty || !trimmed) {
-        onClose()
-        return
-      }
-      onSave(trimmed, false)
-      return
-    }
-    // Kept the masked placeholder untouched -> nothing to persist.
-    if (!dirty || MASK_RE.test(value)) {
-      // anysearch/keenable: an untouched-but-empty field still means "anonymous".
-      if (isAnonymousProvider && !initial) onSave('', true)
-      else onClose()
-      return
-    }
     const trimmed = value.trim()
-    // anysearch/keenable: empty key = enable anonymous mode.
-    onSave(trimmed, isAnonymousProvider && !trimmed)
+    if (!dirty || !trimmed) {
+      onClose()
+      return
+    }
+    onSave(trimmed)
   }
 
-  const fieldLabel = isSearxng ? t('models_search_instance_url') : 'API Key'
-  const fieldHint = isSearxng
-    ? undefined
-    : isAnonymousProvider
-      ? t('models_search_anysearch_anon_hint')
-      : undefined
-  const placeholder = isSearxng ? 'https://searxng.example.com' : 'sk-...'
+  const fieldLabel = t('models_search_instance_url')
+  const placeholder = 'https://searxng.example.com'
 
   return (
     <Modal
@@ -1128,98 +1071,16 @@ const SearchKeyModal: React.FC<{
       }
     >
       <p className="text-xs text-content-tertiary mb-3">{desc}</p>
-      <Field label={fieldLabel} hint={fieldHint}>
+      <Field label={fieldLabel}>
         <TextInput
-          className={isSearxng ? '' : 'font-mono'}
           value={value}
           placeholder={placeholder}
-          onFocus={() => {
-            // Only API keys use a masked sentinel; URLs stay as-is.
-            if (!isSearxng && !dirty && MASK_RE.test(value)) setValue('')
-          }}
           onChange={(e) => {
             setValue(e.target.value)
             setDirty(true)
           }}
         />
       </Field>
-    </Modal>
-  )
-}
-
-// DeepSeek search reuses the model vendor's key and base URL. No clear action:
-// clearing would also disable the chat model.
-const DeepseekSearchModal: React.FC<{
-  provider: SearchProviderMeta | null
-  busy: boolean
-  onClose: () => void
-  onSave: (apiKey: string, apiBase: string) => void
-}> = ({ provider, busy, onClose, onSave }) => {
-  const open = !!provider
-  const initialKey = provider?.api_key_masked || ''
-  const initialBase = provider?.api_base || ''
-  const [key, setKey] = useState('')
-  const [base, setBase] = useState('')
-  const [keyDirty, setKeyDirty] = useState(false)
-
-  useEffect(() => {
-    if (open) {
-      setKey(initialKey)
-      setBase(initialBase)
-      setKeyDirty(false)
-    }
-  }, [open, initialKey, initialBase])
-
-  if (!provider) return null
-
-  const handleSave = () => {
-    const keptKey = !keyDirty || MASK_RE.test(key)
-    const apiKey = keptKey ? '' : key.trim()
-    if (!apiKey && !initialKey) return
-    onSave(apiKey, base.trim())
-  }
-
-  return (
-    <Modal
-      open={open}
-      title={t('models_search_deepseek_title')}
-      onClose={onClose}
-      footer={
-        <>
-          <Btn variant="ghost" onClick={onClose}>
-            {t('config_cancel')}
-          </Btn>
-          <Btn variant="primary" disabled={busy} onClick={handleSave}>
-            {busy ? <Loader2 size={14} className="animate-spin" /> : t('config_save')}
-          </Btn>
-        </>
-      }
-    >
-      <p className="text-xs text-content-tertiary mb-3">{t('models_search_deepseek_desc')}</p>
-      <div className="space-y-3">
-        <Field label="Base URL">
-          <TextInput
-            className="font-mono"
-            value={base}
-            placeholder="https://api.deepseek.com/v1"
-            onChange={(e) => setBase(e.target.value)}
-          />
-        </Field>
-        <Field label="API Key">
-          <TextInput
-            className="font-mono"
-            value={key}
-            placeholder="sk-..."
-            onFocus={() => {
-              if (!keyDirty && MASK_RE.test(key)) setKey('')
-            }}
-            onChange={(e) => {
-              setKey(e.target.value)
-              setKeyDirty(true)
-            }}
-          />
-        </Field>
-      </div>
     </Modal>
   )
 }

@@ -166,11 +166,4 @@ When a server returns `401` on its first load, authorization starts automaticall
 | Changes to `mcp.json` aren't applied | Changes take effect on **the next message**. If the server config didn't actually change (e.g. only comments edited), no restart is triggered |
 | Docker deployment | Make sure host's `./maia` is mounted to `/home/agent/maia` in the container, then just drop `mcp.json` into host's `./maia/`. Or just ask the Agent to do it |
 
-## Recommended MCP Marketplaces
-
-You can browse third-party MCP marketplaces and copy a JSON config to use directly, for example:
-
-- [mcp.so](https://mcp.so) — Global MCP service index
-- [ModelScope MCP Hub](https://modelscope.cn/mcp) — ModelScope's MCP hub, more reliable from mainland China
-
-Any MCP server that follows the standard protocol (stdio / SSE / Streamable HTTP) integrates with Maia out of the box.
+Add servers yourself in `mcp.json`. Any MCP server that follows the standard protocol (stdio / SSE / Streamable HTTP) integrates with Maia. Maia does not call an MCP marketplace.

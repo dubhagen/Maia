@@ -452,28 +452,8 @@ clone_project() {
 # Install dependencies
 install_dependencies() {
     echo -e "${GREEN}📦 Installing dependencies...${NC}"
-    # Pick the pip index by install language, then fall back to the other if the
-    # preferred one is unreachable:
-    #   - zh users: Tsinghua mirror first (fast in China), official PyPI fallback
-    #   - others : official PyPI first, Tsinghua mirror fallback
+    # Official PyPI only.
     local PIP_MIRROR=""
-    local _tuna="https://pypi.tuna.tsinghua.edu.cn/simple"
-    local _pypi="https://pypi.org/simple"
-    if [ "$UI_LANG" = "zh" ]; then
-        # Prefer Tsinghua; if it's down, fall back to official PyPI (pip default).
-        if curl -s --connect-timeout 5 "${_tuna}/" > /dev/null 2>&1; then
-            PIP_MIRROR="-i $_tuna"
-        fi
-    else
-        # Prefer official PyPI; only use Tsinghua if PyPI is unreachable.
-        if ! curl -s --connect-timeout 5 "${_pypi}/" > /dev/null 2>&1 \
-           && curl -s --connect-timeout 5 "${_tuna}/" > /dev/null 2>&1; then
-            PIP_MIRROR="-i $_tuna"
-        fi
-    fi
-    if [ -n "$PIP_MIRROR" ]; then
-        echo -e "${YELLOW}Using pip mirror: ${_tuna}${NC}"
-    fi
 
     # Only pass --break-system-packages if this pip actually supports it
     # (pip >= 23.x). Older pip versions error out with "no such option",

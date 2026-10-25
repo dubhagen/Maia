@@ -40,7 +40,7 @@ def make_pages(root):
     (root / "concepts").mkdir()
     (root / "entities").mkdir()
     (root / "concepts/rag.md").write_text("# RAG\n", encoding="utf-8")
-    (root / "entities/deepseek.md").write_text(
+    (root / "entities/proxy.md").write_text(
         "# DeepSeek\nsee [RAG](../concepts/rag.md)\n", encoding="utf-8"
     )
     (root / "notes.md").write_text("# Notes\n", encoding="utf-8")
@@ -53,9 +53,9 @@ def test_nested_pages_keep_their_category_and_forward_slash_ids(tmp_path):
     graph = svc.build_graph()
     nodes = {n["id"]: n for n in graph["nodes"]}
 
-    assert set(nodes) == {"concepts/rag.md", "entities/deepseek.md", "notes.md"}
+    assert set(nodes) == {"concepts/rag.md", "entities/proxy.md", "notes.md"}
     assert nodes["concepts/rag.md"]["category"] == "concepts"
-    assert nodes["entities/deepseek.md"]["category"] == "entities"
+    assert nodes["entities/proxy.md"]["category"] == "entities"
     # A page directly under knowledge/ has no category segment.
     assert nodes["notes.md"]["category"] == "root"
     for node_id in nodes:
@@ -70,7 +70,7 @@ def test_graph_links_are_named_like_their_nodes(tmp_path):
     node_ids = {n["id"] for n in graph["nodes"]}
     endpoints = {l["source"] for l in graph["links"]} | {l["target"] for l in graph["links"]}
 
-    assert ("entities/deepseek.md", "concepts/rag.md") in {
+    assert ("entities/proxy.md", "concepts/rag.md") in {
         (l["source"], l["target"]) for l in graph["links"]
     }
     # An edge that points at a string no node carries leaves an orphan in the

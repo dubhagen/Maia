@@ -46,7 +46,7 @@ def console(tmp_path):
 
 def _post_form(console, path, fields):
     """``fields`` is a list of (name, value) or (name, (filename, bytes))."""
-    boundary = "----cowmulti"
+    boundary = "----maiamulti"
     chunks = []
     for name, value in fields:
         if isinstance(value, tuple):

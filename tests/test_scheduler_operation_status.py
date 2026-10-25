@@ -30,8 +30,8 @@ def create(**overrides):
     create(schedule_type=""), create(schedule_value=""),
     create(schedule_type="cron", schedule_value="invalid cron"),
     create(schedule_value="2000-01-01 00:00:00"),
-    create(channel_type="weixin"),
-    create(channel_type="weixin", receiver="unknown"),
+    create(channel_type="terminal"),
+    create(channel_type="terminal", receiver="unknown"),
     *[{"action": action, "task_id": task_id}
       for action in ("get", "delete", "enable", "disable")
       for task_id in ("", "does-not-exist")],
@@ -50,7 +50,7 @@ def test_missing_conversation_and_recipient_directory_report_failure(tool):
     tool.current_context = {"channel_type": "web"}
     tool.recipient_store = None
     assert tool.execute({"action": "list_recipients"}).status == "error"
-    assert tool.execute(create(channel_type="weixin", receiver="unknown")).status == "error"
+    assert tool.execute(create(channel_type="terminal", receiver="unknown")).status == "error"
     assert tool.task_store.load_tasks() == {}
 
 

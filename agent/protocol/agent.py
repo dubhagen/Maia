@@ -37,22 +37,11 @@ def _first_version(model_name: str):
 _MODEL_SPECS = {
     # gpt-5.x / gpt-6 / future: 1M context, 128K max output.
     "gpt": {"version_min": 5.0, "window": 1000000, "max_output": 128000},
-    # deepseek V4+: 1M context, 384K max output; legacy chat/reasoner: 64K.
-    # full_cap_names lists version-less flagship names that should also get the
-    # large window even though they carry no numeric version (e.g. deepseek-flash).
-    "deepseek": {"version_min": 4.0, "window": 1000000, "max_output": 384000,
-                 "fallback_window": 64000, "full_cap_names": ("deepseek-flash",)},
     # gemini: 1M context, 64K max output.
     "gemini": {"window": 1000000, "max_output": 64000},
     # claude 5+: 1M context, 128K max output; claude 4 and earlier: 200K / 64K.
     "claude": {"version_min": 5.0, "window": 1000000, "max_output": 128000,
                "fallback_window": 200000, "fallback_max_output": 64000},
-    # GLM: only 5.3-flash ships a 1M window; older glm-5.x stays at 200K.
-    "glm": {"prefix": "glm-5.3-flash", "window": 1000000, "max_output": None,
-            "fallback_window": 200000},
-    # Qwen: only 3.8-flash ships a 1M window; keep others conservative.
-    "qwen": {"prefix": "qwen3.8-flash", "window": 1000000, "max_output": None,
-             "fallback_window": 128000},
 }
 
 
@@ -74,17 +63,12 @@ def resolve_family_spec(model_name: str):
         prefix = spec.get("prefix")
         version_min = spec.get("version_min")
         if prefix is not None:
-            # Family where only a specific model gets the large window
-            # (e.g. glm-5.3-flash); everything else uses the fallback.
             if name.startswith(prefix):
                 return spec["window"], spec.get("max_output")
             return spec.get("fallback_window", 128000), None
         if name in spec.get("full_cap_names", ()):
-            # Version-less flagship (e.g. deepseek-flash = V4.1): full window.
             return spec["window"], spec.get("max_output")
         if version_min is not None and (version is None or version < version_min):
-            # Older release of a family that only bumped at version_min
-            # (e.g. deepseek < v4): use its conservative fallback window.
             return spec.get("fallback_window", 128000), spec.get("fallback_max_output")
         return spec["window"], spec.get("max_output")
     return None, None

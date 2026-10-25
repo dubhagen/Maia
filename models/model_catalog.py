@@ -20,12 +20,12 @@ Storage (``get_data_root()/system/models.json``)::
 
     {
         "providers": {
-            "zhipu": {
+            "litellm": {
                 "overrides": [
-                    {"name": "glm-5.3", "capabilities": ["text"],
-                     "context_window": 2000000}
+                    {"name": "demo-chat", "capabilities": ["text"],
+                     "context_window": 200000}
                 ],
-                "hidden": ["glm-4.7"]
+                "hidden": ["old-demo"]
             },
             "custom:3f2a9c1b": {"overrides": [ ... ], "hidden": []}
         }

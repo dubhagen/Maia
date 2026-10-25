@@ -668,15 +668,6 @@ function saveTaskEdit() {
         action.receiver_name = recipient.name || recipient.receiver;
         action.is_group = recipient.is_group || false;
         action.notify_session_id = recipient.session_id || recipient.receiver;
-        // Preserve channel-specific fields only when the channel is unchanged
-        // (e.g. DingTalk sender_staff_id is meaningless on a different instance).
-        if (
-            action.channel_type === (origAction.channel_type || '') &&
-            action.receiver === (origAction.receiver || '') &&
-            origAction.dingtalk_sender_staff_id
-        ) {
-            action.dingtalk_sender_staff_id = origAction.dingtalk_sender_staff_id;
-        }
     }
     
     saveBtn.disabled = true;

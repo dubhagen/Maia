@@ -137,19 +137,18 @@ def _usable_hub_url(url: str) -> bool:
 
 
 def custom_skill_hub() -> bool:
-    """Whether ``skill_hub_url`` points requests at a registry other than the default."""
+    """Whether the user set a usable ``skill_hub_url``. There is no default registry."""
     url = _skill_hub_setting("skill_hub_url")
     return bool(url) and _usable_hub_url(url)
 
 
 def skill_hub(provider: str = None) -> tuple:
-    """Base URL and request headers for a Skill Hub request.
+    """Base URL and request headers for a user-configured skill registry.
 
-    ``skill_hub_url`` replaces the default hub for requests that name no
-    provider: installs by bare name, search and the remote listing. Requests
-    for a provider (github:, ...) are what the default hub proxies,
-    so they keep going there. ``skill_hub_api_key`` only ever goes to the
-    configured registry.
+    An empty ``skill_hub_url`` disables installs by bare name, search, and the
+    remote listing. Named providers (github:, a git URL) are installed directly
+    and never go through a registry. ``skill_hub_api_key``, when set, is sent
+    only to the URL the user configured.
     """
     if provider or not custom_skill_hub():
         return "", {}

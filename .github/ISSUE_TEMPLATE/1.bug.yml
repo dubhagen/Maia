@@ -18,11 +18,11 @@ body:
       label: Environment
       description: "Version (`maia status`), OS, Python version, install method, model & channel."
       placeholder: |
-        Version: v1.2.0
+        Version: 0.99.0
         OS: macOS / Linux / Windows / Docker
         Python: 3.11
         Install: installer / Docker / source
-        Model & channel: deepseek-flash, web
+        Model & channel: your-model-id, web
     validations:
       required: true
   - type: textarea

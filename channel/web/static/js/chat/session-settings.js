@@ -62,8 +62,8 @@ function _renderPermissionChip() {
     const btn = _permBtn();
     if (!btn || !_sessCfg) return;
     const state = _sessCfg.permission || {};
-    const mode = state.mode || 'full-access';
-    const meta = PERMISSION_META[mode] || PERMISSION_META['full-access'];
+    const mode = state.mode || 'workspace-write';
+    const meta = PERMISSION_META[mode] || PERMISSION_META['workspace-write'];
 
     const label = document.getElementById('permission-selector-label');
     if (label) label.textContent = _permLabel(mode);
@@ -136,7 +136,7 @@ function renderPermissionMenu() {
     if (!menu) return;
     const state = (_sessCfg && _sessCfg.permission) || {};
     const modes = state.modes && state.modes.length ? state.modes : Object.keys(PERMISSION_META);
-    const current = state.mode || 'full-access';
+    const current = state.mode || 'workspace-write';
     const isGlobal = state.source === 'global';
 
     const parts = [`<div class="composer-menu-title">${escapeHtml(t('perm_menu_title'))}</div>`];

@@ -75,7 +75,7 @@ def console(tmp_path, monkeypatch):
 
 def _post_multipart(console, path, agent_id, filename, field, content_type, blob):
     """What the browser sends: the Agent rides in the query string only."""
-    boundary = "----cowtest"
+    boundary = "----maiatest"
     body = (
         f"--{boundary}\r\n"
         f'Content-Disposition: form-data; name="{field}"; filename="{filename}"\r\n'

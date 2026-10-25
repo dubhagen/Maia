@@ -118,7 +118,7 @@ def test_web_edit_preserves_hidden_agent_action_fields(tmp_path):
         "receiver": "user-1",
         "receiver_name": "User",
         "is_group": False,
-        "channel_type": "feishu",
+        "channel_type": "web",
         "notify_session_id": "session-1",
         "silent": True,
         "delivery_extension": {"trace": True},
@@ -131,7 +131,7 @@ def test_web_edit_preserves_hidden_agent_action_fields(tmp_path):
             "type": "agent_task",
             "task_description": "refresh both indexes",
             "receiver": "user-1",
-            "channel_type": "feishu",
+            "channel_type": "web",
         },
     })
 

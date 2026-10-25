@@ -48,7 +48,7 @@ class TestRouting:
 
     def test_the_conversations_provider_still_wins(self, model):
         model.set_agent_default("claude", "some-model")
-        model.set_session_override("deepseek", "other-model")
+        model.set_session_override("litellm", "other-model")
         assert model._resolve_bot_type("other-model") == "litellm"
 
 

@@ -20,9 +20,9 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 from common.log import logger
 
-# bge-reranker-base has a 512-token input limit, which matches the 500-char
+# MiniLM-L-6 has a 512-token input limit, which matches the 500-char
 # ``snippet`` already carried by SearchResult.
-DEFAULT_RERANK_MODEL = "BAAI/bge-reranker-base"
+DEFAULT_RERANK_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
 
 class Reranker(ABC):

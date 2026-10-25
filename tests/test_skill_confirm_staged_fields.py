@@ -1,6 +1,6 @@
 """Console skill confirm keeps the registry's presentation fields.
 
-A preview fetched from a configured Skill Hub registry stages the skill
+A preview fetched from a configured skill registry stages the skill
 together with the fields the registry returned (category,
 display_description, icon, version) in the staging directory's
 skills_config.json. commit_staged forwards only source and display_name,

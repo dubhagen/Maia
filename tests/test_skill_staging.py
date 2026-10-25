@@ -124,9 +124,9 @@ def test_stage_skill_redirects_every_write_to_the_staging_dir(tmp_path, live_dir
 
 @pytest.mark.parametrize("source,value,expected", [
     ("hub", "pptx", "pptx"),
-    ("github", "larksuite/cli", "larksuite/cli"),
-    ("github", "https://github.com/larksuite/cli/tree/main/skills/lark-im",
-     "https://github.com/larksuite/cli/tree/main/skills/lark-im"),
+    ("github", "owner/repo", "owner/repo"),
+    ("github", "https://github.com/owner/repo/tree/main/skills/one-skill",
+     "https://github.com/owner/repo/tree/main/skills/one-skill"),
 ])
 def test_market_spec_maps_each_source(source, value, expected):
     assert _market_spec(source, value) == expected

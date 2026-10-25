@@ -270,15 +270,8 @@ function Test-UrlReachable {
     }
 }
 
-# Official PyPI first. If it is unreachable, fall back to a public mirror.
-# Returns an args array to splat into pip (empty = pip default / official PyPI).
+# Official PyPI only.
 function Get-PipMirrorArgs {
-    $tuna = "https://pypi.tuna.tsinghua.edu.cn/simple"
-    $pypi = "https://pypi.org/simple"
-    if ((-not (Test-UrlReachable "$pypi/")) -and (Test-UrlReachable "$tuna/")) {
-        Write-Warn ("Using pip mirror" + ": $tuna")
-        return @("-i", $tuna)
-    }
     return @()
 }
 

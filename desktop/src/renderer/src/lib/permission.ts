@@ -17,7 +17,7 @@ export const PERMISSION_META: Record<PermissionMode, { key: string; descKey: str
 
 export function asPermissionMode(value: string | undefined | null): PermissionMode {
   if (value === 'read-only' || value === 'workspace-write' || value === 'full-access') return value
-  return 'full-access'
+  return 'workspace-write'
 }
 
 export function permLabel(mode: string | undefined | null): string {

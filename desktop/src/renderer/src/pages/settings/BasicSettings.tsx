@@ -128,7 +128,7 @@ const BasicSettings: React.FC<BasicSettingsProps> = ({ baseUrl, onOpenModels }) 
   const [pwDirty, setPwDirty] = useState(false)
   const [pwVisible, setPwVisible] = useState(false)
   const [pwStatus, setPwStatus] = useState('')
-  const [permissionMode, setPermissionMode] = useState('full-access')
+  const [permissionMode, setPermissionMode] = useState('workspace-write')
   const [permStatus, setPermStatus] = useState('')
 
   useEffect(() => {

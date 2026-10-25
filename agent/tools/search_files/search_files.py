@@ -269,7 +269,7 @@ class SearchFiles(BaseTool):
         self.cwd = self.config.get("cwd", os.getcwd())
         self.timeout = self.config.get("timeout", SEARCH_TIMEOUT_SECONDS)
         # Resolved once (assumes ~/.maia is stable for this session), not per-check.
-        self._cow_dir = os.path.realpath(expand_path("~/.maia")).replace(os.sep, "/")
+        self._maia_dir = os.path.realpath(expand_path("~/.maia")).replace(os.sep, "/")
 
     # --------------------------------------------------------- file-name search
     def _find_by_name(self, pattern: str, root: str, ignore_case: bool,
@@ -481,7 +481,7 @@ class SearchFiles(BaseTool):
         for candidate in candidates:
             if _PROC_ENVIRON_RE.match(candidate):
                 return True
-        return any(c == self._cow_dir or c.startswith(self._cow_dir + "/") for c in candidates)
+        return any(c == self._maia_dir or c.startswith(self._maia_dir + "/") for c in candidates)
 
     def _rel(self, file_path: str, root: str) -> str:
         # Always emit forward slashes so paths are consistent across platforms

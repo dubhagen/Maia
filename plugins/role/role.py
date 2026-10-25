@@ -132,7 +132,7 @@ class Role(Plugin):
         if e_context["context"].type != ContextType.TEXT:
             return
         btype = Bridge().get_bot_type("chat")
-        if btype not in [const.LITELLM, const.OPEN_AI, const.OPENAI, const.CHATGPT, const.CHATGPTONAZURE, const.QWEN_DASHSCOPE, const.XUNFEI, const.BAIDU, const.QIANFAN, const.ZHIPU_AI, const.MOONSHOT, const.MiniMax, const.MODELSCOPE]:
+        if btype != const.LITELLM:
             logger.debug(f"Unsupported bot: {btype}")
             return
         bot = Bridge().get_bot("chat")

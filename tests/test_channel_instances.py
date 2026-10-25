@@ -16,8 +16,8 @@ from channel import channel_instances as ci
 def test_new_instance_id_has_type_prefix_and_is_unique():
     ids = set()
     for _ in range(50):
-        new = ci.new_instance_id("feishu", ids)
-        assert new.startswith("feishu-")
+        new = ci.new_instance_id("web", ids)
+        assert new.startswith("web-")
         assert new not in ids
         ids.add(new)
 
@@ -28,8 +28,8 @@ def test_new_instance_id_keeps_type_and_handles_empty():
 
 
 def test_new_instance_id_avoids_taken():
-    taken = {f"feishu-{i:010d}" for i in range(3)}
-    assert ci.new_instance_id("feishu", taken) not in taken
+    taken = {f"web-{i:010d}" for i in range(3)}
+    assert ci.new_instance_id("web", taken) not in taken
 
 
 # ---------------------------------------------------------------------------
@@ -37,10 +37,10 @@ def test_new_instance_id_avoids_taken():
 # ---------------------------------------------------------------------------
 
 def test_legacy_channel_type_string(tmp_path):
-    settings = {"agent_workspace": str(tmp_path), "channel_type": "feishu, dingtalk"}
+    settings = {"agent_workspace": str(tmp_path), "channel_type": "web, terminal"}
     insts = ci.resolve_channel_instances(settings)
     ids = {i.instance_id for i in insts}
-    assert ids == {"feishu", "dingtalk"}
+    assert ids == {"web", "terminal"}
     # legacy instances carry no per-instance credentials or binding
     for i in insts:
         assert i.legacy is True
@@ -49,9 +49,9 @@ def test_legacy_channel_type_string(tmp_path):
 
 
 def test_legacy_channel_type_list(tmp_path):
-    settings = {"agent_workspace": str(tmp_path), "channel_type": ["feishu"]}
+    settings = {"agent_workspace": str(tmp_path), "channel_type": ["web"]}
     insts = ci.resolve_channel_instances(settings)
-    assert [i.instance_id for i in insts] == ["feishu"]
+    assert [i.instance_id for i in insts] == ["web"]
     assert insts[0].legacy is True
 
 
@@ -84,26 +84,26 @@ def test_explicit_instances_win_over_legacy(tmp_path):
         tmp_path,
         [
             {
-                "instance_id": "feishu-a",
-                "channel_type": "feishu",
+                "instance_id": "web-a",
+                "channel_type": "web",
                 "agent_id": "default",
-                "credentials": {"feishu_app_id": "A", "feishu_app_secret": "sa"},
+                "credentials": {"web_app_id": "A", "web_app_secret": "sa"},
             },
             {
-                "instance_id": "feishu-b",
-                "channel_type": "feishu",
+                "instance_id": "web-b",
+                "channel_type": "web",
                 "agent_id": "ops",
-                "credentials": {"feishu_app_id": "B", "feishu_app_secret": "sb"},
+                "credentials": {"web_app_id": "B", "web_app_secret": "sb"},
             },
         ],
     )
-    settings["channel_type"] = "feishu"  # legacy field present but ignored
+    settings["channel_type"] = "web"  # legacy field present but ignored
     insts = ci.resolve_channel_instances(settings)
     by_id = {i.instance_id: i for i in insts}
-    assert set(by_id) == {"feishu-a", "feishu-b"}
-    assert by_id["feishu-a"].agent_id == "default"
-    assert by_id["feishu-b"].agent_id == "ops"
-    assert by_id["feishu-a"].credentials == {}
+    assert set(by_id) == {"web-a", "web-b"}
+    assert by_id["web-a"].agent_id == "default"
+    assert by_id["web-b"].agent_id == "ops"
+    assert by_id["web-a"].credentials == {}
     assert all(i.legacy is False for i in insts)
 
 
@@ -112,9 +112,9 @@ def test_explicit_only_known_credential_keys_kept(tmp_path):
         tmp_path,
         [
             {
-                "instance_id": "feishu-a",
-                "channel_type": "feishu",
-                "credentials": {"feishu_app_id": "A", "junk": "x"},
+                "instance_id": "web-a",
+                "channel_type": "web",
+                "credentials": {"web_app_id": "A", "junk": "x"},
             }
         ],
     )
@@ -130,11 +130,11 @@ def test_upsert_creates_with_generated_id(tmp_path):
     settings = {"agent_workspace": str(tmp_path)}
     inst = ci.upsert_instance(
         settings,
-        channel_type="feishu",
+        channel_type="web",
         agent_id="agent-x",
-        credentials={"feishu_app_id": "A", "feishu_app_secret": "B", "junk": "no"},
+        credentials={"web_app_id": "A", "web_app_secret": "B", "junk": "no"},
     )
-    assert inst.instance_id.startswith("feishu-")
+    assert inst.instance_id.startswith("web-")
     assert inst.agent_id == "agent-x"
     assert inst.credentials == {}
     assert ci.read_raw_instances(settings)[0]["instance_id"] == inst.instance_id
@@ -143,13 +143,13 @@ def test_upsert_creates_with_generated_id(tmp_path):
 def test_upsert_partial_update_keeps_binding(tmp_path):
     settings = {"agent_workspace": str(tmp_path)}
     inst = ci.upsert_instance(
-        settings, channel_type="feishu", agent_id="agent-x",
-        credentials={"feishu_app_id": "A", "feishu_app_secret": "B"},
+        settings, channel_type="web", agent_id="agent-x",
+        credentials={"web_app_id": "A", "web_app_secret": "B"},
     )
     # update credentials only, without re-sending agent_id
     updated = ci.upsert_instance(
-        settings, channel_type="feishu", instance_id=inst.instance_id,
-        credentials={"feishu_app_secret": "B2"},
+        settings, channel_type="web", instance_id=inst.instance_id,
+        credentials={"web_app_secret": "B2"},
     )
     assert updated.agent_id == "agent-x"  # binding preserved
     assert updated.credentials == {}
@@ -160,8 +160,8 @@ def test_upsert_partial_update_keeps_binding(tmp_path):
 def test_upsert_honors_provided_id(tmp_path):
     settings = {"agent_workspace": str(tmp_path)}
     inst = ci.upsert_instance(
-        settings, channel_type="feishu", instance_id="from-remote-123",
-        agent_id="a", credentials={"feishu_app_id": "A"},
+        settings, channel_type="web", instance_id="from-remote-123",
+        agent_id="a", credentials={"web_app_id": "A"},
     )
     assert inst.instance_id == "from-remote-123"
 
@@ -182,28 +182,28 @@ def test_new_instance_gets_default_name(tmp_path):
 
 def test_upsert_can_set_and_clear_name(tmp_path):
     settings = {"agent_workspace": str(tmp_path)}
-    inst = ci.upsert_instance(settings, channel_type="feishu",
-                              credentials={"feishu_app_id": "A"})
-    renamed = ci.upsert_instance(settings, channel_type="feishu",
+    inst = ci.upsert_instance(settings, channel_type="web",
+                              credentials={"web_app_id": "A"})
+    renamed = ci.upsert_instance(settings, channel_type="web",
                                  instance_id=inst.instance_id, name="Ops")
     assert renamed.name == "Ops"
     # Renaming must not disturb credentials or duplicate the record.
     assert renamed.credentials == {}
     assert len(ci.read_raw_instances(settings)) == 1
     # Empty name clears the label back to unset.
-    cleared = ci.upsert_instance(settings, channel_type="feishu",
+    cleared = ci.upsert_instance(settings, channel_type="web",
                                  instance_id=inst.instance_id, name="")
     assert cleared.name == ""
 
 
 def test_upsert_partial_update_keeps_name(tmp_path):
     settings = {"agent_workspace": str(tmp_path)}
-    inst = ci.upsert_instance(settings, channel_type="feishu", name="Support",
-                              credentials={"feishu_app_id": "A"})
+    inst = ci.upsert_instance(settings, channel_type="web", name="Support",
+                              credentials={"web_app_id": "A"})
     # A credentials-only update (name=None) must preserve the existing label.
-    updated = ci.upsert_instance(settings, channel_type="feishu",
+    updated = ci.upsert_instance(settings, channel_type="web",
                                  instance_id=inst.instance_id,
-                                 credentials={"feishu_app_secret": "S"})
+                                 credentials={"web_app_secret": "S"})
     assert updated.name == "Support"
 
 
@@ -212,18 +212,18 @@ def test_legacy_record_without_name_resolves(tmp_path):
     # empty name (the UI falls back to the id) and no error.
     settings = _write_instances(
         tmp_path,
-        [{"instance_id": "feishu-old", "channel_type": "feishu",
-          "credentials": {"feishu_app_id": "A"}}],
+        [{"instance_id": "web-old", "channel_type": "web",
+          "credentials": {"web_app_id": "A"}}],
     )
     inst = ci.resolve_channel_instances(settings)[0]
     assert inst.name == ""
-    assert inst.instance_id == "feishu-old"
+    assert inst.instance_id == "web-old"
 
 
 def test_remove_instance(tmp_path):
     settings = {"agent_workspace": str(tmp_path)}
-    inst = ci.upsert_instance(settings, channel_type="feishu",
-                              credentials={"feishu_app_id": "A"})
+    inst = ci.upsert_instance(settings, channel_type="web",
+                              credentials={"web_app_id": "A"})
     assert ci.remove_instance(settings, inst.instance_id) is True
     assert ci.read_raw_instances(settings) == []
     # removing a missing id is a no-op
@@ -239,11 +239,11 @@ def test_explicit_instance_parses_members(tmp_path):
         tmp_path,
         [
             {
-                "instance_id": "feishu-team",
-                "channel_type": "feishu",
+                "instance_id": "web-team",
+                "channel_type": "web",
                 "agent_id": "leader",
                 "members": ["ops", "research", "leader", "ops", ""],
-                "credentials": {"feishu_app_id": "A"},
+                "credentials": {"web_app_id": "A"},
             }
         ],
     )
@@ -255,22 +255,22 @@ def test_explicit_instance_parses_members(tmp_path):
 def test_upsert_sets_and_preserves_members(tmp_path):
     settings = {"agent_workspace": str(tmp_path)}
     inst = ci.upsert_instance(
-        settings, channel_type="feishu", agent_id="leader",
+        settings, channel_type="web", agent_id="leader",
         members=["ops", "leader", "research"],
-        credentials={"feishu_app_id": "A"},
+        credentials={"web_app_id": "A"},
     )
     assert inst.members == ["ops", "research"]  # owner filtered out
 
     # a credentials-only update must not drop the team
     kept = ci.upsert_instance(
-        settings, channel_type="feishu", instance_id=inst.instance_id,
-        credentials={"feishu_app_secret": "S"},
+        settings, channel_type="web", instance_id=inst.instance_id,
+        credentials={"web_app_secret": "S"},
     )
     assert kept.members == ["ops", "research"]
 
     # members=[] clears the team
     cleared = ci.upsert_instance(
-        settings, channel_type="feishu", instance_id=inst.instance_id,
+        settings, channel_type="web", instance_id=inst.instance_id,
         members=[],
     )
     assert cleared.members == []

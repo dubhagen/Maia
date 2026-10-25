@@ -1,6 +1,6 @@
 ---
 title: Skill Management
-description: "Skill management commands: use /skill in chat or maia skill in a terminal to list, search, install, uninstall, enable and disable skills from a git URL, a local path, or a Skill Hub URL you set."
+description: "Skill management commands: use /skill in chat or maia skill in a terminal to list, search, install, uninstall, enable and disable skills from a git URL or a local path."
 ---
 
 Skill management commands are used to install, query, and manage Maia skills. Use `/skill <subcommand>` in chat or `maia skill <subcommand>` in the terminal.
@@ -26,7 +26,7 @@ Example output:
 
 ✅ pptx
    Use this skill any time a .pptx file is involved…
-   Source: maiahub
+   Source: github
 
 ✅ skill-creator
    Create, install, or update skills…
@@ -37,7 +37,7 @@ Example output:
    Source: builtin
 ```
 
-**Browse the Skill Hub** (view all available skills):
+**List a registry** only when `skill_hub_url` is set. There is no default registry:
 
 <CodeGroup>
 ```text Chat
@@ -53,12 +53,12 @@ maia skill list --remote
 
 | Option | Description | Default |
 | --- | --- | --- |
-| `--remote`, `-r` | Browse Skill Hub remote skill list | No |
+| `--remote`, `-r` | List the registry at `skill_hub_url`, when set | No |
 | `--page` | Page number for remote listing | 1 |
 
 ## search
 
-Search for skills on the Skill Hub.
+Search the registry at `skill_hub_url`. With no URL set, this command does nothing.
 
 <CodeGroup>
 ```text Chat
@@ -72,43 +72,31 @@ maia skill search pptx
 
 ## install
 
-Install skills with a single `install` command from a git URL, a local path, a Skill Hub URL you set, or any URL (zip archives, SKILL.md links) — no manual download or configuration required.
-
-**From Skill Hub (recommended):**
-
-<CodeGroup>
-```text Chat
-/skill install pptx
-```
-
-```bash Terminal
-maia skill install pptx
-```
-</CodeGroup>
+Install skills from a git URL, a local path, or an archive URL. A bare name is sent to `skill_hub_url` only when you set that URL. There is no default registry.
 
 **From GitHub:**
 
 <CodeGroup>
 ```text Chat
 # Install all skills in a repo (auto-discovers subdirectories with SKILL.md)
-/skill install larksuite/cli
+/skill install owner/repo
 
 # Specify a subdirectory to install a single skill
-/skill install https://github.com/larksuite/cli/tree/main/skills/lark-im
+/skill install https://github.com/owner/repo/tree/main/skills/one-skill
 
 # Use # to specify a subdirectory
-/skill install larksuite/cli#skills/lark-minutes
+/skill install owner/repo#skills/one-skill
 ```
 
 ```bash Terminal
 # Install all skills in a repo (auto-discovers subdirectories with SKILL.md)
-maia skill install larksuite/cli
+maia skill install owner/repo
 
 # Specify a subdirectory to install a single skill
-maia skill install https://github.com/larksuite/cli/tree/main/skills/lark-im
+maia skill install https://github.com/owner/repo/tree/main/skills/one-skill
 
 # Use # to specify a subdirectory
-maia skill install larksuite/cli#skills/lark-minutes
+maia skill install owner/repo#skills/one-skill
 ```
 </CodeGroup>
 
@@ -187,7 +175,7 @@ Installed skills track their origin, viewable via `/skill list`:
 | Source | Description |
 | --- | --- |
 | `builtin` | Built-in project skills |
-| `maiahub` | Installed from Maia Skill Hub |
+| `maiahub` | Installed from the registry URL set in `skill_hub_url` |
 | `github` | Installed directly from a GitHub URL |
 | `url` | Installed from a SKILL.md or archive URL |
 | `local` | Installed from a path on disk, or created locally |

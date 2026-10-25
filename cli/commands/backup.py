@@ -32,8 +32,6 @@ def _team():
 
 
 BACKUP_FORMAT = "maia-backup"
-# Archives written before the rename still restore. New archives use BACKUP_FORMAT.
-_LEGACY_BACKUP_FORMATS = {"cowagent-backup"}
 # v2 only describes the multi-Agent layout. A single-workspace archive is
 # structurally identical to what v1 produced, so it keeps declaring v1 and
 # stays restorable by older Maia versions.
@@ -270,7 +268,7 @@ def _validate_archive(archive: zipfile.ZipFile) -> dict:
         raise ValueError("archive manifest is invalid") from exc
     version = manifest.get("version")
     if (
-        manifest.get("format") not in {BACKUP_FORMAT, *_LEGACY_BACKUP_FORMATS}
+        manifest.get("format") != BACKUP_FORMAT
         or version not in _SUPPORTED_BACKUP_VERSIONS
     ):
         raise ValueError("unsupported Maia backup format or version")
