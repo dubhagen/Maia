@@ -82,7 +82,7 @@ function taskLocalTimeToUTC(value, timeZone) {
     return new Date(instant).toISOString();
 }
 // Middle-truncate a long recipient id so the dropdown row's right-hand id stays
-// on one line (e.g. "o9cq807...MYB0@im.wechat").
+// on one line (e.g. "user-1a2b...9f").
 function truncateRecipientId(id, max) {
     const s = String(id || '');
     const limit = max || 22;
@@ -135,7 +135,7 @@ function loadTaskInstances(preselect) {
             filterTaskRecipients('');
             return;
         }
-        // Only preselect an instance we actually offer (it may have been removed).
+        // Only preselect an instance that is still in the list.
         const initialInstance = options.some(o => o.value === preInstance) ? preInstance : '';
         selectedTaskInstanceId = initialInstance;
         initDropdown(instEl, options, initialInstance, (iid) => {
@@ -175,8 +175,8 @@ function filterTaskRecipients(instanceId, preReceiver) {
         const key = iid + ':' + r.receiver;
         taskRecipientMap[key] = r;
         if (preReceiver && r.receiver === preReceiver) preKey = key;
-        // Fall back to the raw id when a channel gives us no nickname (common on
-        // Feishu). The right-hand hint carries the unique id (truncated).
+        // Fall back to the raw id when there is no display name. The right-hand
+        // hint carries the unique id (truncated).
         const name = r.name || r.receiver;
         return { value: key, label: name, hint: truncateRecipientId(r.receiver) };
     });

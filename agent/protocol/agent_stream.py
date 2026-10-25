@@ -647,9 +647,8 @@ class AgentStreamExecutor:
         """Whether ``<think>...</think>`` blocks embedded directly in ``content``
         (MiniMax, some third-party proxies) should be surfaced to the channel.
 
-        Only the Web console can render them in a collapsible panel. IM channels
-        (WeChat/WeCom/DingTalk/Feishu) must strip them, otherwise users see raw
-        XML tags in their chat.
+        Only the web console can render them in a collapsible panel. The
+        terminal strips them, otherwise the user sees raw XML tags.
         """
         from config import conf
         channel_type = getattr(self.model, 'channel_type', '') or ''
@@ -662,7 +661,7 @@ class AgentStreamExecutor:
 
         - When inline thinking rendering is allowed (Web + thinking enabled):
           remove only the tags, keep the content inside.
-        - Otherwise (IM channels, or thinking disabled globally): remove paired
+        - Otherwise (the terminal, or thinking disabled globally): remove paired
           blocks entirely. A tag without a partner is literal text, so it is kept
           in full-width form (``＜think＞``) instead of swallowing the reply.
         """
@@ -780,7 +779,7 @@ class AgentStreamExecutor:
         Some providers (Anthropic-shaped adapters, MiMo sync wrappers) stream
         ``content`` as a list of blocks instead of a string. Thinking/reasoning
         blocks must never be treated as the visible reply — that is what leaked
-        CoT into IM channels as an "Agent Reply". A plain string passes through
+        chain-of-thought into the chat as an "Agent Reply". A plain string passes through
         unchanged as visible text.
         """
         if isinstance(content, str):
@@ -1781,8 +1780,8 @@ class AgentStreamExecutor:
                     # Handle text content. Some providers (Anthropic-shaped
                     # adapters, MiMo sync wrappers) stream a list of content
                     # blocks instead of a string. Thinking/reasoning blocks
-                    # must never be treated as the visible reply — that is
-                    # what leaked CoT into WeChat as "Agent Reply".
+                    # must never be treated as the visible reply. That is
+                    # what leaked chain-of-thought into the chat as "Agent Reply".
                     content_delta = delta.get("content") or ""
                     if isinstance(content_delta, list):
                         content_delta, thinking_text = self._split_content_blocks(content_delta)

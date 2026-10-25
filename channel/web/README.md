@@ -44,7 +44,7 @@ The code sits in two packages, mirroring the frontend's `core/` and `views/`:
 | `agents.py` | `/api/agents/*`, core files, avatars |
 | `config.py` | `/api/config`, `/api/external_api` (turn the chat API on or off, issue its key) |
 | `models.py` | `/api/models` |
-| `channels.py` | `/api/channels`, the WeChat QR and Feishu registration flows |
+| `channels.py` | `/api/channels`, the web console card |
 | `scheduler.py` | `/api/scheduler/*` |
 | `skills.py`, `memory.py`, `knowledge.py`, `logs.py` | The remaining management views |
 | `update.py` | `/VERSION`, `/api/update/*` |
@@ -119,7 +119,7 @@ Two rules for includes:
 | `layout/login.html` | Login overlay |
 | `layout/sidebar.html` | Left navigation (`data-view` names the target; this is the default menu, redrawn by `core/menu.js` once a saved one loads), the update menu on the version row, the rail toggle, mobile overlay |
 | `layout/session-panel.html` | Session history side panel |
-| `layout/header.html` | Top bar: panel toggle, breadcrumb (with an open-outside button for menu pages), language/theme switches, logout |
+| `layout/header.html` | Top bar: panel toggle, breadcrumb (with an open-outside button for menu pages), theme switch, logout |
 | `views/chat.html` | Chat view: message list, composer card, workspace panel |
 | `views/artifacts.html` | Artifacts view: day-grouped gallery and preview pane |
 | `views/agents.html` | Agent team: list, detail drawer, create form |
@@ -135,7 +135,6 @@ Two rules for includes:
 | `modals/knowledge-dialog.html` | Knowledge create/rename/delete dialog |
 | `modals/skill-add.html` | Add skill: install from a market or an upload after a preview, or write a new one from a form (attachments picked as files or as a folder) |
 | `modals/confirm-dialog.html` | Static confirm dialog |
-| `modals/rename-dialog.html` | Channel instance rename |
 | `modals/folder-picker.html` | Project folder picker |
 | `modals/vendor.html` | LiteLLM endpoint credentials and model catalog editor |
 | `modals/task-edit.html` | Scheduled task create/edit |

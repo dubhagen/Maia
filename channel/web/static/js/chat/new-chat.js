@@ -100,24 +100,11 @@ function startTeamChat() {
     setTeamMembers(guests).then(() => renderComposerIdentity());
 }
 
-function newChat(optimistic = true, inherit = true) {
-    // A fresh session resets the preview panel, discarding an open editor.
-    if (typeof wsGuardUnsaved === 'function'
-        && !wsGuardUnsaved(() => newChat(optimistic, inherit))) return;
-
-    // Do NOT close active streams: other sessions keep streaming in the
-    // background (each stream self-guards against the foreign view) and their
-    // replies still complete and persist.
-
-    // Generate a fresh session and persist it so the next page load also starts clean
-    sessionId = generateSessionId();
-    localStorage.setItem(activeSessionStorageKey(), sessionId);
-    refreshWorkspaceSelector();  // a fresh session starts on the default workspace
-    refreshSessionSettings();    // ... and on the global model / permission
-    if (typeof wsOnSessionSwitch === 'function') wsOnSessionSwitch();
-    resetSendBtnSendMode();  // fresh session has no in-flight reply
-    startPolling();  // bump generation so old loop self-cancels, new loop uses fresh sessionId
-    if (typeof resetTimeline === 'function') resetTimeline();
+/** Draw the welcome screen into the chat pane and bind its example cards.
+ *
+ *  The cards that ship in the page are bound once at load. Anything this
+ *  mounts later is a new node, so it needs its own listeners. */
+function mountWelcomeScreen() {
     messagesDiv.innerHTML = '';
     const ws = document.createElement('div');
     ws.id = 'welcome-screen';
@@ -203,6 +190,83 @@ function newChat(optimistic = true, inherit = true) {
             }
         });
     });
+}
+
+/** Cover the open conversation with the welcome screen.
+ *
+ *  The stored session stays in the list. It is not drawn, and it is not
+ *  replaced: the next message from this screen starts a new session. Opening
+ *  the stored row draws that conversation again. */
+function showHomeScreen() {
+    // Document editors live on the other views. Ask before leaving one, and
+    // do not cover the chat until the user agrees — navigateTo asks again
+    // once the editor has been discarded.
+    if (currentView !== 'chat'
+        && typeof docGuardUnsaved === 'function'
+        && !docGuardUnsaved(() => showHomeScreen())) return;
+
+    showingHome = true;
+    if (!document.getElementById('welcome-screen')) {
+        if (typeof resetTimeline === 'function') resetTimeline();
+        mountWelcomeScreen();
+        resetSendBtnSendMode();
+    }
+    document.querySelectorAll('.session-item.active').forEach(el => el.classList.remove('active'));
+    if (currentView !== 'chat') navigateTo('chat');
+    else if (window.innerWidth < 1024) closeSidebar();
+}
+
+/** Leave the welcome screen into a new conversation.
+ *
+ *  The caller has already settled any unsaved editor and has not yet bound
+ *  the outgoing text to a session id. The welcome markup stays put so the
+ *  send path can still see that this is the first turn of the new session. */
+function beginConversationFromHome() {
+    showingHome = false;
+    sessionId = generateSessionId();
+    localStorage.setItem(activeSessionStorageKey(), sessionId);
+    refreshWorkspaceSelector();
+    refreshSessionSettings();
+    if (typeof wsOnSessionSwitch === 'function') wsOnSessionSwitch();
+    resetSendBtnSendMode();
+    startPolling();
+    if (typeof resetTimeline === 'function') resetTimeline();
+    renderComposerIdentity();
+
+    const panel = document.getElementById('session-panel');
+    if (panel && !sessionPanelOpen) {
+        sessionPanelOpen = true;
+        panel.classList.remove('hidden');
+        _showSessionOverlay();
+        _persistPanelState();
+    }
+    const newSid = sessionId;
+    loadSessionList(() => _addOptimisticSessionItem(newSid));
+}
+
+function newChat(optimistic = true, inherit = true) {
+    // A fresh session resets the preview panel, discarding an open editor.
+    if (typeof wsGuardUnsaved === 'function'
+        && !wsGuardUnsaved(() => newChat(optimistic, inherit))) return;
+
+    // This button creates a real session. The welcome screen it draws is that
+    // session, so a later send continues it instead of starting another.
+    showingHome = false;
+
+    // Do NOT close active streams: other sessions keep streaming in the
+    // background (each stream self-guards against the foreign view) and their
+    // replies still complete and persist.
+
+    // Generate a fresh session and persist it so the next page load also starts clean
+    sessionId = generateSessionId();
+    localStorage.setItem(activeSessionStorageKey(), sessionId);
+    refreshWorkspaceSelector();  // a fresh session starts on the default workspace
+    refreshSessionSettings();    // ... and on the global model / permission
+    if (typeof wsOnSessionSwitch === 'function') wsOnSessionSwitch();
+    resetSendBtnSendMode();  // fresh session has no in-flight reply
+    startPolling();  // bump generation so old loop self-cancels, new loop uses fresh sessionId
+    if (typeof resetTimeline === 'function') resetTimeline();
+    mountWelcomeScreen();
     if (currentView !== 'chat') navigateTo('chat');
 
     // Show panel and load full session list, then prepend the new session on top

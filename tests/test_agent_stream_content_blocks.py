@@ -4,7 +4,7 @@
 Some providers (Anthropic-shaped adapters, MiMo sync wrappers) stream
 ``content`` as a list of blocks. ``AgentStream._split_content_blocks`` routes
 thinking/reasoning blocks to the reasoning channel and keeps only real text as
-the visible content, which is what stops CoT from leaking into IM channels as
+the visible content, which is what stops chain-of-thought from leaking into chat as
 an "Agent Reply".
 """
 import os

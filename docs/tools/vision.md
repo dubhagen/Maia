@@ -1,0 +1,40 @@
+# vision - Image Understanding
+
+Asks a model on the LiteLLM endpoint about a local image or an image URL. Use it for descriptions, text extraction, and object recognition.
+
+## Model selection
+
+One model id is sent, unchanged:
+
+1. `vision_model`, when that field is set
+2. Otherwise the chat `model`, when discovery lists it with the `vision` capability, or when discovery does not list that model
+3. Off, when discovery lists the chat model and does not tag it `vision`
+
+There is no second provider and no vendor key. A text-only chat model stays off until you set `vision_model` to an id that accepts images.
+
+```json
+{
+  "model": "your-chat-model",
+  "vision_model": ""
+}
+```
+
+Leave `vision_model` empty to follow the chat model. Set it when you want a different id on the same endpoint.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `image` | string | Yes | Local file path or HTTP(S) image URL |
+| `question` | string | Yes | Question to ask about the image |
+
+Supported formats: jpg, jpeg, png, gif, webp.
+
+## Uses
+
+- Describe image content
+- Extract text from images
+- Identify objects, colors, and scenes
+- Read screenshots and scanned documents
+
+> **Note.** Images larger than 1MB are compressed before they are sent. Local files and remote URLs are both sent as base64 on the LiteLLM chat endpoint.

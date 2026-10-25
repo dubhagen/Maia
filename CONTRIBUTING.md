@@ -42,7 +42,7 @@ docs: clarify Docker setup
 
 ## Development setup
 
-See [docs/guide/manual-install.mdx](docs/guide/manual-install.mdx). In short:
+See [docs/guide/manual-install.md](docs/guide/manual-install.md). In short:
 
 ```bash
 git clone https://github.com/dubhagen/Maia.git

@@ -16,10 +16,7 @@ from cli.config_json import deep_merge_dicts as _deep_merge_dicts, merge_duplica
 # The values here are placeholders only; the program does NOT read them.
 # They merely document the expected format — put real values in config.json.
 available_setting = {
-    # global UI language for CLI, startup logs, error messages, agent prompts
-    # and channel replies. Options: "auto" (detect from system locale, default),
-    # "zh" (Chinese) or "en" (English). An explicit value locks the language.
-    # value: auto/en/zh
+    # UI language. English is the only language. "auto" and any other value stay English.
     "maia_lang": "auto",
     # LiteLLM OpenAI-compatible proxy. Every model call uses this endpoint.
     "litellm_api_base": "http://127.0.0.1:4000/v1",
@@ -117,7 +114,7 @@ available_setting = {
     # custom trigger words for admin commands
     "clear_memory_commands": ["#reset"],  # session-reset command; must start with #
     # channel config
-    "channel_type": "web",  # web console. "terminal" is the local stdin channel. Other chat providers are not supported.
+    "channel_type": "web",  # web console. "terminal" is the local stdin channel.
     "web_console": True,  # whether to auto-start the Web console (on by default). Set False to disable
     "debug": False,  # whether to enable debug mode; prints more logs when on
     "appdata_dir": "",  # data directory

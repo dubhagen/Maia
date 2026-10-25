@@ -748,7 +748,7 @@ function externalApiExample(lang, reveal) {
 function renderExternalApi() {
     const s = externalApiState;
     const docs = document.getElementById('cfg-api-docs');
-    if (docs) docs.href = 'https://github.com/dubhagen/Maia/blob/master/docs/extensions/chat-api.mdx';
+    if (docs) docs.href = 'https://github.com/dubhagen/Maia/blob/master/docs/extensions/chat-api.md';
     document.getElementById('cfg-api-enabled').checked = !!s.enabled;
     document.getElementById('cfg-api-detail').classList.toggle('hidden', !s.enabled);
     if (!s.enabled) return;

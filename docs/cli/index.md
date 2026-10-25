@@ -1,0 +1,95 @@
+# Commands Overview
+
+Maia provides two ways to interact via commands:
+
+- **Terminal CLI** — Run `maia <command>` in your system terminal for service management, skill management, and other operations
+- **Chat Commands** — Type `/<command>` or `maia <command>` in any conversation to check status, manage skills, adjust configuration, etc.
+
+## Maia CLI
+
+After deploying with the one-click install script, the `maia` command is automatically available. For manual installations, run:
+
+```bash
+pip install -e .
+```
+
+Then use the `maia` command from anywhere:
+
+```bash
+maia help
+```
+
+Example output:
+
+```
+🐮 Maia CLI
+
+Usage: maia <command>
+
+Service:
+  start     Start the Maia service
+  stop      Stop the Maia service
+  restart   Restart the Maia service
+  update    Update code and restart service
+  status    Show service status
+  logs      View service logs
+
+Skills:
+  skill     Manage skills (list / search / install / uninstall ...)
+
+Memory & Knowledge:
+  memory    Memory distillation (dream)
+  knowledge View knowledge base stats and structure
+
+Data portability:
+  backup    Back up config and agent workspace
+  restore   Restore a Maia backup
+
+Others:
+  help      Show this help message
+  version   Show version
+```
+
+## Chat Commands
+
+In the Web console or any connected channel, type `/` to see command suggestions. Supported commands:
+
+| Command | Description |
+| --- | --- |
+| `/help` | Show command help |
+| `/status` | View service status and configuration |
+| `/cancel` | Abort the currently running agent task |
+| `/steer <instruction>` | Guide the currently running agent task without queueing a new turn |
+| `/config` | View or modify runtime configuration |
+| `/skill` | Manage skills (install, uninstall, enable, disable, etc.) |
+| `/memory dream [N]` | Manually trigger memory distillation (default 3 days, max 30) |
+| `/knowledge` | View knowledge base statistics |
+| `/knowledge list` | View knowledge base directory structure |
+| `/knowledge on\|off` | Enable or disable knowledge base |
+| `/context` | View current session context info |
+| `/context clear` | Clear current session context |
+| `/logs` | View recent logs |
+| `/version` | Show version number |
+
+> **Tip.** Service management commands like `/start`, `/stop`, `/restart` will prompt you to use them in the terminal instead, as they involve process operations.
+
+## Command Availability
+
+| Command | Terminal (`maia`) | Chat (`/`) |
+| --- | :---: | :---: |
+| help | ✓ | ✓ |
+| version | ✓ | ✓ |
+| status | ✓ | ✓ |
+| logs | ✓ | ✓ |
+| cancel | ✗ | ✓ |
+| config | ✗ | ✓ |
+| context | — | ✓ |
+| memory (subcommands) | ✗ | ✓ |
+| knowledge (subcommands) | ✓ | ✓ |
+| skill (subcommands) | ✓ | ✓ |
+| start / stop / restart | ✓ | ✗ |
+| update | ✓ | ✗ |
+| install-browser | ✓ | ✗ |
+| backup / restore | ✓ | ✗ |
+
+> **Note.** `context` only shows a hint in the terminal to use it in chat. `config` is only available in chat.

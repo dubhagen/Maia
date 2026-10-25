@@ -105,6 +105,11 @@ function loadOrCreateSessionId() {
 
 let sessionId = loadOrCreateSessionId();
 
+// `/` is the welcome screen. The stored session stays in the list and is not
+// drawn over that screen until the user opens it. Sending from the welcome
+// screen starts a new session; it does not continue the stored one.
+let showingHome = (location.pathname.replace(/\/+$/, '') || '/') === '/';
+
 // ---- Conversation history state ----
 let historyPage = 0;       // last page fetched (0 = nothing fetched yet)
 let historyHasMore = false;

@@ -1,0 +1,114 @@
+# Process Management
+
+Process management commands control the Maia background process. These commands are only available in the terminal.
+
+## start
+
+Start the Maia service. Runs as a background daemon by default and automatically tails logs.
+
+```bash
+maia start
+```
+
+**Options:**
+
+| Option | Description |
+| --- | --- |
+| `-f`, `--foreground` | Run in foreground, not as a background daemon |
+| `--no-logs` | Don't tail logs after starting |
+
+## stop
+
+Stop the running Maia service.
+
+```bash
+maia stop
+```
+
+## restart
+
+Restart the Maia service (stop then start).
+
+```bash
+maia restart
+```
+
+**Options:**
+
+| Option | Description |
+| --- | --- |
+| `--no-logs` | Don't tail logs after restart |
+
+## update
+
+Update code and restart the service. Automatically performs:
+
+1. Pull latest code (`git pull`)
+2. Stop current service
+3. Update Python dependencies
+4. Reinstall CLI
+5. Start service
+
+```bash
+maia update
+```
+
+> **Warning.** If `git pull` fails (e.g., uncommitted local changes), the update aborts and the service remains unaffected.
+
+## status
+
+Check Maia service status, including process info, version, and current model/channel configuration.
+
+```bash
+maia status
+```
+
+## logs
+
+View service logs. The same file is on screen under Monitor → Logs in the [web console](../channels/web.md).
+
+```bash
+maia logs
+```
+
+**Options:**
+
+| Option | Description | Default |
+| --- | --- | --- |
+| `-f`, `--follow` | Continuously tail log output | No |
+| `-n`, `--lines` | Show last N lines | 50 |
+
+Examples:
+
+```bash
+# View last 100 lines
+maia logs -n 100
+
+# Continuously tail logs
+maia logs -f
+```
+
+## install-browser
+
+Install Playwright and Chromium browser for the [browser tool](../tools/browser.md).
+
+```bash
+maia install-browser
+```
+
+> **Tip.** Only needed when using browser tools (web browsing, screenshots, etc.).
+
+## run.sh Compatibility
+
+If Maia CLI is not installed, you can use `run.sh` to manage the service:
+
+| maia command | run.sh equivalent |
+| --- | --- |
+| `maia start` | `./run.sh start` |
+| `maia stop` | `./run.sh stop` |
+| `maia restart` | `./run.sh restart` |
+| `maia update` | `./run.sh update` |
+| `maia status` | `./run.sh status` |
+| `maia logs` | `./run.sh logs` |
+
+> **Note.** The `maia` command is recommended — it provides cleaner syntax and richer features. It is automatically installed via the one-click install script.

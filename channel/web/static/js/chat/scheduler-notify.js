@@ -68,8 +68,8 @@ function isSchedulerRequest(requestId) {
 }
 
 function maybeNotifyScheduledRun(run) {
-    // Only client-delivered tasks: WeChat/Feishu etc. already push into the IM
-    // app, so re-notifying in the console would be noise.
+    // Only web deliveries. A terminal task is already on that process, so a
+    // console notification would be noise.
     const channel = run.channel_type || '';
     if (channel && channel !== 'web') return;
     // Skip failed runs — nothing was delivered to the session to jump to.

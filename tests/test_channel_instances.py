@@ -278,30 +278,23 @@ def test_upsert_sets_and_preserves_members(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# bootstrap: removed chat channels are not folded into channel_instances
+# bootstrap: unknown channel types are not folded into channel_instances
 # ---------------------------------------------------------------------------
 
-def test_bootstrap_does_not_adopt_removed_chat_channels(tmp_path):
-    for channel_type, extra in (
-        ("feishu", {"feishu_app_id": "APP", "feishu_app_secret": "SECRET"}),
-        ("dingtalk", {"dingtalk_client_id": "id", "dingtalk_client_secret": "sec"}),
-        ("weixin", {"weixin_token": "tok"}),
-        ("qq", {"qq_app_id": "id"}),
-        ("telegram", {"telegram_token": "tok"}),
-        ("slack", {"slack_bot_token": "tok"}),
-        ("discord", {"discord_token": "tok"}),
-        ("wecom_bot", {"wecom_bot_id": "id"}),
-    ):
-        settings = {"agent_workspace": str(tmp_path), "channel_type": channel_type, **extra}
-        assert ci.bootstrap_legacy_instances(settings, {}, "primary") == []
+def test_bootstrap_does_not_adopt_an_unknown_channel(tmp_path):
+    settings = {
+        "agent_workspace": str(tmp_path),
+        "channel_type": "extra",
+        "extra_token": "tok",
+    }
+    assert ci.bootstrap_legacy_instances(settings, {}, "primary") == []
 
 
 def test_bootstrap_keeps_an_existing_record(tmp_path):
     settings = {
         "agent_workspace": str(tmp_path),
-        "channel_type": "feishu",
-        "feishu_app_id": "APP",
-        "feishu_app_secret": "SECRET",
+        "channel_type": "extra",
+        "extra_token": "tok",
     }
     roster = {
         "channel_instances": [
@@ -312,7 +305,7 @@ def test_bootstrap_keeps_an_existing_record(tmp_path):
     assert [r["instance_id"] for r in records] == ["terminal-a"]
 
 
-def test_startup_does_not_add_a_removed_channel(tmp_path):
+def test_startup_does_not_add_an_unknown_channel(tmp_path):
     from agent import team
 
     settings = {"agent_workspace": str(tmp_path), "channel_type": ""}
@@ -323,8 +316,8 @@ def test_startup_does_not_add_a_removed_channel(tmp_path):
             {"instance_id": "terminal-a", "channel_type": "terminal", "agent_id": "primary"}
         ],
     })
-    settings["channel_type"] = "weixin"
-    settings["weixin_token"] = "tok"
+    settings["channel_type"] = "extra"
+    settings["extra_token"] = "tok"
     assert team.adopt_legacy_channels(settings) is None
     records = team.read(settings)["channel_instances"]
     assert [r["instance_id"] for r in records] == ["terminal-a"]
@@ -333,27 +326,26 @@ def test_startup_does_not_add_a_removed_channel(tmp_path):
 def test_startup_leaves_the_roster_alone_when_nothing_is_missing(tmp_path):
     from agent import team
 
-    settings = {"agent_workspace": str(tmp_path), "channel_type": "feishu"}
+    settings = {"agent_workspace": str(tmp_path), "channel_type": "extra"}
     assert team.adopt_legacy_channels(settings) is None
     assert not team.team_file(settings).exists()
 
     path = team.team_file(settings)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text('{"channel_instances": [', encoding="utf-8")
-    settings.update({"feishu_app_id": "APP", "feishu_app_secret": "SECRET"})
+    settings.update({"extra_token": "tok"})
     assert team.adopt_legacy_channels(settings) is None
     assert path.read_text(encoding="utf-8") == '{"channel_instances": ['
 
 
-def test_write_does_not_copy_removed_channel_secrets(tmp_path):
-    """team.write must not copy flat IM credentials into channel_instances."""
+def test_write_does_not_copy_unknown_channel_secrets(tmp_path):
+    """team.write must not copy flat credentials for an unknown channel."""
     from agent import team
 
     settings = {
         "agent_workspace": str(tmp_path),
-        "channel_type": "feishu",
-        "feishu_app_id": "APP",
-        "feishu_app_secret": "SECRET",
+        "channel_type": "extra",
+        "extra_token": "SECRET",
         "default_agent_id": "primary",
     }
     team.write(settings, {"default_agent_id": "primary", "agents": []})

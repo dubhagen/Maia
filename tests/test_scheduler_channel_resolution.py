@@ -58,21 +58,21 @@ def _install_directory(monkeypatch, entries):
 
 
 def test_resolves_live_instance_when_task_has_no_instance_id(monkeypatch):
-    live = _FakeChannel("terminal", "terminal-c6961093a5", tokens={"user@im": "tok"})
+    live = _FakeChannel("terminal", "terminal-c6961093a5", tokens={"user-1": "tok"})
     _install_manager(monkeypatch, _FakeManager({"terminal-c6961093a5": live}))
     _install_directory(monkeypatch, [])
 
-    resolved = integration._resolve_delivery_channel("terminal", "", "user@im")
+    resolved = integration._resolve_delivery_channel("terminal", "", "user-1")
 
     assert resolved is live
 
 
 def test_ready_true_for_instance_run_terminal_without_instance_id(monkeypatch):
-    live = _FakeChannel("terminal", "terminal-c6961093a5", tokens={"user@im": "tok"})
+    live = _FakeChannel("terminal", "terminal-c6961093a5", tokens={"user-1": "tok"})
     _install_manager(monkeypatch, _FakeManager({"terminal-c6961093a5": live}))
     _install_directory(monkeypatch, [])
 
-    assert integration._is_channel_ready("terminal", "user@im", instance_id="") is True
+    assert integration._is_channel_ready("terminal", "user-1", instance_id="") is True
 
 
 def test_multiple_instances_are_not_guessed_without_a_directory_hit(monkeypatch):
@@ -89,7 +89,7 @@ def test_multiple_instances_are_not_guessed_without_a_directory_hit(monkeypatch)
     fake_factory.create_channel = lambda *a, **k: bare
     monkeypatch.setitem(sys.modules, "channel.channel_factory", fake_factory)
 
-    resolved = integration._resolve_delivery_channel("terminal", "", "user@im")
+    resolved = integration._resolve_delivery_channel("terminal", "", "user-1")
 
     assert resolved is not other
     assert resolved is not mine
@@ -97,9 +97,9 @@ def test_multiple_instances_are_not_guessed_without_a_directory_hit(monkeypatch)
 
 
 def test_web_recovers_correct_instance_from_recipient_directory(monkeypatch):
-    """Two Feishu apps; a task with no instance_id must resolve to the app that
-    actually owns the open_id, not the first one (which raises open_id cross
-    app). The recipient directory is the authoritative source of that mapping."""
+    """Two web instances; a task with no instance_id must resolve to the
+    instance that owns the receiver, not the first one. The recipient
+    directory is the authoritative source of that mapping."""
     app_a = _FakeChannel("web", "web-72734a6dbe")
     app_b = _FakeChannel("web", "web-ec75a1f1f8")
     _install_manager(
@@ -112,19 +112,19 @@ def test_web_recovers_correct_instance_from_recipient_directory(monkeypatch):
             {
                 "channel_type": "web",
                 "instance_id": "web-ec75a1f1f8",
-                "receiver": "ou_a2a4af",
+                "receiver": "user-2",
             }
         ],
     )
 
-    resolved = integration._resolve_delivery_channel("web", "", "ou_a2a4af")
+    resolved = integration._resolve_delivery_channel("web", "", "user-2")
 
     assert resolved is app_b
 
 
 def test_web_refuses_to_guess_between_instances_without_a_directory_hit(monkeypatch):
     """No instance_id and the receiver is unknown to the directory: we must not
-    blindly deliver through the first app (that is the cross-app bug). Falling
+    blindly deliver through the first instance. Falling
     through to create_channel is fine — the point is we don't return app_a."""
     app_a = _FakeChannel("web", "web-72734a6dbe")
     app_b = _FakeChannel("web", "web-ec75a1f1f8")
@@ -139,7 +139,7 @@ def test_web_refuses_to_guess_between_instances_without_a_directory_hit(monkeypa
     fake_factory.create_channel = lambda *a, **k: bare
     monkeypatch.setitem(sys.modules, "channel.channel_factory", fake_factory)
 
-    resolved = integration._resolve_delivery_channel("web", "", "ou_unknown")
+    resolved = integration._resolve_delivery_channel("web", "", "user-unknown")
 
     assert resolved is not app_a
     assert resolved is not app_b
@@ -147,13 +147,12 @@ def test_web_refuses_to_guess_between_instances_without_a_directory_hit(monkeypa
 
 
 def test_single_web_instance_is_used_directly(monkeypatch):
-    """Solo Feishu install: exactly one instance, so it is safe to auto-pick
-    even without a directory entry (legacy behaviour preserved)."""
+    """One web instance: it is safe to auto-pick even without a directory entry."""
     only = _FakeChannel("web", "web-72734a6dbe")
     _install_manager(monkeypatch, _FakeManager({"web-72734a6dbe": only}))
     _install_directory(monkeypatch, [])
 
-    resolved = integration._resolve_delivery_channel("web", "", "ou_a2a4af")
+    resolved = integration._resolve_delivery_channel("web", "", "user-2")
 
     assert resolved is only
 
@@ -177,11 +176,11 @@ def test_manager_is_shared_across_app_main_duplication(monkeypatch):
 
 
 def test_exact_instance_id_still_wins(monkeypatch):
-    a = _FakeChannel("terminal", "terminal-aaaa", tokens={"user@im": "t"})
-    b = _FakeChannel("terminal", "terminal-bbbb", tokens={"user@im": "t"})
+    a = _FakeChannel("terminal", "terminal-aaaa", tokens={"user-1": "t"})
+    b = _FakeChannel("terminal", "terminal-bbbb", tokens={"user-1": "t"})
     _install_manager(monkeypatch, _FakeManager({"terminal-aaaa": a, "terminal-bbbb": b}))
 
-    resolved = integration._resolve_delivery_channel("terminal", "terminal-bbbb", "user@im")
+    resolved = integration._resolve_delivery_channel("terminal", "terminal-bbbb", "user-1")
 
     assert resolved is b
 
@@ -196,16 +195,16 @@ def test_bare_singleton_fallback_does_not_hard_block_readiness(monkeypatch):
         integration, "_resolve_delivery_channel", lambda *a, **k: bare
     )
 
-    assert integration._is_channel_ready("terminal", "user@im", instance_id="") is True
+    assert integration._is_channel_ready("terminal", "user-1", instance_id="") is True
 
 
 def test_live_instance_is_ready_without_a_token_map(monkeypatch):
-    """Removed chat channels no longer gate delivery on a login token map."""
+    """A live terminal instance is ready without a login token map."""
     live = _FakeChannel("terminal", "terminal-1", tokens={})
     _install_manager(monkeypatch, _FakeManager({"terminal-1": live}))
     _install_directory(monkeypatch, [])
 
-    assert integration._is_channel_ready("terminal", "user@im", instance_id="") is True
+    assert integration._is_channel_ready("terminal", "user-1", instance_id="") is True
 
 
 # ── Backward-compatibility: legacy tasks with no instance_id / no agent_id ──
@@ -219,14 +218,14 @@ def test_legacy_single_instance_registers_under_channel_type(monkeypatch):
     """A non-multi install runs its channel under the bare channel_type key
     (``terminal``). A legacy task with no instance_id resolves to it via
     ``lookup = instance_id or channel_type`` — the original single-bot path."""
-    legacy = _FakeChannel("terminal", "terminal", tokens={"user@im": "tok"})
+    legacy = _FakeChannel("terminal", "terminal", tokens={"user-1": "tok"})
     _install_manager(monkeypatch, _FakeManager({"terminal": legacy}))
     _install_directory(monkeypatch, [])
 
-    resolved = integration._resolve_delivery_channel("terminal", "", "user@im")
+    resolved = integration._resolve_delivery_channel("terminal", "", "user-1")
 
     assert resolved is legacy
-    assert integration._is_channel_ready("terminal", "user@im", instance_id="") is True
+    assert integration._is_channel_ready("terminal", "user-1", instance_id="") is True
 
 
 def test_no_manager_falls_back_to_create_channel_like_before(monkeypatch):
@@ -248,16 +247,15 @@ def test_no_manager_falls_back_to_create_channel_like_before(monkeypatch):
     fake_factory.create_channel = _create
     monkeypatch.setitem(sys.modules, "channel.channel_factory", fake_factory)
 
-    resolved = integration._resolve_delivery_channel("web", "", "ou_x")
+    resolved = integration._resolve_delivery_channel("web", "", "user-x")
 
     assert resolved is bare
     assert called["channel_type"] == "web"
 
 
 def test_legacy_web_task_without_instance_id_single_instance(monkeypatch):
-    """The common legacy case: one Feishu app, an old task with no instance_id
-    and no directory entry. Auto-picking the sole running instance is safe and
-    keeps the task delivering."""
+    """One web instance and an old task with no instance_id and no directory
+    entry. Auto-picking the sole running instance keeps the task delivering."""
     only = _FakeChannel("web", "web")
     _install_manager(monkeypatch, _FakeManager({"web": only}))
     _install_directory(monkeypatch, [])

@@ -313,7 +313,7 @@ class Agent:
                 from common import i18n
                 lang = i18n.get_language()
             except Exception:
-                lang = "zh"
+                lang = "en"
             builder = PromptBuilder(workspace_dir=self.workspace_dir or "", language=lang)
             full = builder.build(
                 # Same list the model is offered this turn: describing a tool

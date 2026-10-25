@@ -49,6 +49,9 @@ interface SessionState {
   hasMore: boolean
   loading: boolean
   activeId: string
+  /** Welcome screen is covering the stored conversation. Sending starts a new one. */
+  atHome: boolean
+  showHome: () => void
   groupMode: 'project' | 'time'
   projectOrder: string[]
   /** Bumped whenever project records change (rename/delete), so other views
@@ -95,6 +98,13 @@ function readActive(): string {
   return localStorage.getItem(ACTIVE_KEY) || genId()
 }
 
+// `/` (the hash route's base) opens the welcome screen. A stored conversation
+// stays in the list and is not drawn over that screen until the user opens it.
+function startsOnHome(): boolean {
+  const hash = (window.location.hash || '#/').replace(/^#/, '').split('?')[0].replace(/\/+$/, '') || '/'
+  return hash === '/'
+}
+
 // One row per session id. Offset pagination can hand back a row twice when the
 // list shifts between pages, and two rows for one conversation both light up as
 // "selected". The first occurrence (already on screen) wins.
@@ -134,6 +144,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   hasMore: false,
   loading: false,
   activeId: readActive(),
+  atHome: startsOnHome(),
   groupMode: 'time',
   projectOrder: [],
   projectsRev: 0,
@@ -179,8 +190,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     if (id !== get().activeId && !(await useWorkspaceStore.getState().guardUnsavedEdit())) return
     localStorage.setItem(ACTIVE_KEY, id)
     activateOwner(id)
-    set({ activeId: id })
+    set({ activeId: id, atHome: false })
   },
+
+  showHome: () => set({ atHome: true }),
 
   newSession: (ownerId) => {
     const id = genId()
@@ -190,7 +203,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       activateOwner(id)
     }
     localStorage.setItem(ACTIVE_KEY, id)
-    set({ activeId: id })
+    set({ activeId: id, atHome: false })
     return id
   },
 

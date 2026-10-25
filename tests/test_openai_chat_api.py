@@ -993,7 +993,7 @@ def test_http_stream_returns_sse_body_and_done_marker(monkeypatch):
 def test_route_config_and_english_documentation_expose_the_public_api():
     root = Path(__file__).parents[1]
     config = json.loads((root / "config-template.json").read_text(encoding="utf-8"))
-    docs = (root / "docs/extensions/chat-api.mdx").read_text(encoding="utf-8")
+    docs = (root / "docs/extensions/chat-api.md").read_text(encoding="utf-8")
 
     assert config["external_api_token"] == ""
     assert "POST /v1/chat/completions" in docs

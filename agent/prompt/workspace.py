@@ -283,7 +283,7 @@ def _is_en_lang() -> bool:
 
 
 def _get_agent_template() -> str:
-    """Agent persona template (zh/en by resolved language)."""
+    """Agent persona template."""
     return _AGENT_TEMPLATE_EN
 
 
@@ -331,7 +331,7 @@ _You are not a chatbot. You are becoming someone._
 
 
 def _get_user_template() -> str:
-    """User identity template (zh/en by resolved language)."""
+    """User identity template."""
     return _USER_TEMPLATE_EN
 
 
@@ -346,11 +346,10 @@ _USER_TEMPLATE_EN = """# USER.md - User basics
 - **Name**: *(ask during the first conversation)*
 - **Preferred name**: *(how the user wants to be addressed)*
 - **Occupation**: *(optional)*
-- **Timezone**: *(e.g. Asia/Shanghai)*
+- **Timezone**: *(e.g. UTC)*
 
 ## Contact
 
-- **WeChat**: 
 - **Email**: 
 - **Other**: 
 
@@ -366,7 +365,7 @@ _USER_TEMPLATE_EN = """# USER.md - User basics
 
 
 def _get_rule_template() -> str:
-    """Workspace rules template (zh/en by resolved language)."""
+    """Workspace rules template."""
     return _RULE_TEMPLATE_EN
 
 
@@ -472,7 +471,7 @@ This workspace grows as you use it. When you learn something new, find a better 
 
 
 def _get_memory_template() -> str:
-    """Long-term memory template (empty, agent fills it; zh/en header)."""
+    """Long-term memory template. Empty until the agent fills it."""
     return _MEMORY_TEMPLATE_EN
 
 

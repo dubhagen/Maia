@@ -87,7 +87,7 @@ def build_agent_system_prompt(
 
     Args:
         workspace_dir: workspace directory
-        language: language ("zh" or "en")
+        language: language ("en")
         base_persona: base persona description (deprecated, defined by AGENT.md)
         user_identity: user identity info
         tools: tool list

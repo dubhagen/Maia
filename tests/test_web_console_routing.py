@@ -250,3 +250,44 @@ def test_the_first_route_is_applied_only_once_auth_has_settled():
     assert "addEventListener('popstate', routeApply)" in router
     # A bare call at the top level would run before auth.
     assert not re.search(r"^routeApply\(\)", router, re.M)
+
+
+def test_the_base_url_opens_the_welcome_screen_and_the_logo_returns_to_it():
+    """A stored conversation used to cover the welcome screen, and the logo
+    only re-selected the chat view, so both `/` and the mark stayed on that
+    conversation. `/` starts on the welcome screen, the mark returns to it,
+    and sending from it starts a new session instead of continuing the stored
+    one. Opening that same row draws the conversation again."""
+    state = _js("chat/state.js")
+    assert "let showingHome = (location.pathname.replace(/\\/+$/, '') || '/') === '/';" in state
+
+    assert "showHomeScreen()" in _js("core/nav.js")
+    assert "if (!showingHome) loadHistory(1);" in _js("boot.js")
+
+    new_chat = _js("chat/new-chat.js")
+    assert "function showHomeScreen()" in new_chat
+    assert "function beginConversationFromHome()" in new_chat
+    assert "function mountWelcomeScreen()" in new_chat
+    # New Chat creates a real session, so its welcome screen must not mint
+    # another one on send.
+    new_fn = new_chat[new_chat.index("function newChat("):]
+    assert "showingHome = false;" in new_fn
+
+    send = _js("chat/send.js")
+    send_fn = send[send.index("function sendMessage()"):]
+    send_fn = send_fn[:send_fn.index("\nfunction ")]
+    assert send_fn.index("if (!text && pendingAttachments.length === 0) return;") < send_fn.index(
+        "beginConversationFromHome()"
+    )
+    assert "!showingHome && ownerSession === sessionId" in send
+
+    render = _js("chat/render.js")
+    assert "if (showingHome) return Promise.resolve();" in render
+    assert "if (showingHome || historySessionId !== sessionId) return;" in render
+
+    sessions = _js("views/sessions.js")
+    switch = sessions[sessions.index("function switchSession("):]
+    switch = switch[:switch.index("\nfunction ")]
+    assert "if (newSessionId === sessionId && !showingHome)" in switch
+    assert switch.index("wsGuardUnsaved") < switch.index("showingHome = false")
+    assert "!showingHome && s.session_id === sessionId" in sessions

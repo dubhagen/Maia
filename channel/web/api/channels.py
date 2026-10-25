@@ -9,14 +9,14 @@ from common.log import logger
 from config import conf
 
 
-_REMOVED = (
-    "Chat channels other than the web console have been removed. "
-    "The local terminal is still available as channel_type \"terminal\"."
+_UNSUPPORTED = (
+    "Chat is the web console and the local terminal. "
+    "Set channel_type to \"terminal\" for the local process."
 )
 
 
 class ChannelsHandler:
-    """Lists the web console. Saving or connecting an IM channel is rejected."""
+    """Lists the web console. Any other channel type is rejected."""
 
     def GET(self):
         _require_auth()
@@ -45,4 +45,4 @@ class ChannelsHandler:
     def POST(self):
         _require_auth()
         web.header("Content-Type", "application/json; charset=utf-8")
-        return json.dumps({"status": "error", "message": _REMOVED})
+        return json.dumps({"status": "error", "message": _UNSUPPORTED})

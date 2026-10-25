@@ -22,6 +22,7 @@ import type { MenuGroup, MenuItem } from '../types'
 import brandLogo from '../assets/logo.png'
 import { t } from '../i18n'
 import { useUIStore } from '../store/uiStore'
+import { useSessionStore } from '../store/sessionStore'
 import { guardDocEditors } from '../store/docEditorStore'
 import { useTheme } from '../hooks/useTheme'
 import { usePlatform } from '../hooks/usePlatform'
@@ -72,6 +73,15 @@ const NavRail: React.FC<NavRailProps> = () => {
   const go = async (path: string) => {
     if (!(await guardDocEditors())) return
     navigate(path)
+  }
+
+  // The mark opens the welcome screen. It does not start a session; the next
+  // message from that screen does. Declining an unsaved document leaves the
+  // current view alone.
+  const showWelcome = async () => {
+    if (!(await guardDocEditors())) return
+    useSessionStore.getState().showHome()
+    navigate('/')
   }
 
   const menu = useMenuStore((s) => s.doc)
@@ -179,7 +189,14 @@ const NavRail: React.FC<NavRailProps> = () => {
             <product.slots.NavRailBrand collapsed={collapsed} />
           ) : (
             <div className="flex items-center gap-2 min-w-0 select-none">
-              <BrandLogo />
+              <button
+                type="button"
+                className="titlebar-no-drag flex-shrink-0 cursor-pointer rounded-md hover:opacity-80 transition-opacity"
+                aria-label={appName}
+                onClick={() => void showWelcome()}
+              >
+                <BrandLogo />
+              </button>
               {!collapsed && (
                 <span className="text-[14px] font-semibold text-content truncate">{appName}</span>
               )}

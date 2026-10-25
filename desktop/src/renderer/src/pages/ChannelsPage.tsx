@@ -6,7 +6,7 @@ interface ChannelsPageProps {
   baseUrl: string
 }
 
-/** Chat is the web console. IM channel setup has been removed. */
+/** Chat is the web console. The local terminal is the other surface. */
 const ChannelsPage: React.FC<ChannelsPageProps> = () => {
   return (
     <div className="h-full overflow-y-auto">

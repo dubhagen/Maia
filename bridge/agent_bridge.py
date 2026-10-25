@@ -21,7 +21,6 @@ from bridge.agent_initializer import AgentInitializer
 from bridge.bridge import Bridge
 from bridge.context import Context
 from bridge.reply import Reply, ReplyType
-from common import const
 from common.log import logger
 from common.utils import expand_path
 from config import conf
@@ -371,9 +370,9 @@ class AgentLLMModel(LLMModel):
                     kwargs['agent_id'] = agent_id
 
                 # Thinking mode is a global toggle independent of the channel.
-                # IM channels (WeChat/WeCom/DingTalk/Feishu) won't render the
-                # reasoning trace, but still benefit from the higher answer
-                # quality the thinking pass produces.
+                # The terminal does not render the reasoning trace, but still
+                # benefits from the higher answer quality the thinking pass
+                # produces.
                 from config import conf
                 thinking_enabled = bool(conf().get("enable_thinking", False))
                 # Some native-reasoning models reject disabled thinking or use
@@ -443,9 +442,9 @@ class AgentLLMModel(LLMModel):
                     kwargs['agent_id'] = agent_id
 
                 # Thinking mode is a global toggle independent of the channel.
-                # IM channels (WeChat/WeCom/DingTalk/Feishu) won't render the
-                # reasoning trace, but still benefit from the higher answer
-                # quality the thinking pass produces.
+                # The terminal does not render the reasoning trace, but still
+                # benefits from the higher answer quality the thinking pass
+                # produces.
                 from config import conf
                 thinking_enabled = bool(conf().get("enable_thinking", False))
                 # Keep streaming and non-streaming calls on the same provider
@@ -1450,11 +1449,10 @@ class AgentBridge:
                 else self.agent_registry.default_agent_id
             )
 
-            # A team channel bot (e.g. a Feishu instance with members) carries
-            # its roster on every inbound message. Materialize it into the
-            # session the first time we see the conversation so the shared
-            # delegate/@mention machinery — which reads session_prefs.members —
-            # treats it as a team, exactly like a Web team conversation.
+            # A team conversation carries its roster on every inbound message.
+            # Materialize it into the session the first time we see the
+            # conversation so the shared delegate/@mention machinery — which
+            # reads session_prefs.members — treats it as a team.
             self._seed_team_members(session_id, resolved_agent_id, context)
 
             # Addressing a teammate by name hands the turn to that teammate
@@ -1513,7 +1511,7 @@ class AgentBridge:
             )
 
             # Register a cancel token. Prefer per-turn request_id (web),
-            # fall back to session_id (IM channels). The Event is polled by
+            # fall back to session_id (terminal). The Event is polled by
             # AgentStreamExecutor at safe checkpoints.
             registry = get_cancel_registry()
             # Both the cancel token and the session grouping are namespaced:

@@ -97,7 +97,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
     const known = hasAvailableUpdate(get())
     set({ dismissedVersion: null, panelOpen: known })
     // Always kick a fresh check too (picks up newer versions / recovers errors).
-    // Pass the UI language so downloads route to the China CDN / R2 accordingly.
+    // Auto-update is a no-op. The language argument is ignored.
     window.electronAPI?.checkForUpdate?.(getLang())
   },
 

@@ -3,8 +3,8 @@
 The Agent roster -- create, edit, delete -- their core files and their
 avatars. Editing an Agent has to reach past the config file: the running
 services hold a snapshot of the roster, so _reload_agent_runtime rebuilds
-what changed, and _bind_channel_instance re-points the IM channels an Agent
-answers on.
+what changed, and _bind_channel_instance re-points the channel instance an
+Agent answers on.
 """
 
 from typing import Optional

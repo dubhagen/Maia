@@ -114,7 +114,14 @@ function sendMessage() {
     // send button's pointer click — see send-btn listener above.
 
     const text = chatInput.value.trim();
+    // A bare Enter on the welcome screen must not mint a session and then bail.
     if (!text && pendingAttachments.length === 0) return;
+
+    // The welcome screen is not the stored session. Start a new one before
+    // the text is bound to sessionId, and settle an open editor first.
+    if (showingHome && typeof wsGuardUnsaved === 'function'
+        && !wsGuardUnsaved(() => sendMessage())) return;
+    if (showingHome) beginConversationFromHome();
 
     if (text) {
         inputHistory.push(text);
@@ -289,7 +296,9 @@ function startSSE(requestId, loadingEl, timestamp, replayItems, resume) {
     const ownerSession = sessionId;
     const ownerAgent = activeAgentId;
     const ownerKey = runtimeSessionKey(ownerSession, ownerAgent);
-    const isActive = () => ownerSession === sessionId && ownerAgent === activeAgentId;
+    // Home covers the transcript. The stream keeps running and buffering so
+    // opening the session again can rebuild the bubble.
+    const isActive = () => !showingHome && ownerSession === sessionId && ownerAgent === activeAgentId;
     sessionActiveRequest[ownerKey] = requestId;
     updateEditButtonsState();
     // Per-request event buffer used to rebuild the bubble on re-attach.
@@ -1086,7 +1095,7 @@ function startPolling() {
                 const already = rid && messagesDiv.querySelector(
                     `[data-request-id="${rid}"]`
                 );
-                if (!already) {
+                if (!already && !showingHome) {
                     const welcomeScreen = document.getElementById('welcome-screen');
                     if (welcomeScreen) welcomeScreen.remove();
                     addBotMessage(data.content, new Date(data.timestamp * 1000), rid);

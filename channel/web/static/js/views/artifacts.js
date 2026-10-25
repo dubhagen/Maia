@@ -333,8 +333,7 @@ async function _artApplyPendingFocus() {
 // Timeline rendering
 // =====================================================================
 function _artLocale() {
-    if (currentLang === 'en') return 'en-US';
-    return currentLang === 'zh-Hant' ? 'zh-TW' : 'zh-CN';
+    return 'en-US';
 }
 
 function _artDayStart(ts) {

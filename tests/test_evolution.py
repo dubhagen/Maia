@@ -424,7 +424,7 @@ def scenario_skill_create_implicit():
         "turns": [
             ("Compare Notion, Confluence, and Coda.",
              "I will use a fixed method:\n1. Set the dimensions: price, collaboration, templates, API, and localization.\n2. Collect each product on those dimensions.\n3. Build a comparison table.\n4. Give a conclusion and a recommendation.\n\n(Then a full five-dimension table and a conclusion.)"),
-            ("Good. Use the same method for Slack, Teams, and Discord.",
+            ("Good. Use the same method for Linear, Jira, and Asana.",
              "Using the same method (price, collaboration, templates, API, localization, then a table and a conclusion).\n\n(Then a second table and a recommendation.)"),
             ("That conclusion is clear.", "The five-dimension comparison stays easy to follow."),
         ],

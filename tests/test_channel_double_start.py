@@ -1,10 +1,8 @@
 """Starting a channel that is already running must not leave two of them.
 
-Two paths on the channels page reach the manager: saving a channel's config
-restarts it, connecting it starts it. They used to be able to interleave, and
-the second one simply overwrote the registry entry — the first instance kept
-its connection open with nobody holding it, so the platform pushed every event
-to both and users got two replies to one message.
+Saving config restarts a channel, and starting it again used to interleave
+with that restart. The second start overwrote the registry entry while the
+first instance kept running, so one message could be answered twice.
 """
 
 import os
@@ -52,30 +50,30 @@ class ChannelStartTest(unittest.TestCase):
             th.join(timeout=5)
 
     def test_starting_twice_leaves_a_single_live_channel(self):
-        self.mgr.start(["qq"])
+        self.mgr.start(["terminal"])
         self._join_threads()
-        first = self.mgr.get_channel("qq")
+        first = self.mgr.get_channel("terminal")
 
-        self.mgr.start(["qq"])
+        self.mgr.start(["terminal"])
         self._join_threads()
-        second = self.mgr.get_channel("qq")
+        second = self.mgr.get_channel("terminal")
 
         self.assertIsNot(first, second, "a fresh instance should replace the old one")
         self.assertFalse(first.running, "the superseded instance must be stopped, not orphaned")
         self.assertTrue(second.running)
-        self.assertIs(self.mgr.get_channel("qq"), second)
+        self.assertIs(self.mgr.get_channel("terminal"), second)
 
     def test_restart_after_a_start_keeps_one_channel(self):
-        # The sequence seen in the wild: config save restarts, connect starts.
+        # Config save restarts, then a second start arrives.
         with patch.object(self.app, "_clear_singleton_cache"):
-            self.mgr.restart("qq")
+            self.mgr.restart("terminal")
             self._join_threads()
-            self.mgr.start(["qq"])
+            self.mgr.start(["terminal"])
             self._join_threads()
 
         live = [ch for ch in self.created if ch.running]
         self.assertEqual(len(live), 1, f"expected one live channel, got {len(live)}")
-        self.assertIs(live[0], self.mgr.get_channel("qq"))
+        self.assertIs(live[0], self.mgr.get_channel("terminal"))
 
     def test_a_fresh_start_is_untouched(self):
         self.mgr.start(["web"])

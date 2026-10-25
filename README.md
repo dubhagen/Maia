@@ -71,10 +71,11 @@ The compose file publishes port 9899 and points LiteLLM at `http://host.docker.i
 
 ## Docs
 
-- [Introduction](docs/intro/index.mdx)
-- [Models](docs/models/index.mdx)
-- [Channels](docs/channels/index.mdx)
-- [Web console](docs/channels/web.mdx)
+- [Documentation](docs/README.md)
+- [Introduction](docs/intro/index.md)
+- [Models](docs/models/index.md)
+- [Channels](docs/channels/index.md)
+- [Web console](docs/channels/web.md)
 
 ## License
 

@@ -20,8 +20,8 @@ def test_root_does_not_prefix_sudo(monkeypatch):
     monkeypatch.setattr(install.os, "geteuid", lambda: 0)
     monkeypatch.setattr(install.subprocess, "call", lambda cmd, **kw: calls.append(cmd) or 0)
 
-    assert install._apt_install("fonts-wqy-zenhei") == 0
-    assert calls == [["apt-get", "install", "-y", "--no-install-recommends", "fonts-wqy-zenhei"]]
+    assert install._apt_install("ca-certificates") == 0
+    assert calls == [["apt-get", "install", "-y", "--no-install-recommends", "ca-certificates"]]
 
 
 def test_non_root_with_sudo_prefixes(monkeypatch):
@@ -30,7 +30,7 @@ def test_non_root_with_sudo_prefixes(monkeypatch):
     monkeypatch.setattr(install.shutil, "which", lambda name: "/usr/bin/sudo")
     monkeypatch.setattr(install.subprocess, "call", lambda cmd, **kw: calls.append(cmd) or 0)
 
-    assert install._apt_install("fonts-wqy-zenhei") == 0
+    assert install._apt_install("ca-certificates") == 0
     assert calls[0][:2] == ["sudo", "apt-get"]
 
 
@@ -40,5 +40,5 @@ def test_non_root_without_sudo_skips(monkeypatch):
     monkeypatch.setattr(install.shutil, "which", lambda name: None)
     monkeypatch.setattr(install.subprocess, "call", lambda cmd, **kw: calls.append(cmd) or 0)
 
-    assert install._apt_install("fonts-wqy-zenhei") == 1
+    assert install._apt_install("ca-certificates") == 1
     assert calls == []

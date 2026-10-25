@@ -32,12 +32,15 @@ function loadMemoryView(page) {
         if (total === 0) {
             const emptyIcon = emptyEl.querySelector('i');
             const emptyTitle = emptyEl.querySelector('p');
+            const emptyHint = emptyEl.querySelectorAll('p')[1];
             if (memoryCategory === 'evolution') {
                 emptyIcon.className = 'fas fa-seedling text-emerald-400 text-xl';
                 emptyTitle.textContent = 'No evolution records yet';
+                if (emptyHint) emptyHint.textContent = 'Self-evolution notes show up here after a review.';
             } else {
                 emptyIcon.className = 'fas fa-brain text-purple-400 text-xl';
                 emptyTitle.textContent = 'No memory files';
+                if (emptyHint) emptyHint.textContent = 'Memory files will be displayed here';
             }
             emptyEl.classList.remove('hidden');
             listEl.classList.add('hidden');

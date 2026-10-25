@@ -9,6 +9,10 @@ function sendVoiceMessage(text, audioUrl) {
     text = (text || '').trim();
     if (!text) return;
 
+    if (showingHome && typeof wsGuardUnsaved === 'function'
+        && !wsGuardUnsaved(() => sendVoiceMessage(text, audioUrl))) return;
+    if (showingHome) beginConversationFromHome();
+
     inputHistory.push(text);
     historyIdx = -1;
     historySavedDraft = '';

@@ -14,8 +14,8 @@ requestAuthGatedStart(() => {
             document.getElementById('welcome-title').textContent = title;
             initConfigView(data);
         }
-        loadHistory(1);
-    }).catch(() => { loadHistory(1); });
+        if (!showingHome) loadHistory(1);
+    }).catch(() => { if (!showingHome) loadHistory(1); });
 });
 
 // Start polling so scheduler/push messages are received.

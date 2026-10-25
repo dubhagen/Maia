@@ -571,10 +571,9 @@ def _switch_hint() -> str:
     """One line telling the model what to do, without a UI location that could
     mislead a channel user.
 
-    The permission selector lives in the console — the desktop app or the Web
-    console — so a user chatting through a channel (WeChat, Telegram, ...)
-    cannot see anything "under the chat input". We name the console by build so
-    the model can point the user to the right place, and keep it short.
+    The permission selector lives in the desktop app or the web console. A
+    terminal session has no control under the chat input. Name the console by
+    build so the model can point the user to the right place, and keep it short.
     """
     where = "the desktop app" if os.environ.get("MAIA_DESKTOP") == "1" else "the Web console"
     return (

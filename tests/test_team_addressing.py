@@ -132,7 +132,7 @@ def test_the_web_console_roster_resolves_the_default_alias_too(registry):
     ``agent.team_addressing.roster_from_members`` and
     ``channel.web.core._common._roster_from_members`` are two implementations
     of one roster, so a fix in one that misses the other leaves the browser and
-    an IM group disagreeing about who is reachable.
+    a terminal group chat disagreeing about who is reachable.
     """
     from channel.web.core._common import _roster_from_members
 

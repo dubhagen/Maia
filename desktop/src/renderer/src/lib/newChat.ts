@@ -15,14 +15,17 @@ import { useSessionSettingsStore } from '../store/sessionSettingsStore'
  * chat opened for a *different* Agent starts on that Agent's own root, like the
  * web console, since the project record belongs to the previous owner.
  */
-export function startNewChat(opts?: { ownerId?: string; inheritProject?: boolean }): string {
+export function startNewChat(opts?: { ownerId?: string; inheritProject?: boolean; loadHistory?: boolean }): string {
   const inheritProject = opts?.inheritProject ?? true
   const sessions = useSessionStore.getState()
   const inherited = inheritProject ? sessions.currentProject() : null
   const id = sessions.newSession(opts?.ownerId)
   const chat = useChatStore.getState()
   chat.ensureSession(id)
-  void chat.loadHistory(id, 1)
+  // A send that is about to land skips the reload. Page 1 would replace the
+  // turn if it arrived before the stream flag, and a brand-new session has
+  // nothing on the server to reload.
+  if (opts?.loadHistory !== false) void chat.loadHistory(id, 1)
   // Show the fresh chat in the list immediately (under the inherited space),
   // and expand the session list so the user sees the new session.
   useSessionStore.getState().addOptimistic(id, inherited)

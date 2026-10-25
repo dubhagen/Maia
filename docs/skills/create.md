@@ -1,0 +1,55 @@
+# Create Skills
+
+Maia includes a built-in Skill Creator that lets you quickly create, install, or update skills through natural language conversation.
+
+## Usage
+
+Simply describe the skill you want in a conversation, and the Agent will handle the creation:
+
+- Codify workflows as skills: "Create a skill from this deployment process"
+- Integrate third-party APIs: "Create a skill based on this API documentation"
+- Install remote skills: "Install xxx skill for me"
+
+## Creation Flow
+
+1. Tell the Agent what skill you want to create
+2. Agent automatically generates `SKILL.md` description and execution scripts
+3. Skill is saved to the workspace `~/maia/skills/` directory
+4. Agent will automatically recognize and use the skill in future conversations
+
+The new skill is listed under Skills on Management → Capabilities, with a switch. The page also lists built-in tools and MCP servers. In this shot the workspace skills are image-generation, knowledge-wiki, and skill-creator, all on.
+
+![Capabilities page with three skills enabled](../images/screenshots/skills.png)
+
+*Capabilities lists workspace skills under the built-in tools*
+
+## SKILL.md Format
+
+Created skills follow the standard SKILL.md format:
+
+```markdown
+---
+name: my-skill
+description: Brief description of the skill
+metadata:
+  emoji: 🔧
+  requires:
+    bins: ["curl"]
+    env: ["MY_API_KEY"]
+  primaryEnv: "MY_API_KEY"
+---
+
+# My Skill
+
+Detailed instructions...
+```
+
+| Field | Description |
+| --- | --- |
+| `name` | Skill name, must match directory name |
+| `description` | Skill description, Agent decides whether to invoke based on this |
+| `metadata.requires.bins` | Required system commands |
+| `metadata.requires.env` | Required environment variables |
+| `metadata.always` | Always load (default false) |
+
+> **Tip.** See the [Skill Creator documentation](https://github.com/dubhagen/Maia/blob/master/skills/skill-creator/SKILL.md) for details.

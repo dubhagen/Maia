@@ -9,8 +9,7 @@ _SUPPORTED = ("web", "terminal")
 def create_channel(channel_type, instance_id="", bound_agent_id="", credentials=None, members=None, peers=None) -> Channel:
     """Create a web or terminal channel.
 
-    Extra instance arguments are accepted so older callers keep working.
-    Credentials for removed chat providers are ignored.
+    Extra instance arguments are accepted and ignored.
     """
     del instance_id, bound_agent_id, credentials, members, peers
     name = (channel_type or "").strip()

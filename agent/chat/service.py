@@ -376,7 +376,7 @@ class ChatService:
         from agent.protocol.agent_stream import AgentStreamExecutor
 
         # Register a cancel token so /cancel can abort this in-flight run.
-        # API calls can key by request; IM channels remain session scoped.
+        # API calls can key by request; the terminal stays session scoped.
         from agent.protocol import get_cancel_registry, get_steer_registry
         registry = get_cancel_registry()
         steer_registry = get_steer_registry()

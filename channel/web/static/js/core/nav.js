@@ -155,18 +155,19 @@ function toggleSidebarCollapsed() {
 
 syncSidebarTips();
 
-// The logo goes home, same as the sidebar items do: through navigateTo, so the
-// address bar, the unsaved-edit guard and the mobile drawer all behave as they
-// do for any other destination. It is not a .sidebar-item because it must not
-// pick up the active highlight the chat entry already carries.
+// The logo opens the welcome screen, not the stored conversation. showHomeScreen
+// still goes through navigateTo, so the address bar, the unsaved-edit guard and
+// the mobile drawer behave as they do for any other destination. It is not a
+// .sidebar-item because it must not pick up the active highlight the chat
+// entry already carries.
 const sidebarHome = document.getElementById('sidebar-home');
 if (sidebarHome) {
-    sidebarHome.addEventListener('click', () => navigateTo('chat'));
+    sidebarHome.addEventListener('click', () => showHomeScreen());
     // role="button" without this is a lie to anyone not using a mouse.
     sidebarHome.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            navigateTo('chat');
+            showHomeScreen();
         }
     });
 }

@@ -59,7 +59,7 @@ const formatNextRun = (iso?: string): string => {
 }
 
 // Middle-truncate a long recipient id so a dropdown row's right-hand id stays on
-// one line (e.g. "o9cq807...MYB0@im.wechat"). Mirrors the web console.
+// one line (e.g. "user-1a2b...9f"). Mirrors the web console.
 const truncateId = (id: string, max = 22): string => {
   const s = String(id || '')
   if (s.length <= max) return s

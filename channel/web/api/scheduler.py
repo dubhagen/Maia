@@ -368,13 +368,12 @@ class SchedulerUpdateHandler:
                             "message": f"Cannot change channel type from '{old_channel}' to '{channel_type}'.",
                         }, ensure_ascii=False)
                 else:
-                    # IM task: the editor lets the user re-point it at another
-                    # channel instance / recipient. Only allow a target that is
-                    # in the trusted recipient directory, and take its identity
-                    # from the store rather than trusting the request body — the
-                    # same rule the create endpoint enforces. This also keeps an
-                    # app-scoped id (a Feishu open_id) bound to the instance that
-                    # actually owns it.
+                    # A non-web task can be pointed at another channel instance
+                    # or recipient. Only allow a target that is in the trusted
+                    # recipient directory, and take its identity from the store
+                    # rather than trusting the request body — the same rule the
+                    # create endpoint enforces. That keeps a receiver bound to
+                    # the instance that actually owns it.
                     new_instance = (action.get("instance_id") or channel_type).strip()
                     new_receiver = action.get("receiver")
                     repointed = (

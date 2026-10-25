@@ -247,15 +247,13 @@ interface VendorSectionProps {
 }
 
 const VendorSection: React.FC<VendorSectionProps> = ({ data, onChanged }) => {
-  // Edit an existing built-in vendor.
+  // Edit the LiteLLM credential.
   const [editing, setEditing] = useState<ModelProvider | null>(null)
-  // Add flow: open the vendor modal with a provider picker.
+  // First run only: open that form when nothing is configured yet.
   const [adding, setAdding] = useState(false)
-  // Custom provider modal: 'new' to create, or a provider to edit.
   const [customEditing, setCustomEditing] = useState<ModelProvider | 'new' | null>(null)
 
   const isCustomCard = (p: ModelProvider) => p.is_custom && !!p.custom_name
-  // Unified grid: configured built-ins + all custom provider cards (web parity).
   const shown = data.providers.filter((p) => p.configured || isCustomCard(p))
 
   return (
@@ -279,12 +277,6 @@ const VendorSection: React.FC<VendorSectionProps> = ({ data, onChanged }) => {
               <VendorChip key={p.id} provider={p} onClick={() => setEditing(p)} />
             )
           )}
-          <button
-            onClick={() => setAdding(true)}
-            className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-btn border border-dashed border-default text-content-tertiary hover:border-accent hover:text-accent cursor-pointer transition-colors text-sm"
-          >
-            <Plus size={14} /> {t('models_add_vendor')}
-          </button>
         </div>
       )}
 

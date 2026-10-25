@@ -180,11 +180,11 @@ def test_discovery_failure_is_reported_and_does_not_raise(monkeypatch):
     assert "sk-secret-value" not in err
 
 
-def test_channel_factory_rejects_removed_channels():
+def test_channel_factory_rejects_an_unknown_channel():
     with pytest.raises(RuntimeError):
-        create_channel("feishu")
+        create_channel("extra")
     with pytest.raises(RuntimeError):
-        create_channel("weixin")
+        create_channel("")
 
 
 def test_vision_uses_the_chat_model_when_the_proxy_marks_it_visual(monkeypatch):

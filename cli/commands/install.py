@@ -283,7 +283,7 @@ def run_install_browser(
         stream(f"  (system browser probe skipped: {e})", None)
 
     if sys.platform == "linux":
-        _phase(on_phase, _t("🔧 [2/3] Installing Linux system deps and a lightweight CJK font (WenQuanYi Zen Hei; some steps may need sudo)…",
+        _phase(on_phase, _t("🔧 [2/3] Installing Linux system dependencies (some steps may need sudo)…",
         ))
         stream("[2/3] Installing system dependencies (Linux)...", "yellow")
         ret = _playwright_cli(["install-deps", "chromium"])
@@ -293,22 +293,9 @@ def run_install_browser(
                 f"  Run manually: sudo {python} -m playwright install-deps chromium",
                 "yellow",
             )
-        # Prefer fonts-wqy-zenhei only (~few MB). fonts-noto-cjk is much larger (~150MB+).
-        stream("  Installing CJK font (fonts-wqy-zenhei, lightweight)...")
-        font_ret = _apt_install("fonts-wqy-zenhei")
-        if font_ret != 0:
-            stream(
-                "  Could not auto-install CJK font.\n"
-                "  Run manually: sudo apt-get install -y fonts-wqy-zenhei\n"
-                "  (Optional, larger full coverage: sudo apt-get install -y fonts-noto-cjk)",
-                "yellow",
-            )
-        else:
-            subprocess.call(["fc-cache", "-fv"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            stream("  CJK font (wqy-zenhei) installed.", "green")
         _phase(
             on_phase,
-            _t("✅ [2/3] Linux deps and font steps executed (on permission issues, check the server log or run the suggested commands manually).",
+            _t("✅ [2/3] Linux dependency step finished (on permission issues, check the server log or run the suggested command manually).",
             ),
         )
     else:

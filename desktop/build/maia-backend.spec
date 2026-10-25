@@ -26,24 +26,12 @@ def rp(*parts):
 
 # --- Hidden imports -------------------------------------------------------
 # Channels are imported dynamically by channel_factory via string names, so
-# PyInstaller's static analysis can't see them. List every channel we ship.
-# Chat ships as the web console and the local terminal. Extra channel modules
-# listed below are hidden imports only when those packages are still on disk.
+# PyInstaller's static analysis can't see them. Chat is the web console and
+# the local terminal.
 hiddenimports = [
     # channels (dynamic import in channel/channel_factory.py)
     'channel.web.web_channel',
     'channel.terminal.terminal_channel',
-    'channel.weixin.weixin_channel',
-    'channel.wechatmp.wechatmp_channel',
-    'channel.wechatcom.wechatcomapp_channel',
-    'channel.wechat_kf.wechat_kf_channel',
-    'channel.feishu.feishu_channel',
-    'channel.dingtalk.dingtalk_channel',
-    'channel.wecom_bot.wecom_bot_channel',
-    'channel.qq.qq_channel',
-    'channel.telegram.telegram_channel',
-    'channel.slack.slack_channel',
-    'channel.discord.discord_channel',
 ]
 
 # The web console's backend: web_channel.py is the URL table, and the handlers
@@ -170,11 +158,7 @@ datas += collect_data_files('playwright', include_py_files=True)
 
 # --- Excludes -------------------------------------------------------------
 # Keep the bundle lean: drop tests/docs and dev-only packages.
-#
-# lark_oapi is the Feishu SDK. This fork has no Feishu channel, so the package
-# stays out of the desktop bundle if a local environment still has it installed.
 excludes = [
-    'lark_oapi',          # Feishu SDK — not part of this fork
     'tests',
     'pip',
     'wheel',

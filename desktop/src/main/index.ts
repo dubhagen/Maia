@@ -646,8 +646,7 @@ function setupIPC() {
   })
 
   // Auto-update controls (renderer-driven: check, then opt-in download/install).
-  // The renderer passes its current UI language so downloads can be routed to
-  // the China CDN mirror (zh) or R2 (others).
+  // Desktop auto-update is a no-op. The language argument is ignored.
   ipcMain.handle('update-check', (_event, lang?: string) => {
     setUpdateLanguage(lang)
     // This channel is only hit by an explicit "check for update" click, so the
@@ -681,8 +680,7 @@ function setupIPC() {
     quitAndInstall()
   })
 
-  // Synchronous OS locale lookup (e.g. "zh-CN", "en-US"). Used by the renderer
-  // to pick a sensible default UI language on first run before any paint.
+  // Synchronous OS locale lookup. The interface stays English.
   ipcMain.on('get-system-locale', (event) => {
     event.returnValue = app.getLocale() || app.getSystemLocale?.() || ''
   })

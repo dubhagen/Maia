@@ -52,7 +52,7 @@ export interface ElectronAPI {
     headers?: Record<string, string>
     body?: string
   }) => Promise<{ ok: boolean; status: number; headers: Record<string, string>; body: string }>
-  // Auto-update. lang (e.g. "zh") routes installer downloads to the China CDN.
+  // Auto-update. The optional lang argument is ignored.
   checkForUpdate?: (lang?: string) => Promise<void>
   downloadUpdate?: (lang?: string) => Promise<void>
   installUpdate?: () => Promise<void>
@@ -69,7 +69,7 @@ export interface ElectronAPI {
   notify?: (payload: { title?: string; body?: string; sessionId?: string; silent?: boolean; force?: boolean }) => Promise<boolean>
   onOpenSession?: (callback: (sessionId: string) => void) => () => void
   platform: string
-  // OS UI language (e.g. "zh-CN"); used to default the language on first run.
+  // OS UI locale string. The interface stays English.
   systemLocale?: string
 }
 

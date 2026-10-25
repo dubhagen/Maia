@@ -8,7 +8,6 @@ import sys
 import time
 
 from channel import channel_factory
-from common import const
 from common.log import logger
 from common.ssl_certs import ensure_ca_bundle
 from config import load_config, conf
@@ -57,11 +56,11 @@ def _has_web_entry(channel_names: list) -> bool:
 
 
 def _resolve_startup_channels(raw_channel):
-    """Start only the web console and the local terminal.
+    """Start the web console and the local terminal.
 
-    Messaging channels are removed. A leftover ``channel_type`` value is logged
-    and skipped. ``channel_instances`` is not consulted. An empty list still
-    starts the web console so the LiteLLM base can be configured.
+    Any other ``channel_type`` value is logged and skipped.
+    ``channel_instances`` is not consulted. An empty list still starts the
+    web console so the LiteLLM base can be configured.
     """
     allowed = {"web", "terminal"}
     entries = []
@@ -228,9 +227,9 @@ class ChannelManager:
             # The desktop client IS the web channel: without it the Electron
             # shell polls a health endpoint that will never answer and, 90s
             # later, blames a generic "initialization failed". Exiting non-zero
-            # lets the shell surface the real error immediately. Server
-            # deployments keep the old behavior - other channels may still be
-            # serving, so one broken channel must not take the process down.
+            # lets the shell surface the real error immediately. A server
+            # process stays up so the local terminal can still serve if the
+            # web console failed to start.
             if DESKTOP_MODE and name == "web":
                 logging.shutdown()
                 os._exit(1)
@@ -738,8 +737,8 @@ def run():
             # Otherwise fall back to the legacy channel_type list untouched.
             channel_names = _resolve_startup_channels(raw_channel)
 
-        # Auto-start web console unless explicitly disabled. The web entry stays
-        # a legacy string; only IM channels participate in multi-instance.
+        # Auto-start the web console unless it is explicitly disabled. The web
+        # entry is always the console process, separate from terminal instances.
         web_console_enabled = conf().get("web_console", True)
         if web_console_enabled and not _has_web_entry(channel_names):
             channel_names.append("web")

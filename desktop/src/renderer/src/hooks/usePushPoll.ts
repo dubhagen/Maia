@@ -48,7 +48,9 @@ export function usePushPoll(ready: boolean): void {
           // notify here for ordinary proactive pushes, so a scheduled task the
           // user happens to be viewing isn't announced twice.
           const isScheduler = (data.request_id || '').startsWith('scheduler_')
-          if (added && !isScheduler) notify(sid, data.content)
+          // Home is covering this session. Keep the reply in the store so opening
+          // the row shows it, but do not announce it over the welcome screen.
+          if (added && !isScheduler && !useSessionStore.getState().atHome) notify(sid, data.content)
           schedule(DELAY_HIT_MS)
           return
         }

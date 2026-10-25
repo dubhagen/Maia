@@ -106,7 +106,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }>,
 
   // Auto-update: trigger checks/download/install and subscribe to status. The
-  // optional lang routes installer downloads to the China CDN mirror (zh) or R2.
+  // optional lang is ignored; desktop auto-update does not contact a feed.
   checkForUpdate: (lang?: string) => ipcRenderer.invoke('update-check', lang),
   downloadUpdate: (lang?: string) => ipcRenderer.invoke('update-download', lang),
   installUpdate: () => ipcRenderer.invoke('update-install'),
@@ -133,8 +133,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   platform: process.platform,
-  // OS UI language (e.g. "zh-CN"), read synchronously so the renderer can pick
-  // a default language on first run. Falls back to '' if unavailable.
+  // OS UI locale, read synchronously. The interface stays English.
+  // Falls back to '' if unavailable.
   systemLocale: (() => {
     try {
       return ipcRenderer.sendSync('get-system-locale') as string

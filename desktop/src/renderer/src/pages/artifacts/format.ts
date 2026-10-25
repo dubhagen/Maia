@@ -1,8 +1,8 @@
-import { t, getLang } from '../../i18n'
+import { t } from '../../i18n'
 import type { ArtifactShown } from '../../store/artifactStore'
 
 function locale(): string {
-  return getLang() === 'en' ? 'en-US' : 'zh-CN'
+  return 'en-US'
 }
 
 function dayStart(ts: number): number {

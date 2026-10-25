@@ -93,8 +93,8 @@ export interface ProductNav {
 // Optional external links a build can override (e.g. a differently-branded
 // docs site). Each returns null to fall back to the core default.
 export interface ProductLinks {
-  // The "what's new" page for a given version. `lang` is the UI language
-  // (e.g. 'zh'). Return null to use the core docs site.
+  // The "what's new" page for a given version. `lang` is unused.
+  // Return null to use the core docs site.
   releaseNotesUrl?: (version: string, lang: string) => string | null
   // Hide the "what's new" entry of the update panel.
   hideReleaseNotes?: boolean

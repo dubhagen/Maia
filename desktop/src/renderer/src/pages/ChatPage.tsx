@@ -77,6 +77,7 @@ function useSuggestionCards() {
 
 const ChatPage: React.FC<ChatPageProps> = ({ baseUrl }) => {
   const activeId = useSessionStore((s) => s.activeId)
+  const atHome = useSessionStore((s) => s.atHome)
   const loadSessions = useSessionStore((s) => s.loadSessions)
   const activeAgentId = useAgentStore((s) => s.activeAgentId)
 
@@ -94,7 +95,9 @@ const ChatPage: React.FC<ChatPageProps> = ({ baseUrl }) => {
 
   const messages = session?.messages ?? []
   const isStreaming = session?.isStreaming ?? false
-  const isEmpty = messages.length === 0
+  // Home covers a stored conversation that already has messages. An empty
+  // session still looks like home, and a send there continues that session.
+  const showHome = atHome || messages.length === 0
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const followBottomRef = useRef(true)
@@ -312,7 +315,14 @@ const ChatPage: React.FC<ChatPageProps> = ({ baseUrl }) => {
 
   const handleSend = useCallback(
     async (text: string, attachments: Attachment[], display?: string) => {
-      const sid = activeId
+      let sid = useSessionStore.getState().activeId
+      // The welcome screen is not the stored conversation. Mint a session
+      // before the text is bound to one, and keep the editor if the user
+      // declines to discard it.
+      if (useSessionStore.getState().atHome) {
+        if (!(await useWorkspaceStore.getState().guardUnsavedEdit())) return
+        sid = startNewChat({ loadHistory: false, inheritProject: false })
+      }
       const isFirst = (useChatStore.getState().sessions[sid]?.messages.length ?? 0) === 0
       titlePendingRef.current = isFirst
       // Resolve the owner before the await: the title request must land in the
@@ -338,7 +348,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ baseUrl }) => {
         titlePendingRef.current = false
       }
     },
-    [activeId, cancelQueuedScroll, send, loadSessions]
+    [cancelQueuedScroll, send, loadSessions]
   )
 
   const handleNewChat = useCallback(async () => {
@@ -463,7 +473,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ baseUrl }) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 relative">
-      {!isEmpty && (
+      {!showHome && (
         <ChatTimeline sessionId={activeId} scrollRef={scrollRef} revision={timelineRevision} />
       )}
       <div
@@ -495,7 +505,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ baseUrl }) => {
           </div>
         )}
 
-        {isEmpty ? (
+        {showHome ? (
           <div data-home className="chat-home flex flex-col items-center justify-center h-full px-6 py-12">
             {product.slots?.HomeLogo ? (
               <div className="w-16 h-16 rounded-2xl mb-5 shadow-md overflow-hidden">
@@ -603,7 +613,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ baseUrl }) => {
         onNewChat={handleNewChat}
         onStop={handleStop}
         onClearContext={handleClearContext}
-        isStreaming={isStreaming}
+        isStreaming={isStreaming && !atHome}
         sessionId={activeId}
         onAdjustContext={handleAdjustContext}
         ref={inputResetRef}

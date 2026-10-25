@@ -1,0 +1,29 @@
+# Install Skills
+
+There is no bundled skill marketplace. Use `/skill install` in chat or `maia skill install` in the terminal.
+
+You can also add a skill from the web console. Click **Add skill** and enter a GitHub repository or folder URL, or upload a `.zip`, a `SKILL.md`, or a skill folder.
+
+The skill is fetched first and shown for review. Nothing is installed until you confirm.
+
+## From Git
+
+```text
+/skill install https://github.com/owner/repo
+/skill install https://github.com/owner/repo/tree/main/skills/one-skill
+/skill install ./my-local-skill
+```
+
+`clawhub:` and `linkai:` prefixes are not installed. A `skill_hub_url` is used only when you set one in `config.json`.
+
+## Manage Skills
+
+```text
+/skill list                  # View installed skills
+/skill info pptx             # View skill details
+/skill enable pptx           # Enable a skill
+/skill disable pptx          # Disable a skill
+/skill uninstall pptx        # Uninstall a skill
+```
+
+> **Tip.** All commands above work in the terminal by replacing `/skill` with `maia skill`. See [Skill Management Commands](../cli/skill.md) for full documentation.

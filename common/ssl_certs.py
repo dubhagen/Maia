@@ -2,7 +2,7 @@
 
 A PyInstaller bundle carries its own OpenSSL, whose compiled-in CA paths point
 at the build machine and do not exist on the user's. Anything going through
-``ssl.create_default_context`` — urllib, websockets, the Feishu SDK — then fails
+``ssl.create_default_context`` — urllib and websockets — then fails
 with CERTIFICATE_VERIFY_FAILED, while ``requests`` keeps working because it
 passes certifi's bundle explicitly. Exporting the bundle through OpenSSL's env
 vars fixes every stdlib caller in one place.

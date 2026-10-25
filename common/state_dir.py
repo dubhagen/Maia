@@ -192,7 +192,7 @@ def menu_file(base=None) -> Path:
 
 
 def scheduler_recipients_file(base=None) -> Path:
-    """The one directory of people/groups observed on inbound IM channels.
+    """The one directory of people observed on inbound web and terminal chats.
 
     Shared, not per Agent: a contact is a fact about the person, not about which
     Agent happened to talk to them, so one copy lets any Agent's console build a

@@ -106,7 +106,7 @@ const ChatApiCard: React.FC<{ baseUrl: string }> = ({ baseUrl }) => {
   const enabled = !!state?.enabled
   const key = state?.api_key || ''
   const apiBase = `${baseUrl.replace(/\/$/, '')}/v1`
-  const docsUrl = 'https://github.com/dubhagen/Maia/blob/master/docs/extensions/chat-api.mdx'
+  const docsUrl = 'https://github.com/dubhagen/Maia/blob/master/docs/extensions/chat-api.md'
 
   return (
     <Card

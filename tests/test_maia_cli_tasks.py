@@ -108,7 +108,7 @@ def test_tasks_command_formats_empty_state(monkeypatch):
     plugin = MaiaCliPlugin()
 
     result = plugin._cmd_tasks(
-        "", _event_context("slack", "channel-1", "session-1")
+        "", _event_context("web", "channel-1", "session-1")
     )
 
     assert "task" in result.lower()

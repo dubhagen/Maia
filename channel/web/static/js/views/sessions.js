@@ -464,7 +464,7 @@ function deleteProject(path, name) {
 function _sessionItemEl(s, indent) {
     const item = document.createElement('div');
     const ownerId = (s.agent && s.agent.id) || '';
-    const isActive = s.session_id === sessionId && (!ownerId || ownerId === activeAgentId);
+    const isActive = !showingHome && s.session_id === sessionId && (!ownerId || ownerId === activeAgentId);
     item.className = 'session-item' + (isActive ? ' active' : '') + (s.pinned ? ' pinned' : '')
         + (indent ? ' session-item-indent' : '');
     item.dataset.sessionId = s.session_id;
@@ -630,7 +630,9 @@ function switchSession(newSessionId, agentId) {
         activeAgentId = agentId;
         localStorage.setItem('maia_active_agent', activeAgentId);
     }
-    if (newSessionId === sessionId) {
+    // Home leaves sessionId pointing at the stored conversation, so opening
+    // that same row has to draw it again.
+    if (newSessionId === sessionId && !showingHome) {
         if (currentView !== 'chat') navigateTo('chat');
         renderComposerIdentity();
         return;
@@ -638,8 +640,11 @@ function switchSession(newSessionId, agentId) {
 
     // The preview panel is scoped to a session's workspace, so switching tears
     // down an open editor. Settle unsaved edits before committing to the switch.
+    // Home stays up if the user keeps the edits: clearing the flag first would
+    // make the next click on this same row look like it was already open.
     if (typeof wsGuardUnsaved === 'function'
         && !wsGuardUnsaved(() => switchSession(newSessionId))) return;
+    showingHome = false;
 
     // Do NOT close active streams here: sessions run in parallel, so any
     // in-flight reply for another session must keep streaming in the

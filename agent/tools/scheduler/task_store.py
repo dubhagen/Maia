@@ -123,11 +123,9 @@ class TaskStore:
             try:
                 # Create backup. The store is written as UTF-8 below and read
                 # back as UTF-8 in load_tasks(), so the copy has to go through
-                # the same codec: with the platform default it is decoded
-                # through the wrong one on Windows (cp936 on a zh-CN box), and
-                # the backup ends up either mojibake or -- since the open() for
-                # writing already truncated it -- an empty file where a usable
-                # one used to be.
+                # the same codec. The platform default code page can turn the
+                # backup into mojibake or, because open() for writing already
+                # truncated the file, an empty file where a usable one used to be.
                 if os.path.exists(self.store_path):
                     backup_path = f"{self.store_path}.bak"
                     try:

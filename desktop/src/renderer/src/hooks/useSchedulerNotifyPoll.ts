@@ -75,8 +75,8 @@ function maybeNotify(run: {
 }): void {
   const sid = run.session_id
   if (!sid) return
-  // Only client-delivered tasks: WeChat/Feishu etc. already push into the IM
-  // app, so re-notifying in the desktop client would be noise.
+  // Only web deliveries. A terminal task is already on that process, so a
+  // desktop notification would be noise.
   const channel = run.channel_type || ''
   if (channel && channel !== 'web') return
   // Skip failed runs — nothing was delivered to jump to.

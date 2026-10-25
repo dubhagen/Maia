@@ -534,8 +534,8 @@ def _remember_delivered_output(
         - agent_task / tool_call / skill_call: gated by ``scheduler_inject_to_session``
           (default True). These produce AI-generated content worth remembering.
         - send_message: additionally gated by ``scheduler_inject_send_message``
-          (default False) on push-capable IM channels. Fixed reminder text rarely
-          benefits follow-up Q&A there and would just consume context tokens.
+          (default False) on the terminal. Fixed reminder text rarely benefits
+          follow-up Q&A there and would just consume context tokens.
 
     The web channel is the exception: it cannot push to an idle client, so the
     conversation history is the *only* place a delivered message shows up when
@@ -547,7 +547,7 @@ def _remember_delivered_output(
     action = task.get("action", {})
     action_type = action.get("type", "")
 
-    # send_message defaults to NOT being injected on IM channels; explicit
+    # send_message defaults to NOT being injected on the terminal; explicit
     # opt-in via config. Web always persists (see docstring) since history is
     # its only delivery surface for an idle client.
     if action_type == "send_message" and channel_type != "web":

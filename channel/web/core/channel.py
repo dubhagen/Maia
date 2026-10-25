@@ -1017,8 +1017,7 @@ class WebChannel(ChatChannel):
             use_sse = json_data.get('stream', True)
             attachments = json_data.get('attachments', [])
             # Tag the message as originating from voice input so the post-reply
-            # TTS hook can honour the `voice_if_voice` policy (mirrors the
-            # desire_rtype concept used by other channels).
+            # TTS hook can honour the `voice_if_voice` policy.
             is_voice_input = bool(json_data.get('is_voice', False))
 
             # Fast path for /cancel: bypass the session queue and SSE setup.
@@ -1033,7 +1032,7 @@ class WebChannel(ChatChannel):
                     agent_bridge.agent_registry.default_agent_id,
                 )
                 cancelled = get_cancel_registry().cancel_session(scoped_session_id)
-                lang = (json_data.get('lang') or 'zh').lower()
+                lang = (json_data.get('lang') or 'en').lower()
                 msg_text = _cancel_reply_text(cancelled, lang)
                 logger.info(
                     f"[WebChannel] /cancel fast-path: session={session_id}, cancelled={cancelled}, lang={lang}"
@@ -1047,7 +1046,7 @@ class WebChannel(ChatChannel):
 
             # Explicit steering also bypasses the normal session queue. The
             # Web button sends ``steer: true`` with raw input; typed /steer
-            # commands use the same endpoint and semantics as IM channels.
+            # commands use the same endpoint and semantics as the terminal.
             steer_requested = bool(json_data.get("steer", False))
             is_steer_command = (
                 re.match(r"^/steer(?:\s|$)", stripped_prompt) is not None
@@ -1061,7 +1060,7 @@ class WebChannel(ChatChannel):
                 result = agent_bridge.steer_session(
                     session_id, instruction, resolved_agent_id
                 )
-                lang = (json_data.get("lang") or "zh").lower()
+                lang = (json_data.get("lang") or "en").lower()
                 msg_text = _steer_reply_text(result.status, lang)
                 logger.info(
                     f"[WebChannel] steer fast-path: session={session_id}, "
@@ -1075,7 +1074,7 @@ class WebChannel(ChatChannel):
                     "inline_reply": msg_text,
                 }, ensure_ascii=False)
 
-            # Append file references to the prompt (same format as QQ channel)
+            # Append file references to the prompt.
             if attachments:
                 file_refs = []
                 for att in attachments:
@@ -1395,7 +1394,6 @@ class WebChannel(ChatChannel):
 
             request_id = (json_data.get("request_id") or "").strip()
             session_id = (json_data.get("session_id") or "").strip()
-            lang = (json_data.get("lang") or "zh").lower()
             from bridge.bridge import Bridge
             from agent.routing import AgentUnavailableError
             agent_bridge = Bridge().get_agent_bridge()

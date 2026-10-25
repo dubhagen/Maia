@@ -29,7 +29,7 @@ def test_a_fresh_context_does_not_inherit_a_delivered_tasks_keys():
     scheduled = Context(ContextType.TEXT, "reminder")
     scheduled["receiver"] = "web:user-1"
     scheduled["session_id"] = "web:user-1"
-    scheduled["receive_id_type"] = "open_id"
+    scheduled["receive_id_type"] = "chat"
 
     push = Context(ContextType.TEXT, "an unrelated proactive push")
     push["receiver"] = "terminal:user-2"

@@ -1,0 +1,35 @@
+# Desktop Client
+
+Maia does not publish a desktop installer. Build it from this checkout when you want the Electron shell. The agent itself runs from source with `python app.py` or `maia start` without that shell.
+
+## Build
+
+From `desktop/`, install the Node dependencies and build the shell. The Python backend is packaged separately by the desktop build scripts and still uses `desktop/build/requirements-desktop.txt`.
+
+```bash
+cd desktop
+npm install
+npm run build
+```
+
+`npm run dev` starts the shell against a local backend. There is no update feed. A source checkout updates with `git pull`.
+
+## Desktop vs. Command-line Deployment
+
+- **Desktop client**: best for personal use on your own computer — works out of the box, GUI-based, auto-updating.
+- **Command-line deployment**: best for developers or long-running servers with more customization. See [Quick Start](./quick-start.md).
+
+## Access from a Browser
+
+Once the desktop client is running, it listens on port `9876` locally, and its backend is exactly the same Web console. So while the app is open you can also just point your browser at `http://localhost:9876` for the same full experience as the client UI.
+
+If that port is unavailable (for example reserved by Hyper-V/WSL2 on Windows), the client automatically falls back to another one and still starts normally. The actual port is shown on the `Local access` line in `run.log`, and you can pin one by setting `web_port` in `config.json`.
+
+## Local Data Storage
+
+All data of the desktop client is stored on your machine:
+
+- **Config directory**: `~/.maia` in your home folder, holding `config.json` (model keys, channels, etc.) along with logs, cache and other runtime data.
+- **Workspace**: `~/maia` by default, holding chat history, knowledge base, memory, skills, scheduled tasks and other files produced by the Agent.
+
+Uninstalling the client does not delete these two directories, so your data is preserved across reinstalls. To fully clean up or migrate to another device, just back up or remove the corresponding folders manually.

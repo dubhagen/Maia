@@ -32,9 +32,9 @@ class ChatChannel(Channel):
         super().__init__()
         # Instance-level attributes so each channel subclass has its own
         # independent session queue and lock. Previously these were class-level,
-        # which caused contexts from one channel (e.g. Feishu) to be consumed
-        # by another channel's consume() thread (e.g. Web), leading to errors
-        # like "No request_id found in context".
+        # which caused contexts from one channel to be consumed by the other
+        # channel's consume() thread, leading to errors like
+        # "No request_id found in context".
         self.futures = {}
         self.sessions = {}
         self.lock = threading.Lock()
@@ -377,8 +377,8 @@ class ChatChannel(Channel):
                 logger.debug("[chat_channel] sending reply: {}, context: {}".format(reply, context))
                 
                 
-                # Web channel renders images/videos inline via renderMarkdown,
-                # so skip the extract-and-send step to avoid duplicate media.
+                # The web console renders images inline. The terminal sends
+                # extracted image files so a markdown image is not left as text.
                 if reply.type == ReplyType.TEXT and context.get("channel_type") != "web":
                     self._extract_and_send_images(reply, context)
                 elif reply.type == ReplyType.TEXT:

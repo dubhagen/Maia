@@ -182,12 +182,6 @@ def _explicit_instances(raw_list: list) -> List[ChannelInstance]:
             if source.get(key) is not None:
                 creds[key] = source.get(key)
 
-        if channel_type not in MULTI_INSTANCE_READY:
-            logger.info(
-                f"[ChannelInstances] '{channel_type}' does not support multiple "
-                f"instances yet; '{instance_id}' will run as a single instance"
-            )
-
         out.append(
             ChannelInstance(
                 instance_id=instance_id,

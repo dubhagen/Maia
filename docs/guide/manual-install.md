@@ -1,0 +1,136 @@
+# Manual Install
+
+## Source Code Deployment
+
+### 1. Clone the project
+
+```bash
+git clone https://github.com/dubhagen/Maia.git
+cd Maia/
+```
+
+### 2. Install dependencies
+
+Core dependencies (required):
+
+```bash
+pip3 install -r requirements.txt
+```
+
+Optional dependencies (recommended):
+
+```bash
+pip3 install -r requirements-optional.txt
+```
+
+### 3. Install Maia CLI
+
+Install the command-line tool for managing services and skills:
+
+```bash
+pip3 install -e .
+```
+
+Then use the `maia` command:
+
+```bash
+maia help
+```
+
+> **Note.** This step is recommended. After installation you can use `maia start`, `maia stop`, `maia update` to manage the service, and `maia skill` to manage skills. Without the CLI, you can use `./run.sh` or `python3 app.py` to run.
+
+### 4. Configure
+
+Copy the config template and edit:
+
+```bash
+cp config-template.json config.json
+```
+
+Fill in model API keys, channel type, and other settings in `config.json`. See the [model docs](../models/index.md) for details.
+
+### 5. Run
+
+**Using Maia CLI (recommended):**
+
+```bash
+maia start
+```
+
+**Or run locally in foreground:**
+
+```bash
+python3 app.py
+```
+
+By default, the Web console starts. Access `http://localhost:9899` to chat.
+
+**Background run on server (without CLI):**
+
+```bash
+nohup python3 app.py & tail -f nohup.out
+```
+
+> **Tip.** **Deploying on a server?** By default `web_host` only listens on `127.0.0.1` (local access). Set `web_host` to `0.0.0.0` in `config.json` to make the console reachable from outside, and set `web_password` to protect it. Don't forget to open port `9899` in your firewall or security group — ideally restricted to specific IPs.
+
+## Docker Deployment
+
+Use the compose file in this repository. For Agent mode, a source checkout is recommended for broader system access.
+
+> **Note.** Requires [Docker](https://docs.docker.com/engine/install/) and docker-compose.
+
+**1. Set the LiteLLM endpoint**
+
+In `docker/docker-compose.yml`, set `LITELLM_API_BASE` and `LITELLM_MODEL`. The base URL must be an `http` or `https` URL ending in `/v1`.
+
+**2. Start the container**
+
+```bash
+docker compose -f docker/docker-compose.yml up -d
+```
+
+**3. View logs**
+
+```bash
+sudo docker compose -f docker/docker-compose.yml logs -f
+```
+
+> **Note.** **Data persistence**: `docker-compose.yml` mounts two host directories by default, so your data survives container restarts and `docker compose pull` image upgrades:
+>
+> - `./maia` → `/home/agent/maia` in the container: the workspace, holding conversation-installed skills, memory, knowledge base, `mcp.json`, and conversation artifacts.
+> - `./maia-data` → `/home/agent/.maia` in the container: the data directory pointed to by `MAIA_DATA_DIR`, holding the `config.json` saved from the web console, run logs, and channel credentials.
+>
+> Both directories are created next to `docker-compose.yml` by default — don't delete them.
+
+> **Tip.** **Running in Docker?** Set `WEB_HOST` to `0.0.0.0` in `docker-compose.yml` so the console is reachable from outside the container, and set `WEB_PASSWORD` to protect it. Make sure port `9899` is mapped to the host and open in your firewall or security group.
+
+## Core Configuration
+
+```json
+{
+  "channel_type": "web",
+  "litellm_api_base": "http://127.0.0.1:4000/v1",
+  "litellm_api_key": "",
+  "model": "",
+  "agent": true,
+  "agent_workspace": "~/maia",
+  "agent_max_context_tokens": 200000,
+  "agent_max_context_turns": 30,
+  "agent_max_steps": 100,
+  "maia_lang": "auto"
+}
+```
+
+| Parameter | Description | Default |
+| --- | --- | --- |
+| `channel_type` | Channel type. `web` or `terminal` | `web` |
+| `litellm_api_base` | LiteLLM OpenAI-compatible base. Must end in `/v1` | |
+| `model` | Chat model id on that proxy. Empty until you set one | |
+| `agent` | Enable Agent mode | `true` |
+| `agent_workspace` | Agent workspace path | `~/maia` |
+| `agent_max_context_tokens` | Max context tokens | `200000` |
+| `agent_max_context_turns` | Max context turns | `30` |
+| `agent_max_steps` | Max decision steps per task | `100` |
+| `maia_lang` | UI language. English is the only language; `auto` stays English | `auto` |
+
+> **Tip.** Full configuration options are in the project [`config.py`](https://github.com/dubhagen/Maia/blob/master/config.py).

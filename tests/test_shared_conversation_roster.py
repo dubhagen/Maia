@@ -2,7 +2,7 @@
 
 Deleting an Agent used to leave its id in session_prefs.members. The shared
 path then reloaded history as plain text and dropped tool_use/tool_result
-pairs, so a solo WeChat chat lost its tool chain. The predicate resolves each
+pairs, so a solo chat lost its tool chain. The predicate resolves each
 id; only a member that still exists counts. An id with no local profile still
 counts when the installed transport lists it as a peer.
 """

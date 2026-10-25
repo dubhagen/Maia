@@ -487,7 +487,7 @@ const translations: Record<string, Record<string, string>> = {
     config_permission: 'Default permissions',
     config_permission_desc: 'New chats start with this; each chat can be changed under the input box',
     config_language: 'Language',
-    config_language_hint: 'Interface and reply language',
+    config_language_hint: 'English is the interface and reply language.',
     config_system: 'System',
     config_notifications: 'Notifications',
     config_task_notify: 'Task Notifications',
@@ -772,33 +772,9 @@ const translations: Record<string, Record<string, string>> = {
     memory_doc_load_error: 'Failed to load content',
     memory_prev: 'Prev',
     memory_next: 'Next',
-    channels_title: 'Channels',
-    channels_web_only: 'Chat uses the web console. The local terminal is still available. Other chat channels have been removed.',
-    channels_desc: 'View and manage messaging channels',
-    channels_add: 'Add channel',
-    channels_select_label: 'Select a channel to add',
-    channels_select_placeholder: 'Select a channel...',
-    channels_add_close: 'Close',
-    channels_connected: 'Connected',
-    channels_disconnected: 'Disconnected',
-    channels_connect: 'Connect',
-    channels_disconnect: 'Disconnect',
-    channels_disconnect_confirm: 'This channel will stop receiving messages. Disconnect it?',
-    channels_save: 'Save',
-    channels_loading: 'Loading channels...',
-    channels_rename_instance: 'Rename',
-    channels_instance_name_placeholder: 'Channel name, e.g. "Terminal 2"',
-    channels_connected_section: 'Connected',
-    channels_available_section: 'Available',
-    channels_empty_connected: 'No connected channels yet',
-    channels_empty: 'No channels connected',
-    channels_empty_desc: 'The web console is the chat channel. The local terminal is also available.',
-    channels_qr_hint: 'This channel is not available.',
-    channels_save_ok: 'Saved',
-    channels_save_error: 'Failed to save',
-    channels_connect_error: 'Failed to connect',
-    channels_disconnect_error: 'Failed to disconnect',
-    channels_starting: 'Starting...',
+    channels_title: 'Web console',
+    channels_web_only: 'Chat uses the web console. The local terminal is still available.',
+    channels_desc: 'The web console is the chat surface. The local terminal is the other one.',
     tasks_title: 'Scheduled Tasks',
     tasks_desc: 'View and manage scheduled tasks',
     tasks_tab_tasks: 'Tasks',
@@ -976,7 +952,7 @@ export function setLang(_lang: Lang) {
   currentLang = 'en'
 }
 
-/** Resolve a possibly-localized label ({zh,en} or plain string) for the current language. */
+/** Resolve a label that may be a plain string or `{ en }`. */
 export function localizedLabel(label: string | { en: string; zh?: string } | undefined): string {
   if (!label) return ''
   if (typeof label === 'string') return label

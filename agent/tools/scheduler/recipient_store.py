@@ -18,12 +18,11 @@ class RecipientStore:
     normal outbound readiness checks.
 
     The directory is shared across Agents, but keyed by ``(instance_id, receiver)``
-    rather than by ``(channel_type, receiver)``. A channel *type* can run several
-    *instances* (two Feishu bots, two WeChat logins), each with its own login,
-    tokens and — crucially — its own id space for receivers: the same receiver
-    string on two WeChat instances is two different people. Delivery therefore has
-    to go back out through the exact instance that first saw the contact, so the
-    instance is part of the identity, not just the type.
+    rather than by ``(channel_type, receiver)``. One channel type can run more
+    than one instance, and the same receiver string on two instances is two
+    different people. Delivery therefore has to go back out through the exact
+    instance that first saw the contact, so the instance is part of the identity,
+    not just the type.
 
     Legacy single-instance installs use ``instance_id == channel_type`` (that is
     how the launcher already synthesizes them), so an old entry saved under just a

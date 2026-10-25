@@ -8,7 +8,7 @@
 // Capability cards rendered on the Models page. Order matters — main model
 // comes first because it transitively decides defaults for vision and image.
 // Icon palette is grouped by capability family:
-//   - chat                       → primary (brand green; the "main" capability)
+//   - chat                       → primary (the main capability)
 //   - vision + image             → blue    (everything visual)
 //   - asr + tts                  → amber   (everything audio)
 //   - embedding                  → purple  (vectors)
@@ -142,20 +142,9 @@ function renderVendorsSection() {
                 </button>
             </div>`;
     } else {
-        // Existing vendors as chips, plus a trailing "add" tile so a new
-        // built-in or custom provider can still be added once at least one is
-        // already configured (otherwise the add entry only showed on the empty
-        // state). openVendorModal('') opens the picker → built-in or custom.
-        const addTile = `
-            <button onclick="openVendorModal('')"
-                    class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-dashed
-                           border-slate-300 dark:border-white/15 text-slate-500 dark:text-slate-400
-                           hover:border-primary-400 hover:text-primary-500 cursor-pointer transition-colors text-sm">
-                <i class="fas fa-plus text-[11px]"></i>${t('models_add_vendor')}
-            </button>`;
+        // The only endpoint is LiteLLM. The chip opens its credentials.
         body = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             ${configured.map(renderVendorChip).join('')}
-            ${addTile}
         </div>`;
     }
 

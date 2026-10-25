@@ -1,9 +1,8 @@
 """Who a team message names, and the roster it is matched against.
 
-Shared by every channel that supports team conversations (Web console, Feishu,
-...). A message that starts with ``@name`` hands that turn to the named
-teammate; the matcher is channel-agnostic so the rule reads the same in a
-browser and in an IM group.
+Shared by the web console and the local terminal. A message that starts with
+``@name`` hands that turn to the named teammate. The matcher is the same in
+the browser and in a terminal group chat.
 """
 
 from __future__ import annotations

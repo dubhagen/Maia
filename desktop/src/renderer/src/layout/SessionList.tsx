@@ -147,6 +147,7 @@ const SessionList: React.FC = () => {
   const {
     sessions,
     activeId,
+    atHome,
     loading,
     loadSessions,
     loadMore,
@@ -467,7 +468,7 @@ const SessionList: React.FC = () => {
 
               {!isCollapsed &&
                 group.items.map((s) => {
-                  const isActive = s.session_id === activeId
+                  const isActive = !atHome && s.session_id === activeId
                   const isEditing = editingId === s.session_id
                   return (
                     <div

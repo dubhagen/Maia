@@ -5,7 +5,7 @@
 ("keep legacy token keys for the default agent, namespace the rest"), while the
 cancel paths looked the bare session id up, so for any Agent other than the
 default one they found no queue at all. The two callers that cancel queued work
--- ``#reset`` and the Feishu recall handler -- pass the Agent produce() routed
+-- ``#reset`` and a channel recall -- pass the Agent produce() routed
 to, which is what makes the lookup land.
 """
 

@@ -747,8 +747,8 @@ def _roster_from_members(host_agent_id: str, members) -> List[dict]:
     """Badge every reachable member of a conversation, host first.
 
     Same rule as ``agent.team_addressing.roster_from_members``, reserved
-    "default" alias included: the browser and an IM group have to agree on who
-    is reachable. Deduped on the resolved id, because an alias and the id it
+    "default" alias included: the browser and a terminal group chat have to
+    agree on who is reachable. Deduped on the resolved id, because an alias and the id it
     resolves to name one teammate.
     """
     from agent.multiagent import peer as peer_of

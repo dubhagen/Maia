@@ -776,6 +776,8 @@ function cancelChatScrollForNavigation() {
 // With untilSeq, every page from `page` back to the one holding that message
 // arrives in a single request (the message navigator's long jumps).
 function loadHistory(page, untilSeq) {
+    // A response for the stored session must not replace the welcome screen.
+    if (showingHome) return Promise.resolve();
     if (historyLoading) return Promise.resolve();
     historyLoading = true;
     const historySessionId = sessionId;
@@ -793,7 +795,7 @@ function loadHistory(page, untilSeq) {
         .then(data => {
             // A response from a session we have since left must never render
             // into the new session's message list.
-            if (historySessionId !== sessionId) return;
+            if (showingHome || historySessionId !== sessionId) return;
             if (data.status !== 'success' || data.messages.length === 0) return;
 
             const prevScrollHeight = messagesDiv.scrollHeight;

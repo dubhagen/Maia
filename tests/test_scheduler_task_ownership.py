@@ -1,7 +1,7 @@
 """Ownership of a scheduled task follows its delivery channel instance.
 
-A channel instance binds to exactly one Agent. An IM task delivers *through* an
-instance, so the Agent it runs as (and the owner the console shows) is derived
+A channel instance binds to exactly one Agent. A scheduled task delivers
+through an instance, so the Agent it runs as (and the owner the console shows) is derived
 live from that instance's current binding — never a value frozen on the task.
 This is what lets an instance be re-bound to another Agent with zero task
 migration, and keeps the edit form / task card honest the moment the delivery

@@ -73,4 +73,4 @@ Skills with the same name in the custom directory override builtin ones.
 
 ## Create & Contribute
 
-See [docs/skills/create.mdx](../docs/skills/create.mdx).
+See [docs/skills/create.md](../docs/skills/create.md).

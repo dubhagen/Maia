@@ -46,19 +46,19 @@ class ChannelStopPrimaryTest(unittest.TestCase):
             th.join(timeout=5)
 
     def test_stopping_the_primary_clears_the_reference(self):
-        self.mgr.start(["qq", "web"])
+        self.mgr.start(["terminal", "web"])
         self._join()
         primary = self.mgr.channel
         self.assertIsNotNone(primary)
 
-        self.mgr.stop("qq")
+        self.mgr.stop("terminal")
         self._join()
 
         self.assertIsNone(self.mgr.channel, "mgr.channel still points at a stopped channel")
         self.assertIsNone(self.mgr._primary_channel)
 
     def test_stopping_a_non_primary_leaves_the_primary_alone(self):
-        self.mgr.start(["web", "qq"])
+        self.mgr.start(["web", "terminal"])
         self._join()
         primary = self.mgr.channel
         self.assertIsNotNone(primary)
@@ -70,7 +70,7 @@ class ChannelStopPrimaryTest(unittest.TestCase):
         self.assertIs(self.mgr._primary_channel, primary)
 
     def test_stop_all_clears_the_reference(self):
-        self.mgr.start(["qq", "web"])
+        self.mgr.start(["terminal", "web"])
         self._join()
         self.assertIsNotNone(self.mgr.channel)
 
@@ -80,12 +80,12 @@ class ChannelStopPrimaryTest(unittest.TestCase):
         self.assertIsNone(self.mgr.channel)
 
     def test_restart_adopts_the_new_instance(self):
-        self.mgr.start(["qq"])
+        self.mgr.start(["terminal"])
         self._join()
         original = self.mgr.channel
         self.assertIsNotNone(original)
 
-        self.mgr.restart("qq")
+        self.mgr.restart("terminal")
         self._join()
 
         self.assertIsNotNone(self.mgr.channel, "mgr.channel is None after a restart")
