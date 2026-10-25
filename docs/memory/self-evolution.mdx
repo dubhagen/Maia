@@ -15,10 +15,6 @@ Self-Evolution lets the Agent do more than finish one task at a time; it keeps i
 
 > Self-Evolution complements [Deep Dream](/memory/deep-dream). Deep Dream organizes memory itself, while Self-Evolution goes a step further to improve skills and push unfinished tasks forward, sharpening the Agent's abilities through everyday use.
 
-<Frame>
-  <img src="/images/screenshots/chat.png" alt="Self-Evolution in a conversation" />
-</Frame>
-
 ### Three Goals
 
 Self-Evolution focuses on three things:
@@ -44,7 +40,7 @@ Only when both are met does a review begin. This makes sure there is something w
 
 ### Configuration
 
-You can toggle Self-Evolution in the Web console under **Settings → Agent Config** (below "Deep Thinking"), or adjust it in the config file:
+Turn it on in the config file, or in the web console under Config → General → Agent Configuration. The General screenshot on the [Models](/models) page shows that card, but not this switch. The switch sits further down the same card. The defaults are:
 
 | Parameter | Description | Default |
 | --- | --- | --- |
@@ -52,20 +48,16 @@ You can toggle Self-Evolution in the Web console under **Settings → Agent Conf
 | `self_evolution_idle_minutes` | How long the conversation must be idle before it triggers (minutes) | `10` |
 | `self_evolution_min_turns` | Minimum conversation turns required to trigger | `6` |
 
-<Frame>
-  <img src="/images/screenshots/settings.png" alt="Enable Self-Evolution in the Web console" />
-</Frame>
-
 <Tip>
   The Web console only exposes the on/off toggle. To change the idle window or the turn threshold, edit the config file. Changes take effect immediately, with no restart needed.
 </Tip>
 
 ### Evolution Records
 
-Each review is recorded by date in `memory/evolution/YYYY-MM-DD.md`, viewable in the Web console under the **Memory → Self-Evolution** tab. That tab gathers both self-evolution records and dream diaries in one place, so you can look back on how the Agent has grown.
+Each review is recorded by date in `memory/evolution/YYYY-MM-DD.md`. Open Management → Memory and choose Self-Evolution. That tab also lists dream diaries. Until a review or a dream has been written, the tab is empty.
 
-<Frame>
-  <img src="/images/screenshots/memory-evolution.png" alt="Self-Evolution records list" />
+<Frame caption="Self-Evolution tab before any review has been recorded">
+  <img src="../images/screenshots/memory-evolution.png" alt="Memory page, Self-Evolution tab, empty" width="800" />
 </Frame>
 
 ### Rolling Back

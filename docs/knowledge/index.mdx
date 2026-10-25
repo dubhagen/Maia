@@ -3,11 +3,7 @@ title: Personal Knowledge Base
 description: "Maia's personal knowledge base organizes shared articles, conversation insights and study notes by topic into interlinked Markdown pages and a knowledge graph. Explains how it differs from memory."
 ---
 
-The personal knowledge base is the Agent's long-term structured knowledge store, saved in the `knowledge/` directory within the workspace. Unlike memory, which is organized by timeline, the knowledge base organizes content by topic — articles, conversation insights, and learning materials are structured into interlinked Markdown pages, forming a continuously growing knowledge network.
-
-<Frame>
-  <img src="/images/screenshots/knowledge.png" width="800" />
-</Frame>
+The personal knowledge base is the Agent's long-term structured knowledge store, saved in the `knowledge/` directory within the workspace. Unlike memory, which is organized by timeline, the knowledge base organizes content by topic. Articles, conversation insights, and learning materials become interlinked Markdown pages.
 
 ## Core Concepts
 
@@ -44,11 +40,7 @@ Knowledge writing is an autonomous Agent behavior, triggered in these scenarios:
 - **Conversation produces valuable conclusions** — The Agent organizes insights into knowledge pages and links them to existing knowledge
 - **User explicitly requests organization** — Users can guide the Agent to organize and update knowledge through conversation
 
-Each knowledge page includes cross-reference links to related pages, gradually building a knowledge graph.
-
-<Frame>
-  <img src="/images/screenshots/knowledge.png" width="800" />
-</Frame>
+Each knowledge page can link to related pages. The console Graph view draws those links. The screenshot below is the Documents view, not the graph.
 
 ## Knowledge Retrieval
 
@@ -60,18 +52,10 @@ The Agent can retrieve knowledge during conversation through:
 
 ## Web Console
 
-The web console provides a dedicated "Knowledge" module with:
+Management → Knowledge has two views. Documents is a searchable tree: pick a page and it opens on the right. Graph draws the links between pages. A link in a chat reply opens the page here.
 
-- **Document browsing** — Tree-style directory structure, searchable and collapsible, click to view content
-- **Knowledge graph** — Interactive graph visualizing relationships between knowledge pages
-- **Chat integration** — Knowledge document links referenced in Agent replies are clickable for direct navigation
-
-<Frame>
-  <img src="/images/screenshots/knowledge.png" width="800" />
-</Frame>
-
-<Frame>
-  <img src="/images/screenshots/knowledge.png" width="800" />
+<Frame caption="Documents view: index selected, with an Entities folder in the tree">
+  <img src="../images/screenshots/knowledge.png" alt="Knowledge Documents view with the page tree and index open" width="800" />
 </Frame>
 
 ## CLI Commands

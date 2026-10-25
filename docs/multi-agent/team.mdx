@@ -5,10 +5,6 @@ description: "Build an agent team in Maia: create agents with their own roles, m
 
 Maia is no longer a single Agent. You can create multiple Agents to form a team: each member has its own responsibilities, model, skills, and knowledge, working independently or being brought into the same session to collaborate.
 
-<Frame>
-  <img src="/images/screenshots/agents.png" alt="Multi-agent team" width="800"/>
-</Frame>
-
 ## Why a Team
 
 A team of specialized Agents is better suited to complex tasks that span different business domains, for the following reasons:
@@ -30,12 +26,13 @@ Click Create on the "Agent Team" page in the Web console or desktop client to ad
 - **Skills and knowledge**: these can be shared with the team, or an Agent can have its own dedicated knowledge base that stays isolated from the others.
 - **Copy from an existing Agent**: when creating a new Agent, you can copy an existing Agent's configuration, skills, and knowledge as a starting point.
 
-<Frame>
-  <img src="/images/screenshots/agents.png" alt="Agent-create" width="800"/>
+Management → Agents shows the team on the left and the selected member on the right. The default member is Maia. Profile holds the name, responsibilities, avatar, and default model. Skills and Core files are the other two tabs. Core files include `AGENT.md` and `RULE.md`.
+
+<Frame caption="Agent Team with the default Maia profile: name, responsibilities, and default model">
+  <img src="../images/screenshots/agents.png" alt="Agents page, default Maia profile" width="800"/>
 </Frame>
 
-
-Once created, the Agent appears in the team list. Click any member, and on the right you can switch between "Overview / Skills / Core Files" to configure its basic information, enabled skills, and its persona and rule files (`AGENT.md`, `RULE.md`, and so on).
+Once created, the Agent appears in the team list. Click a member to edit that profile.
 
 <Note>
 There is always a default Agent in the team. It is the fallback for new sessions and elsewhere, follows the global model configuration, and cannot be deleted.
@@ -60,12 +57,7 @@ In an existing session, the Agent selector at the bottom left of the input box l
 - **Add member**: add another Agent to the current session, turning it into a group chat.
 - **Remove member**: remove a member from the current session.
 
-<Frame>
-  <img src="/images/screenshots/chat.png" alt="Agent-team-group" width="800"/>
-</Frame>
-
-
-In a group chat, each Agent answers with its own configured model, and the bubble shows which Agent is speaking. Members in the same session read the same record and can see what others have said.
+In a group chat, each Agent answers with its own configured model, and the bubble shows which Agent is speaking. Members in the same session read the same record and can see what others have said. The new-chat welcome screen is a single empty chat. It does not show a group.
 
 <Note>
 Group chats do not use the session-level model selection; each Agent uses its own configured default model, so no model selector appears in a group chat.
@@ -73,20 +65,9 @@ Group chats do not use the session-level model selection; each Agent uses its ow
 
 ## Channel Integration
 
-A channel of the same type can run multiple instances, and each instance can be bound to a different single Agent or Agent team, appearing as its own separate assistant.
+Chat uses the web console. The local terminal is the other surface. Management → Channels says that and nothing else. It does not list hosted chat apps, and it is not where you add team members.
 
-On the "Channels" page, set the bound Agent for a connected instance:
-
-- The first one selected is the owner, responsible for receiving all tasks from this channel.
-- You can add more members, and the owner assigns suitable tasks to them based on their responsibilities.
-- In the channel, use `@` followed by a member's name or ID to talk to that member directly.
-
-<Frame>
-  <img src="/images/screenshots/channels.png" alt="Agent-team-channel" width="800"/>
-</Frame>
-
-
-Binding changes take effect immediately, with no need to restart the channel. The running channels are the web console and the local terminal.
+Use `@` and a member's name inside a group chat to direct a turn. The lead Agent can still hand work to another member of that session.
 
 ## Collaboration
 
@@ -96,11 +77,6 @@ Multiple Agents in the same session collaborate in two ways.
 
 In a group chat, use `@` followed by a member's name to hand the current turn to a specific Agent. Typing `@` brings up the members in the current session to choose from, and once sent, the bubble carries the avatar of the directed Agent to mark who is responsible for that turn.
 
-<Frame>
-  <img src="/images/screenshots/chat.png" alt="Agent-team-group" width="800"/>
-</Frame>
-
-
 ### 2. Lead Agent and Delegation
 
 A group chat always has a lead Agent (the owner). Unless the user `@`s someone else, it receives every task. Delegation lets the lead Agent hand a task outside its own domain to a more suitable member:
@@ -109,12 +85,7 @@ A group chat always has a lead Agent (the owner). Unless the user `@`s someone e
 - **Execute**: the delegated member completes the task in its own workspace and returns the result to the lead Agent.
 - **Reply**: the lead Agent consolidates the results and replies to the user, who always faces a single entry point.
 
-Details such as the delegation scope, chain depth, and time budget are handled by the [agent_delegate tool](/tools/delegate) and can be adjusted in the configuration.
-
-
-<Frame>
-  <img src="/images/screenshots/agents.png" alt="Agent-team-delegate" width="800"/>
-</Frame>
+Details such as the delegation scope, chain depth, and time budget are handled by the [agent_delegate tool](/tools/delegate) and can be adjusted in the configuration. The Agents page shows who is on the team. It does not show a delegation in progress.
 
 
 
@@ -125,7 +96,7 @@ Agent teams and [sub-Agents](/multi-agent/subagent) both share the workload, but
 | | Team member | Sub-Agent |
 | --- | --- | --- |
 | Lifecycle | Persistent, configured in advance | Created temporarily for one task, then discarded |
-| Identity | Has a name and avatar, appears in the team list, can bind to channels | Anonymous, not in the list |
+| Identity | Has a name and avatar, and appears in the team list | Anonymous, not in the list |
 | Workspace | Independent | Shared with the lead Agent |
 | Memory | Independent | Has no memory of its own |
 | Use case | Long-term specialization, external-facing service | Splitting your own work to run in parallel, isolating large amounts of intermediate work |

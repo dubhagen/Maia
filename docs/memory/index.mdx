@@ -5,7 +5,9 @@ description: "Maia's long-term memory: core memory in MEMORY.md, daily memories 
 
 Long-term memory is stored in workspace files, persisting across sessions. The Agent loads historical memory on demand via retrieval tools during conversation, and automatically writes conversation summaries to long-term memory when context is trimmed.
 
-<img src="/images/memory-architecture.svg" alt="Memory Architecture" />
+Conversation context is trimmed into a dated daily file. Daily files distill into `MEMORY.md`, which does not decay. A dream diary is written beside the daily file.
+
+<img src="../images/memory-architecture.svg" alt="Memory path from conversation context to daily memory, MEMORY.md, and the dream diary" />
 
 ## Memory Types
 
@@ -60,10 +62,10 @@ Files related to memory in the workspace (default `~/maia`):
 
 ## Web Console
 
-The memory management page in the Web console allows browsing memory files and dream diaries, with tab switching support:
+Management → Memory opens on Memory Files. The list shows `MEMORY.md` as Global and each dated file as Daily. The Self-Evolution tab is the other view on this page.
 
-<Frame>
-  <img src="/images/screenshots/memory.png" width="800" />
+<Frame caption="Memory Files for the Maia agent: MEMORY.md (Global) and one daily file">
+  <img src="../images/screenshots/memory.png" alt="Memory Files list with MEMORY.md and a daily file" width="800" />
 </Frame>
 
 ## Configuration

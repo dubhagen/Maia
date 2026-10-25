@@ -103,7 +103,7 @@ export const DEFAULT_THEME_ID = 'default'
 // ~/.maia/themes. This keeps the app bundle free of theme assets.
 export const DEFAULT_THEME: Theme = {
   id: DEFAULT_THEME_ID,
-  name: 'Meadow',
+  name: 'Blue',
   preview: { accent: '#6B8EF0', bg: '#f9fafb', surface: '#ffffff' },
 }
 

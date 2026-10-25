@@ -12,4 +12,10 @@ Maia has two chat surfaces:
 
 `channel_type` accepts `web` and `terminal`. Any other value is skipped at startup. WeChat, Feishu, DingTalk, WeCom, QQ, Telegram, Slack, and Discord are not included.
 
+Management → Channels shows a single card for the web console and notes that the local terminal is still available.
+
+<Frame caption="Channels page: web console only">
+  <img src="../images/screenshots/channels.png" alt="Channels page stating that chat uses the web console" width="800" />
+</Frame>
+
 The web console still starts when `litellm_api_base` is missing, so you can open it and set the proxy. Model calls fail until the base is a valid `/v1` URL.

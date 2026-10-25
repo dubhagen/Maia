@@ -550,7 +550,6 @@ def _new_skill_dirs(ws: Path) -> set:
 # ---------------------------------------------------------------------------
 def run_stub():
     from agent.evolution.executor import run_evolution_for_session
-    from agent.evolution import backup as backup_mod
     from config import conf
     # Evolution is disabled by default now; enable for the test.
     conf()["self_evolution_enabled"] = True
@@ -653,7 +652,7 @@ def run_stub():
 
 
 def _verify_undo():
-    from agent.evolution.backup import create_backup, restore_backup
+    from agent.evolution.backup import create_backup
     ws = _setup_workspace()
     try:
         _point_config_at(ws)
@@ -719,7 +718,6 @@ def run_real():
     from agent.memory.config import (
         MemoryConfig,
         set_global_memory_config,
-        get_default_memory_config,
     )
     from config import conf, load_config
 

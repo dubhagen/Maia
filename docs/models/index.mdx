@@ -5,6 +5,16 @@ description: "Every Maia model call uses one LiteLLM OpenAI-compatible endpoint.
 
 Maia sends chat, vision, embeddings, images, speech-to-text, and text-to-speech to one LiteLLM proxy. The model id is the id the proxy returns. Maia does not rewrite it and does not keep a separate key per vendor.
 
+Management → Config has two tabs. General sets the provider, the chat model, the API key, and the API base. Agent Configuration continues on the same tab, starting with max context tokens. Models is where that one endpoint is shared by the other capabilities.
+
+<Frame caption="Config → General: LiteLLM provider, chat model, key, and API base">
+  <img src="../images/screenshots/settings.png" alt="Config General tab with the LiteLLM model card" width="800" />
+</Frame>
+
+<Frame caption="Config → Models: one LiteLLM credential, the main model, and image understanding">
+  <img src="../images/screenshots/models.png" alt="Config Models tab with provider credentials and the main model" width="800" />
+</Frame>
+
 ## Configuration
 
 ```json

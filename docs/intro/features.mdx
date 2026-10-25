@@ -11,15 +11,11 @@ On first launch, the Agent proactively asks the user for key information and rec
 
 In subsequent long-term conversations, the Agent intelligently stores or retrieves memory as needed, continuously updating its own settings, user preferences, and memory files. **Deep Dream** distillation runs daily, consolidating scattered daily memories into refined long-term memory and generating a narrative-style dream diary.
 
-<Frame>
-  <img src="/images/screenshots/memory.png" width="800" />
+<Frame caption="Memory Files lists the global MEMORY.md and the day's daily file">
+  <img src="../images/screenshots/memory.png" alt="Memory page, Memory Files tab" width="800" />
 </Frame>
 
-Building on this, **Self-Evolution** lets the Agent keep growing through everyday use: after a conversation goes idle, it reviews it automatically to improve skills, follow up on unfinished tasks, and backfill memory and knowledge. It speaks up only when it actually made a change, and every change can be undone. Enabled by default for new installs.
-
-<Frame>
-  <img src="/images/screenshots/chat.png" width="800" />
-</Frame>
+Building on this, **Self-Evolution** lets the Agent keep growing through everyday use: after a conversation goes idle, it reviews it automatically to improve skills, follow up on unfinished tasks, and backfill memory and knowledge. It speaks up only when it actually made a change, and every change can be undone. New installs leave it off. Records show up on the same Memory page, under Self-Evolution.
 
 See [Long-term Memory](/memory), [Deep Dream](/memory/deep-dream), and [Self-Evolution](/memory/self-evolution) for details.
 
@@ -27,15 +23,15 @@ See [Long-term Memory](/memory), [Deep Dream](/memory/deep-dream), and [Self-Evo
 
 > The knowledge base system enables the Agent to continuously accumulate and organize structured knowledge. Unlike memory which records along a timeline, the knowledge base is organized by topics, transforming articles, conversation insights, and learning materials into interconnected Markdown pages that form a continuously growing knowledge network.
 
-The Agent automatically organizes valuable information from conversations into knowledge pages, maintaining cross-references and indexes. The Web console provides document browsing and knowledge graph visualization. Knowledge is stored in `~/maia/knowledge/` within the workspace.
+The Agent organizes useful conversation material into knowledge pages, with an index and cross-references. Knowledge is stored in `~/maia/knowledge/`. In the console, Management → Knowledge opens on Documents: a page tree on the left and the selected page on the right. Graph is the other view on that page.
 
 - **Auto-organization**: The Agent autonomously extracts and organizes structured knowledge during conversations, maintaining indexes and cross-references
 - **Knowledge graph**: Automatically builds a knowledge graph from cross-references between pages, with interactive graph visualization in the Web console
 - **Chat integration**: Knowledge document links referenced in Agent replies can be clicked directly in the Web console for viewing
 - **CLI management**: Use `/knowledge` commands to view stats, browse directory, and toggle the feature with `/knowledge on|off`
 
-<Frame>
-  <img src="/images/screenshots/knowledge.png" width="800" />
+<Frame caption="Knowledge Documents: the page tree and the open index">
+  <img src="../images/screenshots/knowledge.png" alt="Knowledge page in Documents view" width="800" />
 </Frame>
 
 See [Personal Knowledge Base](/knowledge) for details.
@@ -48,43 +44,27 @@ Tools are the core of how the Agent accesses operating system resources. The Age
 
 ### 3.1 Terminal and File Access
 
-Access to the OS terminal and file system is the most fundamental and core capability. Many other tools and skills build on top of this. Users can interact with the Agent from a mobile device to operate resources on their personal computer or server:
-
-<Frame>
-  <img src="/images/screenshots/chat.png" width="800" />
-</Frame>
+Access to the OS terminal and file system is the most fundamental capability. Many other tools and skills build on top of it. From the web console you can ask the agent to operate files and commands on the machine where Maia is running.
 
 ### 3.2 Programming Capability
 
-Combining programming and system access, the Agent can execute the complete **Vibecoding workflow** — from information search, asset generation, coding, testing, deployment, Nginx configuration, to publishing — all triggered by a single command from your phone:
-
-<Frame>
-  <img src="/images/screenshots/chat.png" width="800" />
-</Frame>
+Combining programming and system access, the Agent can run a full coding workflow — search, generate assets, write code, test, and deploy — from one request in the web console.
 
 ### 3.3 Scheduled Tasks
 
-The `scheduler` tool enables dynamic scheduled tasks, supporting **one-time tasks, fixed intervals, and Cron expressions**. Tasks can be triggered as either a **fixed message send** or an **Agent dynamic task** execution:
+The `scheduler` tool creates one-time tasks, fixed intervals, and cron tasks. A task can send a fixed message or run an agent turn. Management → Tasks is where those tasks are listed. A new install starts with an empty list and a New Task button.
 
-<Frame>
-  <img src="/images/screenshots/scheduler.png" width="800" />
+<Frame caption="Tasks page before any task has been added">
+  <img src="../images/screenshots/scheduler.png" alt="Scheduled Tasks page with an empty list" width="800" />
 </Frame>
 
 ### 3.4 Browser
 
-The built-in `browser` tool allows the Agent to control a Chromium browser to visit web pages, fill forms, click elements, and take screenshots, with support for dynamic JS-rendered pages. Run `maia install-browser` to install with one command, automatically adapting to server (headless) and desktop environments:
-
-<Frame>
-  <img src="/images/screenshots/chat.png" width="800" />
-</Frame>
+The built-in `browser` tool lets the Agent drive a Chromium browser: open pages, fill forms, click, and take screenshots, including pages that render with JavaScript. Run `maia install-browser` once. It adapts to a headless server and a desktop.
 
 ### 3.5 Environment Variable Management
 
-Secrets required by skills are stored in an environment variable file, managed by the `env_config` tool. You can update secrets through conversation, with built-in security protection and desensitization:
-
-<Frame>
-  <img src="/images/screenshots/settings.png" width="800" />
-</Frame>
+Secrets a skill needs live in the workspace environment file. The `env_config` tool reads and updates them from chat, and masks values when it lists them. That file is separate from the LiteLLM key on the Config page.
 
 ## 4. Skills System
 
@@ -97,20 +77,16 @@ Install a skill from a git URL or a local path: `/skill install <url>` or `maia 
 
 ### 4.1 Creating Skills
 
-The `skill-creator` skill enables rapid skill creation through conversation. You can ask the Agent to codify a workflow as a skill, or send any API documentation and examples for the Agent to complete the integration directly:
+The `skill-creator` skill turns a workflow or an API note into a skill through conversation. Management → Capabilities is where you see the result: built-in tools, MCP servers, and workspace skills, each skill with its own switch.
 
-<Frame>
-  <img src="/images/screenshots/skills.png" width="800" />
+<Frame caption="Capabilities: built-in tools, an empty MCP section, and three skills switched on">
+  <img src="../images/screenshots/skills.png" alt="Capabilities page with tools, MCP, and skills" width="800" />
 </Frame>
 
 ### 4.2 Web Search and Image Recognition
 
 - **Web search:** Built-in `web_search` tool. It queries SearXNG only when `tools.web_search.searxng_url` is set.
 - **Image recognition:** Uses `vision_model` on the same LiteLLM endpoint. An empty id uses the chat model when that model accepts images.
-
-<Frame>
-  <img src="/images/screenshots/chat.png" width="800" />
-</Frame>
 
 ### 4.3 Installing a skill
 
@@ -120,8 +96,6 @@ The `skill-creator` skill enables rapid skill creation through conversation. You
 ```
 
 See [Install Skills](/skills/install).
-
-<img src="/images/screenshots/skills.png" width="750" />
 
 ## 5. CLI Command System
 
@@ -142,16 +116,12 @@ See [Command Overview](/cli/general) for details.
 
 ## 6. Multi-Agent Teams
 
-Maia is no longer just a single Agent. You can create multiple Agents to form a team, each with its own responsibilities, model, skills, and knowledge, with isolated workspaces and memory. They can work independently or be brought into the same session to collaborate. A channel can bind a single Agent or the whole team to serve externally, making it easy to set up a team of digital employees.
+Maia can run more than one Agent. Each member has its own responsibilities, model, skills, knowledge, workspace, and memory. Management → Agents opens the team list and the selected member's profile: name, responsibilities, avatar, and default model.
 
-<Frame>
-  <img src="/images/screenshots/agents.png" width="800" />
+<Frame caption="Agent Team with the default Maia profile open">
+  <img src="../images/screenshots/agents.png" alt="Agents page showing the default Maia profile" width="800" />
 </Frame>
 
-In a group-chat session, multiple Agents can participate together: use `@` to direct a member to answer, or let the lead Agent automatically **delegate** a task to a more suitable member and consolidate the reply. The lead Agent can also spin up temporary **sub-Agents** to handle independent subtasks in parallel, returning only the conclusion without cluttering the main conversation's context.
-
-<Frame>
-  <img src="/images/screenshots/chat.png" width="800" />
-</Frame>
+In a group-chat session, several Agents can take part. Use `@` to direct a member, or let the lead Agent **delegate** a task and fold the result into one reply. The lead Agent can also start temporary **sub-Agents** for side work, returning only the conclusion.
 
 See [Agent Teams](/multi-agent/team), [Task Delegation](/tools/delegate), and [Sub-Agents](/multi-agent/subagent) for details.

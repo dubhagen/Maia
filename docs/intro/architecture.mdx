@@ -7,9 +7,11 @@ Maia is an out-of-the-box super AI assistant and a complete Agent harness framew
 
 ## System Architecture
 
-Maia's architecture consists of the following core modules:
+A request enters from the web console or the local terminal, crosses one bridge, and leaves as a LiteLLM call. The model id is not rewritten. Local tools run only when you turn them on.
 
-<img src="/images/architecture.svg" alt="Maia Architecture" />
+<img src="../images/architecture.svg" alt="Request path from the web console and terminal through the bridge to one LiteLLM endpoint" />
+
+The rest of the process is the modules around that path:
 
 | Module | Description |
 | --- | --- |

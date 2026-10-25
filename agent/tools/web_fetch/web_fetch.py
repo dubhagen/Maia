@@ -193,7 +193,7 @@ class WebFetch(BaseTool):
             return ToolResult.fail(f"Error: {e}")
 
         try:
-            provider = _fetch_provider()
+            _fetch_provider()
         except ValueError as e:
             return ToolResult.fail(f"Error: {e}")
 

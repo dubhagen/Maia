@@ -1,7 +1,7 @@
 # Contributing to Maia
 
 Thanks for taking the time to contribute. Maia is a fork of CowAgent
-(Copyright (c) 2022 zhayujie, Copyright (c) 2026 dubhagen (github.com/dubhagen), MIT).
+(Copyright (c) 2022 zhayujie, © 2026 dubhagen, MIT).
 Contributions of all sizes are welcome.
 
 ## Language policy

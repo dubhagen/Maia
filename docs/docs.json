@@ -2,14 +2,14 @@
   "$schema": "https://mintlify.com/docs.json",
   "name": "Maia",
   "description": "Maia is a local agent. Model calls go through one LiteLLM endpoint. Chat runs in the web console.",
-  "theme": "mint",
+  "theme": "maple",
   "appearance": {
     "default": "light"
   },
   "colors": {
-    "primary": "#35A85B",
-    "light": "#4ABE6E",
-    "dark": "#228547"
+    "primary": "#4169E1",
+    "light": "#6B8EF0",
+    "dark": "#2F52C4"
   },
   "logo": {
     "light": "/images/logo.jpg",
